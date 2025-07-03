@@ -66,22 +66,33 @@ def search_places(state: AgentState):
 # 리뷰 분석 노드
 def analyze_reviews(state: AgentState):
     place_infos = []
+
     for place in state.places:
         place_id = place["place_id"]
         details = gmaps.place(place_id=place_id, language="ko")
+
         reviews = details.get('result', {}).get('reviews', [])[:3]
         review_text = "\n".join([review['text'] for review in reviews])
 
-        prompt = f"""
-        다음 리뷰를 읽고 장소의 분위기, 접근성, 청결도, 전체적 추천 여부를 요약해줘:\n\n{review_text}\n\n요약:
-        """
+        # 리뷰가 없는 경우 기본 메시지 사용
+        if not review_text.strip():
+            summary = "리뷰 정보가 부족해 요약을 제공할 수 없습니다."
+        else:
+            prompt = f"""
+            다음 리뷰를 읽고 장소의 분위기, 접근성, 청결도, 전체적 추천 여부를 요약해줘:\n\n{review_text}\n\n요약:
+            """
 
-        completion = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-        )
-        summary = completion.choices[0].message.content
+            try:
+                completion = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=300,
+                )
+                summary = completion.choices[0].message.content.strip()
+                if not summary:
+                    summary = "리뷰 내용이 충분하지 않아 요약이 어렵습니다."
+            except Exception as e:
+                summary = "요약 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
 
         place_infos.append({
             'name': place['name'],
@@ -89,10 +100,12 @@ def analyze_reviews(state: AgentState):
             'address': place.get('formatted_address', place.get('vicinity'))
         })
 
+    # 최종 출력 문자열 생성
     state.answer = "\n\n".join(
         [f"🔸 **{info['name']}**\n주소: {info['address']}\n요약: {info['summary']}" for info in place_infos]
     )
     return state.dict()
+
 
 # LangGraph 구성
 graph = StateGraph(AgentState)
