@@ -38,7 +38,7 @@ if not st.session_state.gmaps_key or not st.session_state.openai_key:
         if gmaps_input and openai_input:
             st.session_state.gmaps_key = gmaps_input
             st.session_state.openai_key = openai_input
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.warning("Please enter both keys to proceed.")
     st.stop()
