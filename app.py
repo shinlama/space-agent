@@ -20,7 +20,7 @@ if "openai_key" not in st.session_state:
     st.session_state.openai_key = ""
 
 if not st.session_state.gmaps_key or not st.session_state.openai_key:
-    st.title("🗺️ Seoul Place Recommendation Chatbot")
+    st.title("🗺️ Seoul Place Recommendation and Spatial Evaluation System")
     gmaps_input = st.text_input("Google Maps API Key", type="password")
     openai_input = st.text_input("OpenAI API Key", type="password")
 
@@ -194,7 +194,7 @@ graph.add_edge("analyze_reviews", END)
 agent = graph.compile()
 
 # Streamlit UI
-st.title("🗺️ 서울 장소 추천 및 공간 평가 챗봇")
+st.title("🗺️ 서울시 공간 정량 평가 및 장소 추천 시스템")
 query = st.text_input("🔍 장소 또는 테마 입력")
 
 if st.button("장소 추천받기"):
