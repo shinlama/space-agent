@@ -4,3 +4,4 @@ openai
 langgraph
 langchain
 python-dotenv
+plotly
