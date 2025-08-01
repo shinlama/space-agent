@@ -6,6 +6,11 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List, Dict, Any
 import plotly.express as px
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+# 환경변수 로드
+load_dotenv()
 
 st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="centered")
 
@@ -13,24 +18,47 @@ st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️",
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# 환경변수에서 API 키 가져오기
+gmaps_key = os.getenv("GOOGLE_MAPS_API_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
+
 # 세션 상태 초기화
 if "gmaps_key" not in st.session_state:
-    st.session_state.gmaps_key = ""
+    st.session_state.gmaps_key = gmaps_key or ""
 if "openai_key" not in st.session_state:
-    st.session_state.openai_key = ""
+    st.session_state.openai_key = openai_key or ""
 
+# API 키가 없으면 입력 요청
 if not st.session_state.gmaps_key or not st.session_state.openai_key:
     st.title("🗺️ Seoul Place Recommendation and Spatial Evaluation System")
-    gmaps_input = st.text_input("Google Maps API Key", type="password")
-    openai_input = st.text_input("OpenAI API Key", type="password")
+    
+    # 환경변수 설정 안내
+    st.info("""
+    🔑 **API 키 설정 방법**
+    
+    1. 프로젝트 루트에 `.env` 파일을 생성하세요
+    2. 다음 내용을 추가하세요:
+    ```
+    GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+    OPENAI_API_KEY=your_openai_api_key_here
+    ```
+    3. 앱을 다시 시작하세요
+    """)
+    
+    # 수동 입력 옵션 (환경변수가 없을 때만)
+    if not gmaps_key or not openai_key:
+        st.markdown("---")
+        st.markdown("**또는 수동으로 입력:**")
+        gmaps_input = st.text_input("Google Maps API Key", type="password")
+        openai_input = st.text_input("OpenAI API Key", type="password")
 
-    if st.button("Start"):
-        if gmaps_input and openai_input:
-            st.session_state.gmaps_key = gmaps_input
-            st.session_state.openai_key = openai_input
-            st.rerun()
-        else:
-            st.warning("Please enter both API keys.")
+        if st.button("Start"):
+            if gmaps_input and openai_input:
+                st.session_state.gmaps_key = gmaps_input
+                st.session_state.openai_key = openai_input
+                st.rerun()
+            else:
+                st.warning("Please enter both API keys.")
     st.stop()
 
 # 클라이언트 초기화
