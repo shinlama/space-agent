@@ -3,7 +3,7 @@ import googlemaps
 from openai import OpenAI
 from langgraph.graph import StateGraph, END
 from langchain_core.pydantic_v1 import BaseModel, Field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -73,11 +73,14 @@ except Exception as e:
 
 class AgentState(BaseModel):
     query: str
-    places: List[Dict[str, Any]] = Field(default_factory=list)
-    answer: str = ""
+    places: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    answer: Optional[str] = ""
 
 def search_places(state: AgentState):
     """Google Maps API를 사용하여 장소를 검색하는 함수"""
+    # None 가드
+    if state.places is None:
+        state.places = []
     try:
         res = gmaps.places(query=state.query, language="ko", location="37.5665,126.9780", radius=5000)
         state.places = res.get('results', [])[:5]
@@ -89,6 +92,8 @@ def search_places(state: AgentState):
 
 def analyze_reviews(state: AgentState):
     """장소 리뷰를 분석하고 새로운 장소성 지표로 정량 평가하는 함수"""
+    if state.places is None:
+        state.places = []
     place_infos = []
     new_score_structure = {
         "물리적 환경": {"심미성": None, "형태성": None, "감각적 경험": None, "고유성": None},
@@ -171,15 +176,15 @@ graph.add_edge("analyze_reviews", END)
 agent = graph.compile()
 
 # Streamlit UI
-st.title("🗺️ 서울시 공간 장소성 평가 및 추천 시스템")
-query = st.text_input("🔍 평가하고 싶은 장소나 테마를 입력하세요", placeholder="예: 성수동 카페, 안국역 맛집")
+st.title("🗺️ 장소성 기반 서울시 공간 정량 평가 시스템 ")
+query = st.text_input("🔍 평가하고 싶은 장소나 테마를 입력하세요", placeholder="예: 신촌 카페, 종로구 맛집")
 
 if st.button("장소성 분석하기"):
     if not query.strip():
         st.warning("장소나 테마를 입력해주세요.")
     else:
         with st.spinner("리뷰를 분석하여 장소성을 평가하는 중..."):
-            result = agent.invoke({"query": query})
+            result = agent.invoke({"query": query, "places": [], "answer": ""})
             places = result.get('places', [])
             st.session_state.history.append((query, places))
             st.rerun()
