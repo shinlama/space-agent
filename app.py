@@ -11,6 +11,9 @@ import os
 from dotenv import load_dotenv
 import json
 import re
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import io
 
 # 환경변수 로드
 load_dotenv()
@@ -21,11 +24,10 @@ st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️",
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# --- [수정] API 키 환경변수 이름 표준화 ---
-gmaps_key = os.getenv("Maps_API_KEY")
-openai_key = os.getenv("OPENAI_API_KEY")
+# API 키 환경변수 이름 표준화 및 초기화
+gmaps_key = os.getenv("Maps_API_KEY") or st.secrets.get("Maps_API_KEY", "")
+openai_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY", "")
 
-# 세션 상태 초기화
 if "gmaps_key" not in st.session_state:
     st.session_state.gmaps_key = gmaps_key or ""
 if "openai_key" not in st.session_state:
@@ -34,10 +36,10 @@ if "openai_key" not in st.session_state:
 # API 키가 없으면 입력 요청
 if not st.session_state.gmaps_key or not st.session_state.openai_key:
     st.title("🗺️ Seoul Place Recommendation and Spatial Evaluation System")
-    
+
     st.info("""
     🔑 **API 키 설정 방법**
-    
+
     1. 프로젝트 루트에 `.env` 파일을 생성하세요
     2. 다음 내용을 추가하세요:
     ```
@@ -47,7 +49,7 @@ if not st.session_state.gmaps_key or not st.session_state.openai_key:
     ```
     3. 앱을 다시 시작하세요
     """)
-    
+
     if not gmaps_key or not openai_key:
         st.markdown("---")
         st.markdown("**또는 수동으로 입력:**")
@@ -78,7 +80,6 @@ class AgentState(BaseModel):
 
 def search_places(state: AgentState):
     """Google Maps API를 사용하여 장소를 검색하는 함수"""
-    # None 가드
     if state.places is None:
         state.places = []
     try:
@@ -91,7 +92,7 @@ def search_places(state: AgentState):
     return state.dict()
 
 def analyze_reviews(state: AgentState):
-    """장소 리뷰를 분석하고 새로운 장소성 지표로 정량 평가하는 함수"""
+    """장소 리뷰를 분석하고 장소성 지표로 정량 평가하는 함수"""
     if state.places is None:
         state.places = []
     place_infos = []
@@ -105,16 +106,37 @@ def analyze_reviews(state: AgentState):
         place_id = place.get("place_id")
         if not place_id:
             continue
-            
+
         details = gmaps.place(place_id=place_id, language="ko").get('result', {})
-        reviews = details.get('reviews', [])[:5]
+        reviews = details.get('reviews', [])[:10]
         review_text = "\n".join([review['text'] for review in reviews if review.get('text')])
 
         summary = "리뷰 정보가 부족합니다."
         scores = json.loads(json.dumps(new_score_structure))
+        
+        # 키워드 추출을 위한 새로운 변수 추가
+        positive_keywords = []
+        negative_keywords = []
 
         if review_text.strip():
-            summary_prompt = f"다음 리뷰들을 종합하여 장소의 전반적인 분위기, 실내 공간 디자인 특성, 방문객들의 주요 경험, 긍정적 및 부정적 피드백을 중심으로 요약해줘:\n\n{review_text}\n\n요약:"
+            # LLM을 통해 긍정/부정 키워드 추출 프롬프트 수정
+            keyword_prompt = f"""다음 리뷰를 분석하여 '장소' 또는 '장소성'과 관련된 긍정적 키워드와 부정적 키워드 각각 10개씩 추출하고, 반드시 아래 JSON 형식으로만 응답하세요.
+            ### 리뷰:
+            {review_text}
+            ### 응답 형식:
+            {{"positive_keywords": ["키워드1", "키워드2"], "negative_keywords": ["키워드1", "키워드2"]}}"""
+
+            try:
+                keyword_response = client.chat.completions.create(
+                    model="gpt-4o", messages=[{"role": "user", "content": keyword_prompt}], response_format={"type": "json_object"}
+                )
+                parsed_keywords = json.loads(keyword_response.choices[0].message.content)
+                positive_keywords = parsed_keywords.get("positive_keywords", [])
+                negative_keywords = parsed_keywords.get("negative_keywords", [])
+            except Exception as e:
+                print(f"키워드 추출 중 오류 발생: {e}")
+            
+            summary_prompt = f"다음 리뷰들을 종합하여 장소의 전반적인 분위기, 건축 및 실내 공간 디자인 특성, 방문객들의 주요 경험, 긍정적 및 부정적 피드백을 중심으로 요약해줘:\n\n{review_text}\n\n요약:"
             try:
                 completion = client.chat.completions.create(
                     model="gpt-4o", messages=[{"role": "user", "content": summary_prompt}], max_tokens=400
@@ -158,9 +180,14 @@ def analyze_reviews(state: AgentState):
                 print(f"JSON 파싱 또는 API 오류: {e}")
 
         place_infos.append({
-            'name': place.get('name', '이름 없음'), 'summary': summary,
+            'name': place.get('name', '이름 없음'), 
+            'summary': summary,
             'address': place.get('formatted_address', place.get('vicinity', '주소 정보 없음')),
-            'scores': scores, 'geometry': place.get('geometry', {}), 'place_id': place.get('place_id', '')
+            'scores': scores, 
+            'geometry': place.get('geometry', {}), 
+            'place_id': place.get('place_id', ''),
+            'positive_keywords': positive_keywords, 
+            'negative_keywords': negative_keywords, 
         })
 
     state.places = place_infos
@@ -204,20 +231,20 @@ if st.session_state.history:
             scores = place.get('scores')
             if scores:
                 st.markdown(f"**📊 장소성 종합 평가**")
-                
+
                 # Sunburst 차트 데이터 생성
                 labels = []
                 parents = []
                 values = []
                 colors = []
-                
+
                 # 부드러운 파스텔톤 색상 맵
                 color_map = {
-                    "물리적 환경": "rgb(173, 216, 230)",      # 연한 파란색 (Light Blue)
+                    "물리적 환경": "rgb(173, 216, 230)",     # 연한 파란색 (Light Blue)
                     "사회적 상호작용": "rgb(152, 251, 152)",   # 연한 연두색 (Light Lime Green)
                     "개인적/문화적 의미": "rgb(255, 182, 193)" # 연한 분홍색 (Light Pink)
                 }
-                
+
                 # 루트 노드 추가 (전체 점수의 평균으로 설정)
                 total_score = 0
                 score_count = 0
@@ -226,27 +253,22 @@ if st.session_state.history:
                         if score is not None:
                             total_score += score
                             score_count += 1
-                
+
                 root_value = total_score / score_count if score_count > 0 else 0.5
-                
+
                 labels.append(place['name'])
                 parents.append("")
                 values.append(root_value)
                 colors.append("#FFFFFF")
-                
+
                 # 대분류와 세부 분류 추가
                 for main_cat, sub_scores in scores.items():
-                    # 대분류 평균 점수 계산
                     main_scores = [s for s in sub_scores.values() if s is not None]
                     main_avg = sum(main_scores) / len(main_scores) if main_scores else 0
-                    
-                    # 대분류 추가
                     labels.append(main_cat)
                     parents.append(place['name'])
                     values.append(main_avg)
                     colors.append(color_map.get(main_cat, "#CCCCCC"))
-                    
-                    # 세부 분류 추가
                     for sub_cat, score in sub_scores.items():
                         if score is not None:
                             labels.append(sub_cat)
@@ -254,15 +276,13 @@ if st.session_state.history:
                             values.append(float(score))
                             colors.append(color_map.get(main_cat, "#CCCCCC"))
                 
-
-                
                 # Sunburst 차트 생성
                 try:
                     fig_sunburst = go.Figure(go.Sunburst(
                         labels=labels,
                         parents=parents,
                         values=values,
-                        branchvalues="remainder",  # total 대신 remainder 사용
+                        branchvalues="remainder",
                         marker=dict(colors=colors),
                         hovertemplate='<b>%{label}</b><br>점수: %{value:.2f}',
                         maxdepth=2,
@@ -281,7 +301,6 @@ if st.session_state.history:
                 except Exception as e:
                     st.error(f"Sunburst 차트 생성 중 오류: {e}")
                     
-                    # 대안: Treemap 차트 시도
                     try:
                         st.info("Sunburst 차트 대신 Treemap 차트를 표시합니다.")
                         fig_treemap = go.Figure(go.Treemap(
@@ -310,10 +329,52 @@ if st.session_state.history:
             else:
                 st.warning("정량 평가 결과가 없습니다.")
 
+            # 워드 클라우드 시각화 추가
+            if place.get('positive_keywords') or place.get('negative_keywords'):
+                st.markdown("---")
+                st.markdown("**📝 리뷰 키워드 분석**")
+                
+                col_pos, col_neg = st.columns(2)
+                
+                # 긍정 워드 클라우드
+                if place.get('positive_keywords'):
+                    with col_pos:
+                        st.markdown("#### ✅ 긍정 키워드")
+                        text = " ".join(place['positive_keywords'])
+                        if text:
+                            # 폰트 경로 설정 (예시: 윈도우 환경)
+                            font_path = "C:/Windows/Fonts/malgun.ttf"
+                            wordcloud = WordCloud(font_path=font_path, 
+                                                  background_color="white", 
+                                                  width=400, 
+                                                  height=200,
+                                                  prefer_horizontal=0.9).generate(text)
+                            fig, ax = plt.subplots(figsize=(4, 2))
+                            ax.imshow(wordcloud, interpolation='bilinear')
+                            ax.axis("off")
+                            st.pyplot(fig)
+                
+                # 부정 워드 클라우드
+                if place.get('negative_keywords'):
+                    with col_neg:
+                        st.markdown("#### ❌ 부정 키워드")
+                        text = " ".join(place['negative_keywords'])
+                        if text:
+                            font_path = "C:/Windows/Fonts/malgun.ttf"
+                            wordcloud = WordCloud(font_path=font_path, 
+                                                  background_color="white", 
+                                                  width=400, 
+                                                  height=200,
+                                                  prefer_horizontal=0.9,
+                                                  colormap='Reds').generate(text)
+                            fig, ax = plt.subplots(figsize=(4, 2))
+                            ax.imshow(wordcloud, interpolation='bilinear')
+                            ax.axis("off")
+                            st.pyplot(fig)
+            
             if place.get('geometry') and place['geometry'].get('location'):
                 lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
                 
-                # 세션 상태 초기화
                 map_key = f"map_{i}_{place['place_id']}"
                 streetview_key = f"street_{i}_{place['place_id']}"
                 
@@ -324,7 +385,6 @@ if st.session_state.history:
                 
                 col1, col2 = st.columns(2)
                 
-                # 버튼 클릭 처리
                 if col1.button("🗺️ 지도 보기", key=f"btn_{map_key}"):
                     st.session_state[map_key] = not st.session_state[map_key]
                     st.rerun()
@@ -333,20 +393,19 @@ if st.session_state.history:
                     st.session_state[streetview_key] = not st.session_state[streetview_key]
                     st.rerun()
                 
-                # 지도와 로드뷰를 세로로 쌓아서 표시
                 if st.session_state[map_key] or st.session_state[streetview_key]:
                     st.markdown("**📍 위치 정보**")
                     
-                    # 지도 표시
                     if st.session_state[map_key]:
                         st.markdown("**🗺️ 지도**")
-                        map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}&zoom=16"
+                        # Google Maps Embed API를 사용하도록 URL 수정
+                        map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}"
                         st.components.v1.iframe(map_url, height=400, width=700)
                     
-                    # 로드뷰 표시
                     if st.session_state[streetview_key]:
                         st.markdown("**🚗 로드뷰**")
-                        streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}&heading=210&pitch=10"
+                        # Google Maps Street View Embed API를 사용하도록 URL 수정
+                        streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}"
                         st.components.v1.iframe(streetview_url, height=400, width=700)
             else:
                 st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")

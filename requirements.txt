@@ -5,3 +5,6 @@ langgraph
 langchain
 python-dotenv
 plotly
+wordcloud
+konlpy
+matplotlib
