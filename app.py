@@ -18,6 +18,9 @@ import io
 # 환경변수 로드
 load_dotenv()
 
+# 워드클라우드 폰트 경로 (프로젝트 상대 경로)
+font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'NotoSansKR-Regular.ttf')
+
 st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="centered")
 
 # 세션 상태 변수 초기화
@@ -342,8 +345,6 @@ if st.session_state.history:
                         st.markdown("#### ✅ 긍정 키워드")
                         text = " ".join(place['positive_keywords'])
                         if text:
-                            # 폰트 경로 설정 (예시: 윈도우 환경)
-                            font_path = "C:/Windows/Fonts/malgun.ttf"
                             wordcloud = WordCloud(font_path=font_path, 
                                                   background_color="white", 
                                                   width=400, 
@@ -360,7 +361,6 @@ if st.session_state.history:
                         st.markdown("#### ❌ 부정 키워드")
                         text = " ".join(place['negative_keywords'])
                         if text:
-                            font_path = "C:/Windows/Fonts/malgun.ttf"
                             wordcloud = WordCloud(font_path=font_path, 
                                                   background_color="white", 
                                                   width=400, 
