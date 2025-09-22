@@ -206,14 +206,20 @@ graph.add_edge("analyze_reviews", END)
 agent = graph.compile()
 
 # Streamlit UI
-st.title("🗺️ 장소성 기반 공간 정량 평가 시스템 ")
-query = st.text_input("🔍 평가하고자 하는 장소의 감성적, 기능적 속성을 입력해주세요.", placeholder="예: 신촌 카페, 종로구 맛집")
+st.title("장소성 요인 기반 공간 정량 평가 도구")
 
-if st.button("장소성 분석하기"):
+st.markdown("분석할 공간의 위치와 감성/기능적 특성을 입력하십시오.  \n"
+            "<span style='color:gray'>(예: 신촌 조용한 카페, 종로구 전통적인 음식점, 마포구 산책로 공원)</span>", 
+            unsafe_allow_html=True)
+
+query = st.text_input("", placeholder="예: 신촌 조용한 카페")
+
+
+if st.button("장소성 정량 분석"):
     if not query.strip():
         st.warning("장소를 입력해주세요.")
     else:
-        with st.spinner("리뷰를 분석하여 공간을 평가하는 중..."):
+        with st.spinner("사용자 리뷰 데이터를 기반으로 장소성 요인을 정량 평가하는 중..."):
             result = agent.invoke({"query": query, "places": [], "answer": ""})
             places = result.get('places', [])
             st.session_state.history.append((query, places))
@@ -223,7 +229,7 @@ if st.button("장소성 분석하기"):
 if st.session_state.history:
     latest_query, latest_places = st.session_state.history[-1]
     st.markdown(f"---")
-    st.markdown(f"### 🔍 '{latest_query}'에 대한 분석 결과")
+    st.markdown(f"### '{latest_query}'에 대한 장소성 평가 결과")
 
     for i, place in enumerate(latest_places):
         with st.container(border=True):
