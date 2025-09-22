@@ -12,14 +12,57 @@ from dotenv import load_dotenv
 import json
 import re
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
 import io
+
+# 폰트 경로 캐싱
+@st.cache_resource(show_spinner=False)
+def get_font_path():
+    return os.path.join(os.path.dirname(__file__), 'fonts', 'NotoSansKR-Regular.ttf')
+
+font_path = get_font_path()
+
+# 워드클라우드 이미지 캐싱 (PIL 이미지 반환)
+@st.cache_data(show_spinner=False)
+def generate_wordcloud(
+    text: str,
+    font_path: str,
+    colormap: str = "Greens",
+    width: int = 600,
+    height: int = 300,
+    scale: int = 2,
+    max_words: int = 180,
+    prefer_horizontal: float = 0.9,
+    collocations: bool = True,
+    normalize_plurals: bool = False,
+    relative_scaling: float = 0.35,
+    min_font_size: int = 8,
+    max_font_size: int = 90,
+    random_state: int = 42,
+):
+    if not text or not text.strip():
+        return None
+    wc = WordCloud(
+        font_path=font_path,
+        background_color="white",
+        width=width,
+        height=height,
+        scale=scale,
+        max_words=max_words,
+        prefer_horizontal=prefer_horizontal,
+        colormap=colormap,
+        collocations=collocations,
+        normalize_plurals=normalize_plurals,
+        relative_scaling=relative_scaling,
+        min_font_size=min_font_size,
+        max_font_size=max_font_size,
+        random_state=random_state,
+    ).generate(text)
+    return wc.to_image()
 
 # 환경변수 로드
 load_dotenv()
 
-# 워드클라우드 폰트 경로 (프로젝트 상대 경로)
-font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'NotoSansKR-Regular.ttf')
+# 워드클라우드 폰트 경로 (cache_resource 사용)
 
 st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="centered")
 
@@ -100,9 +143,9 @@ def analyze_reviews(state: AgentState):
         state.places = []
     place_infos = []
     new_score_structure = {
-        "물리적 환경": {"심미성": None, "형태성": None, "감각적 경험": None, "고유성": None},
+        "물리적 환경": {"심미성": None, "형태성": None, "감각적 경험": None, "접근성": None},
         "사회적 상호작용": {"활동성": None, "사회성": None, "참여성": None},
-        "개인적/문화적 의미": {"기억/경험": None, "정체성/애착": None, "문화적 맥락": None}
+        "개인적/문화적 의미": {"고유성": None, "기억/경험": None, "정체성/애착": None, "문화적 맥락": None}
     }
 
     for place in state.places:
@@ -122,65 +165,66 @@ def analyze_reviews(state: AgentState):
         negative_keywords = []
 
         if review_text.strip():
-            # LLM을 통해 긍정/부정 키워드 추출 프롬프트 수정
-            keyword_prompt = f"""다음 리뷰를 분석하여 '장소' 또는 '장소성'과 관련된 긍정적 키워드와 부정적 키워드 각각 10개씩 추출하고, 반드시 아래 JSON 형식으로만 응답하세요.
-            ### 리뷰:
-            {review_text}
-            ### 응답 형식:
-            {{"positive_keywords": ["키워드1", "키워드2"], "negative_keywords": ["키워드1", "키워드2"]}}"""
+            unified_prompt = f"""다음 리뷰들을 바탕으로 장소를 분석하여 한 번에 JSON으로만 응답하세요. 한국어로 작성합니다.
+            1) positive_keywords: 장소/장소성 관련 긍정 키워드 최대 10개 (단어만)
+            2) negative_keywords: 장소/장소성 관련 부정 키워드 최대 10개 (단어만)
+            3) summary: 전반적 분위기, 실내 인테리어/ 공간 특성, 주요 경험, 긍/부정 피드백 중심 5~8문장 요약
+            4) scores: 아래 구조와 키를 그대로 사용하며 각 항목은 0.0~1.0 실수. 근거 부족 시 0.5
 
-            try:
-                keyword_response = client.chat.completions.create(
-                    model="gpt-4o", messages=[{"role": "user", "content": keyword_prompt}], response_format={"type": "json_object"}
-                )
-                parsed_keywords = json.loads(keyword_response.choices[0].message.content)
-                positive_keywords = parsed_keywords.get("positive_keywords", [])
-                negative_keywords = parsed_keywords.get("negative_keywords", [])
-            except Exception as e:
-                print(f"키워드 추출 중 오류 발생: {e}")
-            
-            summary_prompt = f"다음 리뷰들을 종합하여 장소의 전반적인 분위기, 건축 및 실내 공간 디자인 특성, 방문객들의 주요 경험, 긍정적 및 부정적 피드백을 중심으로 요약해줘:\n\n{review_text}\n\n요약:"
-            try:
-                completion = client.chat.completions.create(
-                    model="gpt-4o", messages=[{"role": "user", "content": summary_prompt}], max_tokens=400
-                )
-                summary = completion.choices[0].message.content.strip() or "리뷰 내용이 충분하지 않아 요약이 어렵습니다."
-            except Exception as e:
-                summary = f"요약 생성 중 오류 발생: {e}"
-
-            scoring_prompt = f"""다음 리뷰를 '장소성' 관점에서 분석하여 각 세부 지표를 0.0부터 1.0 사이의 숫자로 평가하세요. 판단 근거가 부족하면 0.5로 평가하고, 평가는 반드시 아래에 제시된 JSON 구조와 키를 그대로 사용해야 합니다. 다른 텍스트는 절대 포함하지 마세요.
-            ### 평가 지표 정의:
+            ### 평가 지표 정의
             **1. 물리적 환경 (Physical Setting): 공간의 물리적 디자인과 특성**
             - **심미성**: 인테리어, 조명, 가구 등 시각적인 아름다움과 분위기.
             - **형태성**: 공간의 구조, 개방감, 좌석 배치 등 공간의 물리적 구성.
             - **감각적 경험**: 배경 음악, 향기, 식기의 질감 등 오감을 자극하는 요소.
-            - **고유성**: 다른 곳과 차별화되는 독특한 디자인, 컨셉, 상징적 요소.
+            - **접근성**: 공간의 접근성, 장소를 쉽고 안전하게 찾아오고 이용할 수 있는 정도.
             **2. 사회적 상호작용 (Social Interaction): 공간 내에서의 활동과 관계**
             - **활동성**: 대화, 작업, 휴식 등 다양한 활동이 이루어지는 정도.
             - **사회성**: 다른 사람들과 자연스럽게 어울리거나 교류할 수 있는 분위기.
             - **참여성**: 이벤트, 오픈 키친, 클래스 등 고객이 참여할 수 있는 요소.
             **3. 개인적/문화적 의미 (Personal/Cultural Meaning): 공간과 맺는 정서적, 문화적 관계**
+            - **고유성**: 다른 곳과 차별화되는 독특한 디자인, 컨셉, 상징적 요소.
             - **기억/경험**: 특별한 추억이나 의미 있는 경험을 제공하는 정도.
             - **정체성/애착**: 방문객이 자신의 취향이나 정체성과 연결하며 애착을 느끼게 하는 정도.
             - **문화적 맥락**: 지역의 역사, 문화적 스토리를 반영하고 있는 정도.
-            ### 리뷰:
+
+            ### 리뷰
             {review_text}
-            ### 응답 형식 (오직 JSON 형식으로만 응답):
-            {{"물리적 환경": {{"심미성": 0.8, "형태성": 0.7, "감각적 경험": 0.6, "고유성": 0.9}},"사회적 상호작용": {{"활동성": 0.7, "사회성": 0.6, "참여성": 0.4}},"개인적/문화적 의미": {{"기억/경험": 0.8, "정체성/애착": 0.9, "문화적 맥락": 0.5}}}}"""
+
+            ### 응답 형식 (JSON만)
+            {{
+              "positive_keywords": ["키워드1", "키워드2"],
+              "negative_keywords": ["키워드1", "키워드2"],
+              "summary": "요약 문장",
+              "scores": {{
+                "물리적 환경": {{"심미성": 0.5, "형태성": 0.5, "감각적 경험": 0.5, "접근성": 0.5}},
+                "사회적 상호작용": {{"활동성": 0.5, "사회성": 0.5, "참여성": 0.5}},
+                "개인적/문화적 의미": {{"고유성": 0.5, "기억/경험": 0.5, "정체성/애착": 0.5, "문화적 맥락": 0.5}}
+              }}
+            }}
+            """
 
             try:
-                score_response = client.chat.completions.create(
-                    model="gpt-4o", messages=[{"role": "user", "content": scoring_prompt}], response_format={"type": "json_object"}
+                unified_response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": unified_prompt}],
+                    response_format={"type": "json_object"}
                 )
-                parsed_scores = json.loads(score_response.choices[0].message.content)
+                parsed = json.loads(unified_response.choices[0].message.content)
+
+                positive_keywords = parsed.get("positive_keywords", []) or []
+                negative_keywords = parsed.get("negative_keywords", []) or []
+                summary = (parsed.get("summary") or "").strip() or "리뷰 내용이 충분하지 않아 요약이 어렵습니다."
+
+                parsed_scores_root = parsed.get("scores", {}) if isinstance(parsed.get("scores", {}), dict) else {}
                 for main_key, sub_dict in new_score_structure.items():
-                    if main_key in parsed_scores and isinstance(parsed_scores[main_key], dict):
+                    src_main = parsed_scores_root.get(main_key, {})
+                    if isinstance(src_main, dict):
                         for sub_key in sub_dict:
-                            value = parsed_scores[main_key].get(sub_key)
+                            value = src_main.get(sub_key)
                             if isinstance(value, (int, float)):
                                 scores[main_key][sub_key] = float(value)
             except Exception as e:
-                print(f"JSON 파싱 또는 API 오류: {e}")
+                print(f"통합 분석 중 오류 발생: {e}")
 
         place_infos.append({
             'name': place.get('name', '이름 없음'), 
@@ -211,9 +255,7 @@ st.title("장소성 요인 기반 공간 정량 평가 도구")
 st.markdown("분석할 공간의 위치와 감성/기능적 특성을 입력하십시오.  \n"
             "<span style='color:gray'>(예: 신촌 조용한 카페, 종로구 전통적인 음식점, 마포구 산책로 공원)</span>", 
             unsafe_allow_html=True)
-
 query = st.text_input("", placeholder="예: 신촌 조용한 카페")
-
 
 if st.button("장소성 정량 분석"):
     if not query.strip():
@@ -305,7 +347,7 @@ if st.session_state.history:
                         font=dict(size=12)
                     )
                     
-                    st.plotly_chart(fig_sunburst, use_container_width=True)
+                    st.plotly_chart(fig_sunburst, use_container_width=True, key=f"sunburst_{i}_{place.get('place_id','')}")
                     
                 except Exception as e:
                     st.error(f"Sunburst 차트 생성 중 오류: {e}")
@@ -324,7 +366,7 @@ if st.session_state.history:
                             height=400,
                             title_text=f"{place['name']} 장소성 종합 평가"
                         )
-                        st.plotly_chart(fig_treemap, use_container_width=True)
+                        st.plotly_chart(fig_treemap, use_container_width=True, key=f"treemap_{i}_{place.get('place_id','')}")
                     except Exception as e2:
                         st.error(f"Treemap 차트 생성 중 오류: {e2}")
 
@@ -334,49 +376,36 @@ if st.session_state.history:
                     df = pd.DataFrame(list(main_scores.items()), columns=['분류', '점수'])
                     fig_bar = px.bar(df, x='분류', y='점수', color='분류', color_discrete_map=color_map, range_y=[0, 1], text_auto='.2f')
                     fig_bar.update_layout(showlegend=False, title_text="")
-                    st.plotly_chart(fig_bar, use_container_width=True)
+                    st.plotly_chart(fig_bar, use_container_width=True, key=f"bar_{i}_{place.get('place_id','')}")
             else:
                 st.warning("정량 평가 결과가 없습니다.")
 
-            # 워드 클라우드 시각화 추가
+            # 워드 클라우드 시각화 (원래 방식: 즉시 표시)
             if place.get('positive_keywords') or place.get('negative_keywords'):
                 st.markdown("---")
                 st.markdown("**📝 리뷰 키워드 분석**")
                 
                 col_pos, col_neg = st.columns(2)
                 
-                # 긍정 워드 클라우드
+                # 긍정 워드 클라우드 (캐시 + PIL 이미지)
                 if place.get('positive_keywords'):
                     with col_pos:
                         st.markdown("#### ✅ 긍정 키워드")
                         text = " ".join(place['positive_keywords'])
                         if text:
-                            wordcloud = WordCloud(font_path=font_path, 
-                                                  background_color="white", 
-                                                  width=400, 
-                                                  height=200,
-                                                  prefer_horizontal=0.9).generate(text)
-                            fig, ax = plt.subplots(figsize=(4, 2))
-                            ax.imshow(wordcloud, interpolation='bilinear')
-                            ax.axis("off")
-                            st.pyplot(fig)
+                            img = generate_wordcloud(text, font_path, colormap="Greens")
+                            if img is not None:
+                                st.image(img, use_container_width=True)
                 
-                # 부정 워드 클라우드
+                # 부정 워드 클라우드 (캐시 + PIL 이미지)
                 if place.get('negative_keywords'):
                     with col_neg:
                         st.markdown("#### ❌ 부정 키워드")
                         text = " ".join(place['negative_keywords'])
                         if text:
-                            wordcloud = WordCloud(font_path=font_path, 
-                                                  background_color="white", 
-                                                  width=400, 
-                                                  height=200,
-                                                  prefer_horizontal=0.9,
-                                                  colormap='Reds').generate(text)
-                            fig, ax = plt.subplots(figsize=(4, 2))
-                            ax.imshow(wordcloud, interpolation='bilinear')
-                            ax.axis("off")
-                            st.pyplot(fig)
+                            img = generate_wordcloud(text, font_path, colormap="Reds")
+                            if img is not None:
+                                st.image(img, use_container_width=True)
             
             if place.get('geometry') and place['geometry'].get('location'):
                 lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
