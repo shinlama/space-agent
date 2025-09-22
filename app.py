@@ -207,13 +207,13 @@ agent = graph.compile()
 
 # Streamlit UI
 st.title("🗺️ 장소성 기반 공간 정량 평가 시스템 ")
-query = st.text_input("🔍 평가하고 싶은 장소를 입력하세요", placeholder="예: 신촌 카페, 종로구 맛집")
+query = st.text_input("🔍 평가하고자 하는 장소의 감성적, 기능적 속성을 입력해주세요.", placeholder="예: 신촌 카페, 종로구 맛집")
 
 if st.button("장소성 분석하기"):
     if not query.strip():
-        st.warning("장소나 테마를 입력해주세요.")
+        st.warning("장소를 입력해주세요.")
     else:
-        with st.spinner("리뷰를 분석하여 장소성을 평가하는 중..."):
+        with st.spinner("리뷰를 분석하여 공간을 평가하는 중..."):
             result = agent.invoke({"query": query, "places": [], "answer": ""})
             places = result.get('places', [])
             st.session_state.history.append((query, places))
