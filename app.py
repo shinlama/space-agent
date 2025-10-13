@@ -295,8 +295,8 @@ def search_places(state: AgentState):
     if state.places is None:
         state.places = []
     try:
-        # 서울시청 기준(37.5665,126.9780) 반경 5km 검색
-        res = gmaps.places(query=state.query, language="ko", location="37.5665,126.9780", radius=5000)
+        # 서울시청 기준(37.5665,126.9780) 반경 10km 검색
+        res = gmaps.places(query=state.query, language="ko", location="37.5665,126.9780", radius=10000)
         state.places = res.get('results', [])[:5]
     except Exception as e:
         st.error(f"Google Maps 장소 검색 중 오류 발생: {e}")
