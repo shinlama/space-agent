@@ -8,3 +8,4 @@ plotly
 wordcloud
 konlpy
 matplotlib
+sentence_transformers
