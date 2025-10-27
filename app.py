@@ -2,7 +2,7 @@ import streamlit as st
 import googlemaps
 from openai import OpenAI
 from langgraph.graph import StateGraph, END
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import plotly.express as px
 import plotly.graph_objects as go
