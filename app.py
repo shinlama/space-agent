@@ -262,8 +262,16 @@ class AgentState(BaseModel):
     answer: Optional[str] = ""
 
 # 장소성 요인 임베딩 및 모델 로드 (Sentence-BERT)
+def _compute_factors_hash(path: str = "factors.json") -> str:
+    try:
+        with open(path, "rb") as f:
+            import hashlib
+            return hashlib.md5(f.read()).hexdigest()
+    except Exception:
+        return ""
+
 @st.cache_resource(show_spinner="임베딩 모델 로드 중...")
-def load_category_embeddings():
+def load_category_embeddings(factors_hash: str):
     try:
         # 한국어 문장 임베딩에 최적화된 모델 사용
         model = SentenceTransformer("jhgan/ko-sroberta-multitask")
@@ -290,7 +298,8 @@ def load_category_embeddings():
             
     return embeddings, model, score_structure
 
-category_embeddings, embed_model, new_score_structure_template = load_category_embeddings()
+factors_hash = _compute_factors_hash()
+category_embeddings, embed_model, new_score_structure_template = load_category_embeddings(factors_hash)
 
 @st.cache_resource(show_spinner="감성 분석 모델 로드 중...")
 def load_sentiment_model_tabularis():
@@ -502,11 +511,11 @@ if st.session_state.history:
                 values = []
                 colors = []
 
-                # 부드러운 파스텔톤 색상 맵
+                # 부드러운 파스텔톤 색상 맵 (factors.json 구조와 동일한 대분류 라벨)
                 color_map = {
-                    "물리적 환경": "rgb(173, 216, 230)",     # 연한 파란색 (Light Blue)
-                    "사회적 상호작용": "rgb(152, 251, 152)",   # 연한 연두색 (Light Lime Green)
-                    "개인적/문화적 의미": "rgb(255, 182, 193)" # 연한 분홍색 (Light Pink)
+                    "물리적 특성": "rgb(173, 216, 230)",     # 연한 파란색 (Light Blue)
+                    "활동적 특성": "rgb(152, 251, 152)",   # 연한 연두색 (Light Lime Green)
+                    "의미적 특성": "rgb(255, 182, 193)" # 연한 분홍색 (Light Pink)
                 }
 
                 # 루트 노드 추가 (전체 점수의 평균으로 설정)
