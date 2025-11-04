@@ -83,6 +83,131 @@ load_dotenv()
 
 st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="centered")
 
+# 의미 단위로 문장을 분리하는 함수 (OpenAI 기반)
+def semantic_split(text: str) -> list[str]:
+    """
+    OpenAI API를 사용해 의미 단위로 문장을 분리합니다.
+    """
+    try:
+        prompt = f"""
+        아래 리뷰 텍스트를 의미 단위(하나의 감정이나 평가를 담은 단락)로 분리하세요.
+        각 문장은 독립적인 판단이 가능한 단위여야 하며, 불필요한 접속사는 제거하세요.
+        출력은 JSON 리스트로만 작성하세요.
+
+        예시:
+        입력: "카페 분위기가 좋고 커피는 맛있지만 좌석이 좁아요."
+        출력: ["카페 분위기가 좋다.", "커피가 맛있다.", "좌석이 좁다."]
+
+        리뷰 텍스트:
+        {text}
+        """
+
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "semantic_split_schema",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "sentences": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                            }
+                        },
+                        "required": ["sentences"],
+                        "additionalProperties": False
+                    }
+                }
+            },
+            temperature=0
+        )
+        content = resp.choices[0].message.content
+        parsed = json.loads(content) if content else {"sentences": []}
+        if isinstance(parsed, list):
+            candidates = parsed
+        else:
+            candidates = parsed.get("sentences", [])
+        cleaned = [c.strip() for c in candidates if isinstance(c, str) and len(c.strip()) > 2]
+        if cleaned:
+            return cleaned
+    except Exception as e:
+        print(f"Semantic split error: {e}")
+        # 폴백은 아래 일반 분기에서 수행
+        pass
+    # 폴백: 문장부호 → 접속 표현 2단계 분할
+    fallback_units = []
+    for s in re.split(r'[.!?]\s*', text):
+        if not s or not s.strip():
+            continue
+        parts = re.split(r'(?:하지만|그러나|그런데|인데|지만|는데)', s)
+        for p in parts:
+            p = p.strip()
+            if len(p) > 2:
+                fallback_units.append(p)
+    return fallback_units
+
+
+# 캐시된 의미 분할 래퍼
+@st.cache_data(show_spinner=False)
+def cached_semantic_split(text: str) -> List[str]:
+    return semantic_split(text)
+
+
+# 캐시된 LLM 요약/키워드 추출 래퍼
+@st.cache_data(show_spinner=False)
+def cached_unified_summary(review_text: str):
+    try:
+        sample = review_text[:1200]
+        unified_prompt = f"""
+        다음 리뷰들을 바탕으로 장소를 분석하여 한 번에 결과만 JSON으로 응답하세요. 한국어로 작성합니다.
+        1) positive_keywords: 장소/장소성 관련 긍정 핵심 단어 최대 10개 (문자열 배열)
+        2) negative_keywords: 장소/장소성 관련 부정 핵심 단어 최대 10개 (문자열 배열)
+        3) summary: 전반적 분위기/공간 특성/주요 경험 중심의 5~8문장 요약 (문자열)
+
+        리뷰 텍스트는 다음과 같습니다. 정의 구간 안의 텍스트만 참고하세요:
+        ```
+        {sample}
+        ```
+        """
+        unified_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": unified_prompt}],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "unified_summary_schema",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "positive_keywords": {"type": "array", "items": {"type": "string"}},
+                            "negative_keywords": {"type": "array", "items": {"type": "string"}},
+                            "summary": {"type": "string"}
+                        },
+                        "required": ["positive_keywords", "negative_keywords", "summary"],
+                        "additionalProperties": False
+                    }
+                }
+            },
+            temperature=0
+        )
+        content = unified_response.choices[0].message.content
+        parsed = json.loads(content) if content else {"positive_keywords": [], "negative_keywords": [], "summary": ""}
+        return {
+            "positive_keywords": parsed.get("positive_keywords", []) or [],
+            "negative_keywords": parsed.get("negative_keywords", []) or [],
+            "summary": (parsed.get("summary") or "").strip() or "리뷰 내용이 충분하지 않아 LLM 요약이 어렵습니다."
+        }
+    except Exception as e:
+        print(f"LLM 요약/키워드 추출 중 오류 발생: {e}")
+        return {
+            "positive_keywords": [],
+            "negative_keywords": [],
+            "summary": "LLM 요약 실패. NLP 분석만 진행됨."
+        }
+
 # ----------------------------------------------------
 # 2. API 키 및 세션 상태 초기화
 # ----------------------------------------------------
@@ -167,123 +292,36 @@ def load_category_embeddings():
 
 category_embeddings, embed_model, new_score_structure_template = load_category_embeddings()
 
-# 감성 분석 모델 로드 (다중 폴백 로직 적용)
 @st.cache_resource(show_spinner="감성 분석 모델 로드 중...")
-def load_sentiment_model_with_fallback():
+def load_sentiment_model_tabularis():
     """
-    안정적 감성 분석 모델 로더.
-    1) Hugging Face에서 가능한 공개 모델들을 순차 시도
-    2) 모두 실패하면 OpenAI(또는 로컬 룰)로 폴백하는 함수 반환
-    반환값: callable(sentences: List[str]) -> List[dict(label: str, score: float, polarity: float)]
-    polarity는 -1.0 ~ 1.0 스케일의 연속값
+    공개 감정 분포형 모델 (tabularisai/multilingual-sentiment-analysis) 기반
+    - 출력: 0.0 ~ 1.0 연속 점수 (부정→긍정)
     """
-    # Hugging Face 경고 메시지 비활성화
-    transformers_logging.set_verbosity_error()
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    
-    # 후보 모델 리스트: 공개적으로 존재하거나 사용 흔한 모델들 (명시적 로드를 위한 모델 이름)
-    # monologg/koelectra-base-v3-discriminator-finetuned-nsmc는 이미 시도했고 실패율이 높았으므로 다른 안정적인 후보로 대체
-    hf_candidates = [
-        "monologg/koelectra-base-finetuned-nsmc",     # KoELECTRA 기반, NSMC fine-tuned (유력)
-        "daekeun-ml/koelectra-small-v3-nsmc",        # 작은 NSMC fine-tuned 모델 (빠름)
-        "WhitePeak/bert-base-cased-Korean-sentiment" # 커스텀 한국어 감성
-    ]
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+    import numpy as np
 
-    # try loading HF pipeline for each candidate
-    for model_name in hf_candidates:
-        try:
-            # 명시적 로드를 통해 안정성 확보
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            pipe = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, device=-1)
-            st.info(f"감성 모델 로드 성공: {model_name}")
-            
-            # 래퍼 함수: 문장 리스트를 받아 label, score, polarity 반환
-            def hf_sentiment(sentences: List[str]):
-                results = []
-                # HuggingFace pipeline은 batch로 처리하는 것이 효율적이지만, 여기서는 안정성을 위해 순차 처리하거나,
-                # pipeline이 자체적으로 처리하도록 단일 문장씩 호출 (안전한 방식)
-                raw_results = pipe(sentences) # pipeline이 내부적으로 문장 리스트를 받도록 수정
+    model_name = "tabularisai/multilingual-sentiment-analysis"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    pipe = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
+    weights = np.linspace(0, 1, 5)  # [0.0, 0.25, 0.5, 0.75, 1.0]
 
-                for r in raw_results:
-                    label = r.get("label", "")
-                    score = float(r.get("score", 0.0))
-                    
-                    # 다양한 label 형식에 대응하여 polarity (-1.0 ~ 1.0) 계산
-                    lab_lower = label.lower()
-                    polarity = 0.0
-                    
-                    # NSMC 기반 모델은 주로 LABEL_0(부정)/LABEL_1(긍정)을 반환
-                    if "label_1" in lab_lower or "positive" in lab_lower or "5" in lab_lower or "4" in lab_lower:
-                        # 긍정 확신도(score: 0.5~1.0) -> (극성: 0.0~1.0)
-                        polarity = max(-1.0, min(1.0, score * 2 - 1))
-                    elif "label_0" in lab_lower or "negative" in lab_lower or "1" in lab_lower or "2" in lab_lower:
-                        # 부정 확신도(score: 0.5~1.0) -> (극성: -1.0~0.0)
-                        polarity = -max(0.0, min(1.0, score * 2 - 1))
-                    else:
-                        # 중립 또는 알 수 없는 레이블인 경우
-                        polarity = (score - 0.5) * 2
+    def predict_score(sentences: List[str]):
+        if not sentences:
+            return []
+        results = pipe(sentences)
+        scores = []
+        for res in results:
+            probs = np.array([r['score'] for r in res])
+            score = float(np.dot(probs, weights))
+            scores.append(score)
+        return scores
 
-                    results.append({"label": label, "score": score, "polarity": float(polarity)})
-                
-                return results
+    return predict_score
 
-            return hf_sentiment
 
-        except Exception as e:
-            # 로드 실패시 다음 후보로 넘어감 (로그 남기기)
-            print(f"HuggingFace 모델 로드 실패: {model_name} -> {e}")
-            continue
-
-    # ============== HF 후보 모두 실패한 경우 폴백 ==============
-    st.warning("모든 Hugging Face 감성 모델 로드 실패. OpenAI 폴백(문장별 감성 API) 사용을 시도합니다.")
-
-    # OpenAI 폴백 함수: 문장 단위로 -1..1 polarity 반환
-    def openai_sentiment(sentences: List[str]):
-        results = []
-        
-        for s in sentences:
-            try:
-                # LLM에게 직접 -1.0 ~ 1.0 사이의 실수 값만 요청
-                prompt = (
-                    "한국어 문장의 감성(polarity)을 -1.0(매우 부정)에서 1.0(매우 긍정) 사이의 숫자로만 "
-                    f"답해주세요. 문장: \"{s}\" 예: -0.75, 0.0, 0.88"
-                )
-                resp = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=8,
-                )
-                text = resp.choices[0].message.content.strip()
-                
-                # 숫자만 파싱 시도
-                m = re.search(r"-?\d+(\.\d+)?", text)
-                if m:
-                    polarity = float(m.group(0))
-                    # 극성 점수 범위를 -1.0 ~ 1.0으로 강제
-                    polarity = max(-1.0, min(1.0, polarity))
-                    results.append({"label": "openai", "score": None, "polarity": polarity})
-                else:
-                    results.append({"label": "openai_parse_fail", "score": None, "polarity": 0.0})
-            except Exception as e:
-                print(f"OpenAI sentiment error: {e}")
-                results.append({"label": "openai_error", "score": None, "polarity": 0.0})
-        return results
-
-    # 룰 기반 최종 폴백 함수:
-    def rule_sentiment(sentences: List[str]):
-        # OpenAI도 실패하거나 키가 없는 경우, 모든 문장을 중립(0.0)으로 처리
-        st.warning("경고: OpenAI 감성 분석도 불가능하여 중립(0.5) 점수로 처리됩니다.")
-        return [{"label": "rule_neutral", "score": None, "polarity": 0.0} for _ in sentences]
-
-    # 우선 OpenAI 폴백을 반환하되, 사용자가 OPENAI 키를 설정했는지 확인
-    if st.session_state.get("openai_key"):
-        return openai_sentiment
-    else:
-        st.warning("OPENAI API 키가 설정되어 있지 않아 rule-based 중립 폴백을 사용합니다.")
-        return rule_sentiment
-
-sentiment_model = load_sentiment_model_with_fallback()
+sentiment_model = load_sentiment_model_tabularis()
 
 
 # ----------------------------------------------------
@@ -305,13 +343,13 @@ def search_places(state: AgentState):
     return state.dict()
 
 def analyze_reviews(state: AgentState):
-    """Sentence-BERT 기반 유사도 필터링 및 감성 분석으로 장소성 정량 평가"""
+    """Sentence-BERT + Tabularis 기반 감성 분석으로 장소성 정량 평가"""
     if state.places is None:
         state.places = []
 
     place_infos = []
     
-    # 유사도 임계값 설정 (실험적으로 조정 권장)
+    # 유사도 임계값 설정 (완화)
     SIMILARITY_THRESHOLD = 0.35
     
     for place in state.places:
@@ -332,37 +370,18 @@ def analyze_reviews(state: AgentState):
         
         # 장소성 정량 평가 (NLP 기반)
         if review_text.strip():
-            # 문장 단위로 분리 (마침표, 물음표, 느낌표 기준)
-            review_sentences = re.split(r'[.!?]\s*', review_text)
+            # OpenAI 기반 의미 단위 분리 (문서 전체를 입력) - 캐시 사용
+            review_units = cached_semantic_split(review_text)
+            if not review_units:
+                # 추가 방어: 폴백 분할 재실행 (캐시 사용)
+                review_units = cached_semantic_split(" ".join([r.get('text','') for r in reviews]))
             
             # 1. LLM을 사용하여 요약 및 워드클라우드 키워드 추출 (OpenAI API 사용)
             try:
-                unified_prompt = f"""다음 리뷰들을 바탕으로 장소를 분석하여 한 번에 JSON으로만 응답하세요. 한국어로 작성합니다.
-                1) positive_keywords: 장소/장소성 관련 긍정적인 **핵심 단어** 최대 10개
-                2) negative_keywords: 장소/장소성 관련 부정적인 **핵심 단어** 최대 10개
-                3) summary: 전반적 분위기, 공간 특성, 주요 경험 중심의 5~8문장 요약 (LLM이 담당)
-                
-                ### 리뷰
-                {review_text}
-
-                ### 응답 형식 (JSON만)
-                {{
-                  "positive_keywords": ["키워드1", "키워드2", ...],
-                  "negative_keywords": ["키워드1", "키워드2", ...],
-                  "summary": "요약 문장"
-                }}
-                """
-                unified_response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[{"role": "user", "content": unified_prompt}],
-                    response_format={"type": "json_object"}
-                )
-                parsed = json.loads(unified_response.choices[0].message.content)
-
-                positive_keywords = parsed.get("positive_keywords", []) or []
-                negative_keywords = parsed.get("negative_keywords", []) or []
-                summary = (parsed.get("summary") or "").strip() or "리뷰 내용이 충분하지 않아 LLM 요약이 어렵습니다."
-                
+                cached = cached_unified_summary(review_text)
+                positive_keywords = cached["positive_keywords"]
+                negative_keywords = cached["negative_keywords"]
+                summary = cached["summary"]
             except Exception as e:
                 print(f"LLM 요약/키워드 추출 중 오류 발생: {e}")
                 summary = "LLM 요약 실패. NLP 분석만 진행됨."
@@ -371,47 +390,43 @@ def analyze_reviews(state: AgentState):
 
             # 2. 장소성 세부 항목별 점수 산정 (SBERT + SA 기반)
             
-            # 장소성 세부 항목 이름: [관련 문장의 극성 점수 리스트]
+            # 장소성 세부 항목 이름: [관련 의미단위의 감성 점수 리스트]
             factor_sentiment_map = {f_name: [] for f_name in category_embeddings.keys()}
             
-            # 모든 문장에 대해 감성 분석을 일괄적으로 수행
-            sent_results = sentiment_model(review_sentences)
-            
-            # 감성 분석 결과와 문장을 매핑
-            processed_sentences = [{"sent": sent, "result": result} for sent, result in zip(review_sentences, sent_results)]
-            
-            for item in processed_sentences:
-                sent = item['sent']
-                result = item['result']
-                
-                if not sent.strip() or len(sent) < 5:
-                    continue
-                
-                try:
-                    sent_emb = embed_model.encode(sent, normalize_embeddings=True)
-                    
-                    polarity = result['polarity'] # 폴백 함수에서 이미 -1.0 ~ 1.0으로 변환된 값 사용
-                    
-                    # 11개 장소성 요인 각각에 대해 유사도 검사
-                    for f_name, f_emb in category_embeddings.items():
-                        sim = np.dot(sent_emb, f_emb) # 코사인 유사도
-                        
-                        if sim > SIMILARITY_THRESHOLD:
-                            factor_sentiment_map[f_name].append(polarity)
-                
-                except Exception as e:
-                    print(f"문장 분석 중 오류 발생: {e}, 문장: {sent}")
-                    continue
+            # 의미 단위별 감성 점수 계산 (0~1 연속값)
+            sentiment_scores = sentiment_model(review_units)
 
-            # 3. 항목별 최종 점수 계산 (정규화)
+            # 감성 분석 결과와 의미 단위를 매핑 (배치 임베딩 + 벡터화 유사도)
+            # 과도한 길이 방지: 의미 단위 상한
+            MAX_UNITS = 60
+            if len(review_units) > MAX_UNITS:
+                review_units = review_units[:MAX_UNITS]
+                sentiment_scores = sentiment_scores[:MAX_UNITS]
+
+            try:
+                unit_embs = embed_model.encode(review_units, normalize_embeddings=True)
+                # 요인 임베딩 행렬 구성 (순서 고정)
+                subcat_list = list(category_embeddings.keys())
+                factor_mat = np.stack([category_embeddings[s] for s in subcat_list], axis=0)
+                # 유사도 행렬: [num_units, num_subcats]
+                sim_mat = np.matmul(unit_embs, factor_mat.T)
+
+                for i, unit in enumerate(review_units):
+                    s_score = float(sentiment_scores[i])
+                    sims = sim_mat[i]
+                    for j, sim in enumerate(sims):
+                        if sim > SIMILARITY_THRESHOLD:
+                            f_name = subcat_list[j]
+                            factor_sentiment_map[f_name].append(s_score)
+            except Exception as e:
+                print(f"배치 임베딩/유사도 계산 오류: {e}")
+
+            # 3. 항목별 최종 점수 계산 (0~1 스케일 그대로 평균)
             for main_cat, subcats in scores.items():
                 for subcat in subcats.keys():
-                    polarities = factor_sentiment_map.get(subcat, [])
-                    
-                    if polarities:
-                        # (Polarity + 1) / 2 로 정규화: -1.0 -> 0.0, 0.0 -> 0.5, 1.0 -> 1.0
-                        avg_polarity_norm = np.mean([(p + 1) / 2 for p in polarities])
-                        scores[main_cat][subcat] = float(avg_polarity_norm)
+                    vals = factor_sentiment_map.get(subcat, [])
+                    if vals:
+                        scores[main_cat][subcat] = float(np.mean(vals))
                     else:
                         # 관련 문장이 없는 경우 중립 점수 (0.5) 부여
                         scores[main_cat][subcat] = 0.5
