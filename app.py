@@ -352,14 +352,14 @@ def search_places(state: AgentState):
     return state.dict()
 
 def analyze_reviews(state: AgentState):
-    """Sentence-BERT + Tabularis 기반 감성 분석으로 장소성 정량 평가"""
+    """SBERT + Sentiment 기반 정량 평가 + LLM 해석"""
     if state.places is None:
         state.places = []
 
     place_infos = []
     
-    # 유사도 임계값 설정 (완화)
     SIMILARITY_THRESHOLD = 0.35
+    ALPHA, BETA = 0.75, 0.25  # 유사도 비중 추가 상향
     
     for place in state.places:
         place_id = place.get("place_id")
@@ -367,80 +367,190 @@ def analyze_reviews(state: AgentState):
             continue
 
         details = gmaps.place(place_id=place_id, language="ko").get('result', {})
-        reviews = details.get('reviews', [])[:10] # 최대 10개 리뷰
-        review_text = "\n".join([review['text'] for review in reviews if review.get('text')])
+        reviews = details.get('reviews', [])[:10]
+        review_texts = [r['text'] for r in reviews if r.get('text')]
+        if not review_texts:
+            continue
 
+        # 1) 의미 단위 분리 (LLM 사용)
+        review_text = "\n".join(review_texts)
+        review_units = cached_semantic_split(review_text)
+        if not review_units:
+            review_units = cached_semantic_split(" ".join(review_texts))
+
+        # 2) SBERT + 감성모델 기반 점수 계산
+        factor_sentiments = {f: [] for f in category_embeddings.keys()}
+        # 리뷰 요약/키워드 (summary)와 점수 해설(explanation)은 분리 생성
+        summary = "리뷰 요약 생성 중 오류가 발생했습니다."
+        positive_keywords: List[str] = []
+        negative_keywords: List[str] = []
+
+        # 2-1) 리뷰 요약 및 키워드 추출 (summary 전용)
+        try:
+            cached = cached_unified_summary(review_text)
+            positive_keywords = cached.get("positive_keywords", []) or []
+            negative_keywords = cached.get("negative_keywords", []) or []
+            summary = cached.get("summary", "") or "리뷰 내용이 충분하지 않아 LLM 요약이 어렵습니다."
+        except Exception as e:
+            print(f"LLM 요약/키워드 추출 중 오류 발생: {e}")
+            summary = "LLM 요약 실패. NLP 분석만 진행됨."
+            positive_keywords, negative_keywords = [], []
+
+        # 감성(0~1) 스코어 및 배치 임베딩/유사도
+        sentiment_scores = sentiment_model(review_units)
+        unit_embs = embed_model.encode(review_units, normalize_embeddings=True)
+        subcat_list = list(category_embeddings.keys())
+        factor_mat = np.stack([category_embeddings[s] for s in subcat_list], axis=0)
+        sim_mat = np.matmul(unit_embs, factor_mat.T)
+
+        for i, unit in enumerate(review_units):
+            raw_sent = float(sentiment_scores[i]) if i < len(sentiment_scores) else 0.5
+            # 감성 보정: 하한 0.3 기준으로 추가 완화
+            sent_adj = np.clip((raw_sent - 0.3) / 0.7, 0, 1)
+            sims = sim_mat[i]
+            for j, sim in enumerate(sims):
+                # 유사도 보정: 0.3 기준으로 추가 완화 (더 많은 문장 포함)
+                sim_adj = np.clip((float(sim) - 0.3) / 0.5, 0, 1)
+                if sim_adj > 0:
+                    f_name = subcat_list[j]
+                    combined = ALPHA * sim_adj + BETA * sent_adj
+                    # 시그모이드: 중심 0.4, 기울기 2.2로 상한 확장
+                    score_scaled = 1 / (1 + np.exp(-2.2 * (combined - 0.4)))
+                    factor_sentiments[f_name].append(float(score_scaled))
+
+        # 3) 세부요인별 평균 점수 (정규화 포함)
         scores = json.loads(json.dumps(new_score_structure_template))
-        
-        # LLM 호출을 위한 키워드/요약 변수
-        summary = "분석 중..."
-        positive_keywords = [] # LLM이 추출한 단어
-        negative_keywords = [] # LLM이 추출한 단어
-        
-        # 장소성 정량 평가 (NLP 기반)
-        if review_text.strip():
-            # OpenAI 기반 의미 단위 분리 (문서 전체를 입력) - 캐시 사용
-            review_units = cached_semantic_split(review_text)
-            if not review_units:
-                # 추가 방어: 폴백 분할 재실행 (캐시 사용)
-                review_units = cached_semantic_split(" ".join([r.get('text','') for r in reviews]))
+        all_vals = []
+        for vals in factor_sentiments.values():
+            all_vals.extend(vals)
+        if all_vals:
+            vmin, vmax = float(np.min(all_vals)), float(np.max(all_vals))
+        else:
+            vmin, vmax = 0.5, 0.5
+
+        for main_cat, subcats in scores.items():
+            for subcat in subcats.keys():
+                vals = factor_sentiments.get(subcat, [])
+                if vals and vmax > vmin:
+                    raw = float(np.mean(vals))
+                    # 0.30~1.0 범위로 min-max 정규화 (하한 추가 완화)
+                    normed = 0.30 + 0.70 * ((raw - vmin) / (vmax - vmin + 1e-8))
+                    scores[main_cat][subcat] = float(np.clip(normed, 0.30, 1.0))
+                elif vals:
+                    scores[main_cat][subcat] = float(np.clip(vals[0], 0.30, 1.0))
+                else:
+                    scores[main_cat][subcat] = 0.5
+
+        # 4) LLM 기반 점수 검증 및 보정 (GPT-4o 추론)
+        corrected_scores = json.loads(json.dumps(scores))  # 보정 전 복사
+        correction_log = []
+        try:
+            sample_reviews = "\n".join(review_texts[:5])
             
-            # 1. LLM을 사용하여 요약 및 워드클라우드 키워드 추출 (OpenAI API 사용)
-            try:
-                cached = cached_unified_summary(review_text)
-                positive_keywords = cached["positive_keywords"]
-                negative_keywords = cached["negative_keywords"]
-                summary = cached["summary"]
-            except Exception as e:
-                print(f"LLM 요약/키워드 추출 중 오류 발생: {e}")
-                summary = "LLM 요약 실패. NLP 분석만 진행됨."
-                positive_keywords, negative_keywords = [], []
-
-
-            # 2. 장소성 세부 항목별 점수 산정 (SBERT + SA 기반)
+            # factors.json 정의 포함
+            with open("factors.json", "r", encoding="utf-8") as f:
+                factor_definitions = json.load(f)
             
-            # 장소성 세부 항목 이름: [관련 의미단위의 감성 점수 리스트]
-            factor_sentiment_map = {f_name: [] for f_name in category_embeddings.keys()}
+            validation_prompt = f"""
+당신은 장소성 평가 감사자입니다.
+입력된 점수는 SBERT + 감성 회귀모델로 산출된 값입니다.
+각 요인별 점수의 타당성을 **요인의 정의에 따라** 정확히 검토하세요.
+
+## 요인 정의 (반드시 참고)
+{json.dumps(factor_definitions, ensure_ascii=False, indent=2)}
+
+## 현재 점수
+{json.dumps(scores, ensure_ascii=False, indent=2)}
+
+## 리뷰 내용
+{sample_reviews}
+
+## 검토 규칙
+1. 각 요인의 정의와 키워드를 **정확히** 확인하세요.
+   예: "감각적 경험"은 음악, 향기, 질감 등 오감 자극 / "문화적 맥락"은 역사, 전통, 지역 배경
+2. 리뷰에서 해당 요인 정의에 맞는 언급이 있는데 점수가 낮거나, 언급이 없는데 점수가 높으면 delta 제안
+3. delta는 -0.3 ~ +0.3 범위
+4. 근거는 한 문장으로만 작성
+
+## 출력 형식 (JSON만)
+{{
+  "corrections": [
+    {{"factor": "쾌적성", "delta": 0.15, "reason": "청결, 화장실, 충전시설 긍정 언급 많음"}},
+    {{"factor": "감각적 경험", "delta": 0.12, "reason": "디저트 맛과 다양성 강조"}}
+  ]
+}}
+
+보정 불필요 시: {{"corrections": []}}
+"""
+            resp = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": validation_prompt}],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+            )
+            correction_result = json.loads(resp.choices[0].message.content)
+            corrections = correction_result.get("corrections", [])
             
-            # 의미 단위별 감성 점수 계산 (0~1 연속값)
-            sentiment_scores = sentiment_model(review_units)
+            print(f"[DEBUG] GPT-4o 응답: {correction_result}")  # 디버깅용
+            
+            # 보정 적용
+            for correction in corrections:
+                if isinstance(correction, dict):
+                    factor_name = correction.get("factor", "")
+                    delta = float(correction.get("delta", 0))
+                    reason = correction.get("reason", "")
+                    
+                    # 요인명 매칭 후 점수 보정
+                    for main_cat, subcats in corrected_scores.items():
+                        if factor_name in subcats:
+                            old_val = subcats[factor_name]
+                            new_val = np.clip(old_val + delta, 0.30, 1.0)
+                            corrected_scores[main_cat][factor_name] = float(new_val)
+                            correction_log.append({
+                                "factor": factor_name,
+                                "original": round(old_val, 2),
+                                "adjusted": round(new_val, 2),
+                                "delta": round(delta, 2),
+                                "reason": reason
+                            })
+                            break
+            
+            # 보정된 점수를 최종 점수로 사용
+            scores = corrected_scores
+            
+            if correction_log:
+                print(f"[INFO] {len(correction_log)}개 요인 보정됨")
+            else:
+                print(f"[INFO] 보정 필요 없음")
+            
+        except Exception as e:
+            print(f"[ERROR] LLM 점수 보정 중 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            correction_log = []
 
-            # 감성 분석 결과와 의미 단위를 매핑 (배치 임베딩 + 벡터화 유사도)
-            # 과도한 길이 방지: 의미 단위 상한
-            MAX_UNITS = 60
-            if len(review_units) > MAX_UNITS:
-                review_units = review_units[:MAX_UNITS]
-                sentiment_scores = sentiment_scores[:MAX_UNITS]
+        # 5) LLM 기반 해석(explanation) - 보정된 점수 기준
+        try:
+            explanation_prompt = f"""
+            아래는 SBERT + 감성 모델 기반 점수를 LLM이 검증·보정한 최종 장소성 점수입니다.
 
-            try:
-                unit_embs = embed_model.encode(review_units, normalize_embeddings=True)
-                # 요인 임베딩 행렬 구성 (순서 고정)
-                subcat_list = list(category_embeddings.keys())
-                factor_mat = np.stack([category_embeddings[s] for s in subcat_list], axis=0)
-                # 유사도 행렬: [num_units, num_subcats]
-                sim_mat = np.matmul(unit_embs, factor_mat.T)
+            {json.dumps(scores, ensure_ascii=False, indent=2)}
 
-                for i, unit in enumerate(review_units):
-                    s_score = float(sentiment_scores[i])
-                    sims = sim_mat[i]
-                    for j, sim in enumerate(sims):
-                        if sim > SIMILARITY_THRESHOLD:
-                            f_name = subcat_list[j]
-                            factor_sentiment_map[f_name].append(s_score)
-            except Exception as e:
-                print(f"배치 임베딩/유사도 계산 오류: {e}")
+            리뷰 내용을 참고해 어떤 요인이 왜 높거나 낮은지 간략히 설명하세요.
+            (4~6문장, 한국어)
+            리뷰:
+            {sample_reviews}
+            """
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": explanation_prompt}],
+                temperature=0.2,
+            )
+            explanation = resp.choices[0].message.content.strip()
+        except Exception as e:
+            explanation = f"LLM 해석 실패: {e}"
 
-            # 3. 항목별 최종 점수 계산 (0~1 스케일 그대로 평균)
-            for main_cat, subcats in scores.items():
-                for subcat in subcats.keys():
-                    vals = factor_sentiment_map.get(subcat, [])
-                    if vals:
-                        scores[main_cat][subcat] = float(np.mean(vals))
-                    else:
-                        # 관련 문장이 없는 경우 중립 점수 (0.5) 부여
-                        scores[main_cat][subcat] = 0.5
-        
-        # 최종 정보 리스트에 추가
+        # 6) 결과 저장
         place_infos.append({
             'name': place.get('name', '이름 없음'), 
             'summary': summary,
@@ -450,6 +560,8 @@ def analyze_reviews(state: AgentState):
             'place_id': place.get('place_id', ''),
             'positive_keywords': positive_keywords, 
             'negative_keywords': negative_keywords, 
+            'explanation': explanation,
+            'corrections': correction_log,  # 보정 내역 추가
         })
 
     state.places = place_infos
@@ -500,6 +612,36 @@ if st.session_state.history:
             st.subheader(place.get('name', '이름 정보 없음'))
             st.markdown(f"**📍 주소:** {place.get('address', '주소 정보 없음')}")
             st.markdown(f"**📝 리뷰 요약 (LLM 생성):** {place.get('summary', '요약 정보 없음')}")
+            if place.get('explanation'):
+                st.markdown(f"**🔎 점수 해설:** {place.get('explanation')}")
+            
+            # LLM 보정 내역 표시
+            corrections = place.get('corrections', [])
+            if corrections:
+                st.markdown("---")
+                st.markdown("**⚙️ LLM 점수 보정 내역**")
+                st.caption("GPT-4o가 리뷰 내용을 검토하여 조정한 항목입니다.")
+                
+                correction_df = pd.DataFrame(corrections)
+                correction_df = correction_df.rename(columns={
+                    "factor": "요인",
+                    "original": "원점수",
+                    "adjusted": "보정점수",
+                    "delta": "변화량",
+                    "reason": "보정 근거"
+                })
+                st.dataframe(
+                    correction_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "요인": st.column_config.TextColumn(width="small"),
+                        "원점수": st.column_config.NumberColumn(format="%.2f", width="small"),
+                        "보정점수": st.column_config.NumberColumn(format="%.2f", width="small"),
+                        "변화량": st.column_config.NumberColumn(format="%+.2f", width="small"),
+                        "보정 근거": st.column_config.TextColumn(width="large"),
+                    }
+                )
 
             scores = place.get('scores')
             if scores:
