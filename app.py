@@ -1789,7 +1789,8 @@ with tab2:
         st.markdown("---")
         st.subheader("5️⃣ H1 검증: 접근성 점수 vs 대중교통 도보 시간")
         
-        transit_df = st.session_state['transit_df']
+        # 결측치 제거
+        transit_df = st.session_state['transit_df'].dropna(subset=['walk_time_minutes', 'accessibility_score'])
         
         st.markdown("""
         **가설 H1**: "최근접 대중교통 도보 시간이 짧을수록 접근성 점수가 높다."
@@ -1798,15 +1799,26 @@ with tab2:
         (도보 시간 ↓ → 접근성 점수 ↑)
         """)
         
-        # 상관관계 계산
-        correlation, p_value = stats.pearsonr(
-            transit_df['walk_time_minutes'], 
-            transit_df['accessibility_score']
-        )
-        
+        # ① 정규성 검정
+        shapiro_walk = stats.shapiro(transit_df['walk_time_minutes'])
+        shapiro_acc = stats.shapiro(transit_df['accessibility_score'])
+        is_normal = shapiro_walk.pvalue > 0.05 and shapiro_acc.pvalue > 0.05
+    
+        # ② 상관계수 계산 (정규분포면 Pearson, 아니면 Spearman)
+        if is_normal:
+            corr_type = "Pearson"
+            correlation, p_value = stats.pearsonr(
+                transit_df['walk_time_minutes'], transit_df['accessibility_score']
+            )
+        else:
+            corr_type = "Spearman"
+            correlation, p_value = stats.spearmanr(
+                transit_df['walk_time_minutes'], transit_df['accessibility_score']
+            )
+    
         col_stat1, col_stat2 = st.columns(2)
         with col_stat1:
-            st.metric("Pearson 상관계수 (r)", f"{correlation:.3f}")
+            st.metric(f"{corr_type} 상관계수 (r)", f"{correlation:.3f}")
         with col_stat2:
             st.metric("p-value", f"{p_value:.4f}")
         
