@@ -81,7 +81,7 @@ def generate_wordcloud(text: str, font_path: str, colormap: str = "Greens", **kw
 # 환경변수 로드
 load_dotenv()
 
-st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="centered")
+st.set_page_config(page_title="Seoul Place Recommendation", page_icon="🗺️", layout="wide")
 
 # 의미 단위로 문장을 분리하는 함수 (OpenAI 기반)
 def semantic_split(text: str) -> list[str]:
@@ -361,6 +361,10 @@ def analyze_reviews(state: AgentState):
     SIMILARITY_THRESHOLD = 0.35
     ALPHA, BETA = 0.75, 0.25  # 유사도 비중 추가 상향
     
+    # factors.json은 한 번만 로드 (속도 개선)
+    with open("factors.json", "r", encoding="utf-8") as f:
+        factor_definitions = json.load(f)
+    
     for place in state.places:
         place_id = place.get("place_id")
         if not place_id:
@@ -418,7 +422,33 @@ def analyze_reviews(state: AgentState):
                     score_scaled = 1 / (1 + np.exp(-2.2 * (combined - 0.4)))
                     factor_sentiments[f_name].append(float(score_scaled))
 
-        # 3) 세부요인별 평균 점수 (정규화 포함)
+        # 3) 키워드 기반 부스팅 (임베딩 한계 보완)
+        keyword_boosts = {
+            "고유성": ["독특", "유니크", "차별", "컨셉", "테마", "특색", "개성", "특별한", "아이덴티티"],
+            "문화적 맥락": ["전통", "역사", "년", "오래", "옛", "고풍", "문화", "배경", "스토리"],
+            "기억/경험": ["추억", "감동", "인상", "특별", "잊을 수", "기억", "회상"],
+            "심미성": ["예쁘", "아름", "멋지", "세련", "야경", "뷰", "인테리어", "디자인", "조명", "아늑"],
+            "감각적 경험": ["음악", "향", "냄새", "질감", "맛", "오감", "감각"],
+            "쾌적성": ["청결", "깨끗", "밝", "통풍", "화장실", "위생", "정돈"],
+            "접근성": ["가깝", "접근", "역", "정류장", "도보", "분 거리", "편리"],
+            "활동성": ["대화", "업무", "작업", "회의", "공부", "활동"],
+            "사회성": ["친절", "서비스", "교류", "소통", "친근"],
+            "형태성": ["넓", "공간", "구조", "배치", "개방", "동선"],
+        }
+        
+        # 키워드 매칭으로 직접 고점수 할당
+        for factor, keywords in keyword_boosts.items():
+            matched_kws = [kw for kw in keywords if kw in review_text]
+            match_count = len(matched_kws)
+            if match_count > 0:
+                # 매칭된 키워드 수에 비례해 0.75~0.95 할당
+                boosted_score = min(0.75 + (match_count * 0.05), 0.95)
+                # 여러 번 추가해 평균에서도 높은 가중치 유지
+                for _ in range(3):
+                    factor_sentiments[factor].append(boosted_score)
+                print(f"[BOOST] {factor}: {match_count}개 키워드 매칭 ({', '.join(matched_kws[:3])}) → {boosted_score:.2f}")
+        
+        # 3-1) 세부요인별 평균 점수 (정규화 포함)
         scores = json.loads(json.dumps(new_score_structure_template))
         all_vals = []
         for vals in factor_sentiments.values():
@@ -433,7 +463,7 @@ def analyze_reviews(state: AgentState):
                 vals = factor_sentiments.get(subcat, [])
                 if vals and vmax > vmin:
                     raw = float(np.mean(vals))
-                    # 0.30~1.0 범위로 min-max 정규화 (하한 추가 완화)
+                    # 0.30~1.0 범위로 min-max 정규화
                     normed = 0.30 + 0.70 * ((raw - vmin) / (vmax - vmin + 1e-8))
                     scores[main_cat][subcat] = float(np.clip(normed, 0.30, 1.0))
                 elif vals:
@@ -445,11 +475,7 @@ def analyze_reviews(state: AgentState):
         corrected_scores = json.loads(json.dumps(scores))  # 보정 전 복사
         correction_log = []
         try:
-            sample_reviews = "\n".join(review_texts[:5])
-            
-            # factors.json 정의 포함
-            with open("factors.json", "r", encoding="utf-8") as f:
-                factor_definitions = json.load(f)
+            sample_reviews = "\n".join(review_texts[:3])  # 리뷰 5개→3개로 축소
             
             validation_prompt = f"""
 당신은 장소성 평가 감사자입니다.
@@ -483,10 +509,11 @@ def analyze_reviews(state: AgentState):
 보정 불필요 시: {{"corrections": []}}
 """
             resp = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o",  # 보정은 정확한 추론이 필요하므로 gpt-4o 사용
                 messages=[{"role": "user", "content": validation_prompt}],
                 response_format={"type": "json_object"},
                 temperature=0.1,
+                max_tokens=500,  # 충분한 토큰으로 정확한 보정
             )
             correction_result = json.loads(resp.choices[0].message.content)
             corrections = correction_result.get("corrections", [])
@@ -529,22 +556,25 @@ def analyze_reviews(state: AgentState):
             traceback.print_exc()
             correction_log = []
 
-        # 5) LLM 기반 해석(explanation) - 보정된 점수 기준
+        # 5) LLM 기반 해석(explanation) - 보정된 점수 기준 (간략화)
         try:
+            # 대표 점수만 추출 (상위 3개 + 하위 2개)
+            flat_scores = [(f"{mc}/{sc}", v) for mc, subs in scores.items() for sc, v in subs.items()]
+            flat_scores.sort(key=lambda x: x[1], reverse=True)
+            top_factors = flat_scores[:3]
+            low_factors = flat_scores[-2:]
+            
             explanation_prompt = f"""
-            아래는 SBERT + 감성 모델 기반 점수를 LLM이 검증·보정한 최종 장소성 점수입니다.
-
-            {json.dumps(scores, ensure_ascii=False, indent=2)}
-
-            리뷰 내용을 참고해 어떤 요인이 왜 높거나 낮은지 간략히 설명하세요.
-            (4~6문장, 한국어)
-            리뷰:
-            {sample_reviews}
-            """
+아래 점수에서 상위/하위 요인의 이유를 3문장으로 설명하세요.
+상위: {", ".join([f"{f}({v:.2f})" for f, v in top_factors])}
+하위: {", ".join([f"{f}({v:.2f})" for f, v in low_factors])}
+리뷰: {sample_reviews[:500]}
+"""
             resp = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": explanation_prompt}],
                 temperature=0.2,
+                max_tokens=300,  # 토큰 제한
             )
             explanation = resp.choices[0].message.content.strip()
         except Exception as e:
@@ -586,8 +616,24 @@ agent = graph.compile()
 
 st.title("장소성 요인 기반 공간 정량 평가 도구")
 
-st.markdown("분석할 공간의 위치와 감성/기능적 특성을 입력하십시오.  \n"
-             "<span style='color:gray'>(예: 신촌 조용한 카페, 종로구 전통적인 음식점, 마포구 산책로 공원)</span>", 
+# CSS로 텍스트 색상 강제 (가독성 개선)
+st.markdown("""
+<style>
+    .stMarkdown, .stCaption, p, div {
+        color: #000000 !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #000000 !important;
+    }
+    /* 예시 텍스트는 회색 유지 */
+    .example-text {
+        color: #888888 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("분석할 공간의 위치와 감성/기능적 특성을 입력하십시오. "
+             "<span class='example-text'>(예: 신촌 조용한 카페, 종로구 전통적인 음식점, 마포구 산책로 공원)</span>", 
              unsafe_allow_html=True)
 query = st.text_input("", placeholder="예: 신촌 조용한 카페")
 
@@ -611,43 +657,22 @@ if st.session_state.history:
         with st.container(border=True):
             st.subheader(place.get('name', '이름 정보 없음'))
             st.markdown(f"**📍 주소:** {place.get('address', '주소 정보 없음')}")
-            st.markdown(f"**📝 리뷰 요약 (LLM 생성):** {place.get('summary', '요약 정보 없음')}")
-            if place.get('explanation'):
-                st.markdown(f"**🔎 점수 해설:** {place.get('explanation')}")
             
-            # LLM 보정 내역 표시
-            corrections = place.get('corrections', [])
-            if corrections:
-                st.markdown("---")
-                st.markdown("**⚙️ LLM 점수 보정 내역**")
-                st.caption("GPT-4o가 리뷰 내용을 검토하여 조정한 항목입니다.")
-                
-                correction_df = pd.DataFrame(corrections)
-                correction_df = correction_df.rename(columns={
-                    "factor": "요인",
-                    "original": "원점수",
-                    "adjusted": "보정점수",
-                    "delta": "변화량",
-                    "reason": "보정 근거"
-                })
-                st.dataframe(
-                    correction_df,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "요인": st.column_config.TextColumn(width="small"),
-                        "원점수": st.column_config.NumberColumn(format="%.2f", width="small"),
-                        "보정점수": st.column_config.NumberColumn(format="%.2f", width="small"),
-                        "변화량": st.column_config.NumberColumn(format="%+.2f", width="small"),
-                        "보정 근거": st.column_config.TextColumn(width="large"),
-                    }
-                )
-
+            # 2열 레이아웃: 왼쪽(시각화), 오른쪽(보정/해설)
+            col_left, col_right = st.columns([1.2, 1])
+            
             scores = place.get('scores')
-            if scores:
-                st.markdown(f"**📊 장소성 종합 평가 (NLP 기반)**")
+            
+            # ========== 왼쪽 열: 리뷰 요약 + 시각화 ==========
+            with col_left:
+                st.markdown(f"**📝 리뷰 요약**")
+                st.markdown(place.get('summary', '요약 정보 없음'))
+                
+            with col_left:
+                if scores:
+                    st.markdown(f"**📊 장소성 종합 평가**")
 
-                # Sunburst 차트 데이터 생성
+                    # Sunburst 차트 데이터 생성
                 labels = []
                 parents = []
                 values = []
@@ -715,83 +740,120 @@ if st.session_state.history:
                     st.error(f"Sunburst 차트 생성 중 오류: {e}")
                     pass
 
-                st.markdown(f"**📊 장소성 대분류 평가**")
-                main_scores = {main: round(sum(filter(None, sub.values())) / len(sub), 2) for main, sub in scores.items() if any(s is not None for s in sub.values())}
-                if main_scores:
-                    df = pd.DataFrame(list(main_scores.items()), columns=['분류', '점수'])
-                    fig_bar = px.bar(df, x='분류', y='점수', color='분류', color_discrete_map=color_map, range_y=[0, 1], text_auto='.2f')
-                    fig_bar.update_layout(showlegend=False, title_text="")
-                    st.plotly_chart(fig_bar, use_container_width=True, key=f"bar_{i}_{place.get('place_id','')}")
-                else:
-                    st.warning("정량 평가 결과가 없습니다.")
+                    st.markdown(f"**📊 장소성 대분류 평가**")
+                    main_scores = {main: round(sum(filter(None, sub.values())) / len(sub), 2) for main, sub in scores.items() if any(s is not None for s in sub.values())}
+                    if main_scores:
+                        df = pd.DataFrame(list(main_scores.items()), columns=['분류', '점수'])
+                        fig_bar = px.bar(df, x='분류', y='점수', color='분류', color_discrete_map=color_map, range_y=[0, 1], text_auto='.2f')
+                        fig_bar.update_layout(showlegend=False, title_text="")
+                        st.plotly_chart(fig_bar, use_container_width=True, key=f"bar_{i}_{place.get('place_id','')}")
+                    else:
+                        st.warning("정량 평가 결과가 없습니다.")
 
-                # 워드 클라우드 시각화 (LLM 추출 키워드 사용)
-                if place.get('positive_keywords') or place.get('negative_keywords'):
-                    st.markdown("---")
-                    st.markdown("**📝 리뷰 키워드 분석 (LLM 추출)**")
+            
+            # ========== 오른쪽 열: LLM 보정 + 해설 ==========
+            with col_right:
+                # LLM 보정 내역 표시
+                corrections = place.get('corrections', [])
+                if corrections:
+                    st.markdown("**⚙️ LLM 점수 보정**")
+                    st.caption("GPT-4o 검증 결과")
                     
-                    col_pos, col_neg = st.columns(2)
+                    correction_df = pd.DataFrame(corrections)
+                    correction_df = correction_df.rename(columns={
+                        "factor": "요인",
+                        "original": "원점수",
+                        "adjusted": "보정",
+                        "delta": "Δ",
+                        "reason": "근거"
+                    })
+                    st.dataframe(
+                        correction_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "요인": st.column_config.TextColumn(width="small"),
+                            "원점수": st.column_config.NumberColumn(format="%.2f", width="small"),
+                            "보정": st.column_config.NumberColumn(format="%.2f", width="small"),
+                            "Δ": st.column_config.NumberColumn(format="%+.2f", width="small"),
+                            "근거": st.column_config.TextColumn(width="medium"),
+                        }
+                    )
+                else:
+                    st.markdown("**⚙️ LLM 점수 보정**")
+                    st.caption("보정 필요 없음")
+                
+                # 점수 해설 (보정 후 최종 점수 기준)
+                if place.get('explanation'):
+                    st.markdown("**🔎 최종 점수 해설**")
+                    st.markdown(place.get('explanation'))
+                
+                # 워드 클라우드 시각화 (오른쪽 열 하단, 좌우 배치)
+                if place.get('positive_keywords') or place.get('negative_keywords'):
+                    st.markdown("**📝 키워드 분석**")
+                    
+                    wc_col1, wc_col2 = st.columns(2)
                     
                     # 긍정 워드 클라우드
                     if place.get('positive_keywords'):
-                        with col_pos:
-                            st.markdown("#### ✅ 긍정 키워드")
+                        with wc_col1:
+                            st.caption("✅ 긍정")
                             text = " ".join(place['positive_keywords'])
                             if text:
                                 img = generate_wordcloud(text, font_path, colormap="Greens")
                                 if img is not None:
                                     st.image(img, use_container_width=True)
-                            else:
-                                st.info("긍정 키워드 없음")
                     
                     # 부정 워드 클라우드
                     if place.get('negative_keywords'):
-                        with col_neg:
-                            st.markdown("#### ❌ 부정 키워드")
+                        with wc_col2:
+                            st.caption("❌ 부정")
                             text = " ".join(place['negative_keywords'])
                             if text:
                                 img = generate_wordcloud(text, font_path, colormap="Reds")
                                 if img is not None:
                                     st.image(img, use_container_width=True)
-                            else:
-                                st.info("부정 키워드 없음")
                 
-                # 지도 및 로드뷰 (기존 로직 유지)
-                if place.get('geometry') and place['geometry'].get('location'):
-                    lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
+            # 지도 및 로드뷰 (기존 로직 유지)
+            if place.get('geometry') and place['geometry'].get('location'):
+                lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
+                
+                map_key = f"map_{i}_{place['place_id']}"
+                streetview_key = f"street_{i}_{place['place_id']}"
+                
+                if map_key not in st.session_state:
+                    st.session_state[map_key] = False
+                if streetview_key not in st.session_state:
+                    st.session_state[streetview_key] = False
+                
+                col1, col2 = st.columns(2)
+                
+                # 버튼 클릭 시 상태 토글 후 재실행하여 지도 표시
+                if col1.button("🗺️ 지도 보기", key=f"btn_{map_key}"):
+                    st.session_state[map_key] = not st.session_state[map_key]
+                    st.rerun()
+                
+                if col2.button("🚗 로드뷰 보기", key=f"btn_{streetview_key}"):
+                    st.session_state[streetview_key] = not st.session_state[streetview_key]
+                    st.rerun()
+                
+                if st.session_state[map_key] or st.session_state[streetview_key]:
+                    st.markdown("**📍 위치 정보**")
                     
-                    map_key = f"map_{i}_{place['place_id']}"
-                    streetview_key = f"street_{i}_{place['place_id']}"
+                    map_col1, map_col2 = st.columns(2)
                     
-                    if map_key not in st.session_state:
-                        st.session_state[map_key] = False
-                    if streetview_key not in st.session_state:
-                        st.session_state[streetview_key] = False
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    # 버튼 클릭 시 상태 토글 후 재실행하여 지도 표시
-                    if col1.button("🗺️ 지도 보기", key=f"btn_{map_key}"):
-                        st.session_state[map_key] = not st.session_state[map_key]
-                        st.rerun()
-                    
-                    if col2.button("🚗 로드뷰 보기", key=f"btn_{streetview_key}"):
-                        st.session_state[streetview_key] = not st.session_state[streetview_key]
-                        st.rerun()
-                    
-                    if st.session_state[map_key] or st.session_state[streetview_key]:
-                        st.markdown("**📍 위치 정보**")
-                        
-                        if st.session_state[map_key]:
+                    if st.session_state[map_key]:
+                        with map_col1:
                             st.markdown("**🗺️ 지도**")
                             # Google Maps Embed API
                             map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}"
-                            st.components.v1.iframe(map_url, height=400, width=700)
-                        
-                        if st.session_state[streetview_key]:
+                            st.components.v1.iframe(map_url, height=450, scrolling=True)
+                    
+                    if st.session_state[streetview_key]:
+                        with map_col2:
                             st.markdown("**🚗 로드뷰**")
                             # Google Maps Street View Embed API
                             streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}"
-                            st.components.v1.iframe(streetview_url, height=400, width=700)
-                else:
-                    st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")
+                            st.components.v1.iframe(streetview_url, height=450, scrolling=True)
+            else:
+                st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")
