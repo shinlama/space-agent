@@ -740,15 +740,76 @@ if st.session_state.history:
                     st.error(f"Sunburst 차트 생성 중 오류: {e}")
                     pass
 
-                    st.markdown(f"**📊 장소성 대분류 평가**")
-                    main_scores = {main: round(sum(filter(None, sub.values())) / len(sub), 2) for main, sub in scores.items() if any(s is not None for s in sub.values())}
-                    if main_scores:
-                        df = pd.DataFrame(list(main_scores.items()), columns=['분류', '점수'])
-                        fig_bar = px.bar(df, x='분류', y='점수', color='분류', color_discrete_map=color_map, range_y=[0, 1], text_auto='.2f')
-                        fig_bar.update_layout(showlegend=False, title_text="")
-                        st.plotly_chart(fig_bar, use_container_width=True, key=f"bar_{i}_{place.get('place_id','')}")
-                    else:
-                        st.warning("정량 평가 결과가 없습니다.")
+                # Radar Chart 생성 함수 정의
+                def make_radar_chart(scores_dict, title="장소성 요인 특성 분포"):
+                    # 색상 매핑 (대분류 기준)
+                    fill_color_map = {
+                        "물리적 특성": "rgba(173, 216, 230, 0.5)",  # 연한 파란색
+                        "활동적 특성": "rgba(152, 251, 152, 0.5)",  # 연한 초록색
+                        "의미적 특성": "rgba(255, 182, 193, 0.5)"   # 연한 분홍색
+                    }
+                    
+                    # 전체 요인을 순서대로 배치 + 색상 매핑
+                    categories = []
+                    values = []
+                    colors = []
+                    
+                    for main_cat, subcats in scores_dict.items():
+                        for subcat, val in subcats.items():
+                            categories.append(subcat)
+                            values.append(val if val is not None else 0.5)
+                            colors.append(fill_color_map.get(main_cat, "rgba(200,200,200,0.5)"))
+                    
+                    fig = go.Figure()
+                    
+                    # Barpolar로 각 축별 색상 구분
+                    fig.add_trace(go.Barpolar(
+                        r=values,
+                        theta=categories,
+                        marker=dict(
+                            color=colors,
+                            line=dict(color="rgba(80,80,80,0.3)", width=1)
+                        ),
+                        hovertemplate='<b>%{theta}</b><br>점수: %{r:.2f}<extra></extra>',
+                        name="요인별 점수"
+                    ))
+                    
+                    # 윤곽선을 위한 Scatterpolar 추가
+                    categories_closed = categories + categories[:1]
+                    values_closed = values + values[:1]
+                    
+                    fig.add_trace(go.Scatterpolar(
+                        r=values_closed,
+                        theta=categories_closed,
+                        mode='lines',
+                        line=dict(color="rgba(60, 60, 60, 0.8)", width=2.5),
+                        showlegend=False,
+                        hoverinfo='skip'
+                    ))
+                    
+                    fig.update_layout(
+                        polar=dict(
+                            radialaxis=dict(
+                                visible=True, 
+                                range=[0, 1], 
+                                tickvals=[0.2, 0.4, 0.6, 0.8, 1.0],
+                                showline=True,
+                                gridcolor="rgba(200,200,200,0.5)"
+                            ),
+                            angularaxis=dict(rotation=90, direction="clockwise")
+                        ),
+                        showlegend=False,
+                        height=580,
+                        margin=dict(l=140, r=140, t=110, b=110),  # 여백 최대 확대
+                        title=dict(text=title, x=0.5, font=dict(size=14, family="NotoSansKR"))
+                    )
+                    
+                    return fig
+                
+                st.markdown(f"**📊 장소성 요인 특성 분포도**")
+                # Radar Chart 출력
+                fig_radar = make_radar_chart(scores, title=f"{place['name']} 장소성 특성 분포")
+                st.plotly_chart(fig_radar, use_container_width=True, key=f"radar_{i}_{place.get('place_id','')}")
 
             
             # ========== 오른쪽 열: LLM 보정 + 해설 ==========
@@ -845,15 +906,21 @@ if st.session_state.history:
                     if st.session_state[map_key]:
                         with map_col1:
                             st.markdown("**🗺️ 지도**")
-                            # Google Maps Embed API
+                            # Google Maps Embed API (전체 폭 사용)
                             map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}"
-                            st.components.v1.iframe(map_url, height=450, scrolling=True)
+                            st.markdown(
+                                f'<iframe src="{map_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
+                                unsafe_allow_html=True
+                            )
                     
                     if st.session_state[streetview_key]:
                         with map_col2:
                             st.markdown("**🚗 로드뷰**")
-                            # Google Maps Street View Embed API
+                            # Google Maps Street View Embed API (전체 폭 사용)
                             streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}"
-                            st.components.v1.iframe(streetview_url, height=450, scrolling=True)
+                            st.markdown(
+                                f'<iframe src="{streetview_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
+                                unsafe_allow_html=True
+                            )
             else:
                 st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")
