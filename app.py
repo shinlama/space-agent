@@ -1139,273 +1139,273 @@ with tab1:
             with st.container(border=True):
                 st.subheader(place.get('name', '이름 정보 없음'))
                 st.markdown(f"**📍 주소:** {place.get('address', '주소 정보 없음')}")
-            
-            # 2열 레이아웃: 왼쪽(시각화), 오른쪽(보정/해설)
-            col_left, col_right = st.columns([1.2, 1])
-            
-            scores = place.get('scores')
-            
-            # ========== 왼쪽 열: 리뷰 요약 + 시각화 ==========
-            with col_left:
-                st.markdown(f"**📝 리뷰 요약**")
-                st.markdown(place.get('summary', '요약 정보 없음'))
                 
-            with col_left:
-                if scores:
-                    st.markdown(f"**📊 장소성 종합 평가**")
+                # 2열 레이아웃: 왼쪽(시각화), 오른쪽(보정/해설)
+                col_left, col_right = st.columns([1.2, 1])
+                
+                scores = place.get('scores')
+                
+                # ========== 왼쪽 열: 리뷰 요약 + 시각화 ==========
+                with col_left:
+                    st.markdown(f"**📝 리뷰 요약**")
+                    st.markdown(place.get('summary', '요약 정보 없음'))
+                
+                with col_left:
+                    if scores:
+                        st.markdown(f"**📊 장소성 종합 평가**")
 
-                    # Sunburst 차트 데이터 생성
-                labels = []
-                parents = []
-                values = []
-                colors = []
+                        # Sunburst 차트 데이터 생성
+                        labels = []
+                        parents = []
+                        values = []
+                        colors = []
 
-                # 부드러운 파스텔톤 색상 맵 (factors.json 구조와 동일한 대분류 라벨)
-                color_map = {
-                    "물리적 특성": "rgb(173, 216, 230)",     # 연한 파란색 (Light Blue)
-                    "활동적 특성": "rgb(152, 251, 152)",   # 연한 연두색 (Light Lime Green)
-                    "의미적 특성": "rgb(255, 182, 193)" # 연한 분홍색 (Light Pink)
-                }
+                        # 부드러운 파스텔톤 색상 맵 (factors.json 구조와 동일한 대분류 라벨)
+                        color_map = {
+                            "물리적 특성": "rgb(173, 216, 230)",     # 연한 파란색 (Light Blue)
+                            "활동적 특성": "rgb(152, 251, 152)",   # 연한 연두색 (Light Lime Green)
+                            "의미적 특성": "rgb(255, 182, 193)" # 연한 분홍색 (Light Pink)
+                        }
 
-                # 루트 노드 추가 (전체 점수의 평균으로 설정)
-                all_scores = [s for main_cat, sub_scores in scores.items() for s in sub_scores.values() if s is not None]
-                total_score = sum(all_scores)
-                score_count = len(all_scores)
-                root_value = total_score / score_count if score_count > 0 else 0.5
+                        # 루트 노드 추가 (전체 점수의 평균으로 설정)
+                        all_scores = [s for main_cat, sub_scores in scores.items() for s in sub_scores.values() if s is not None]
+                        total_score = sum(all_scores)
+                        score_count = len(all_scores)
+                        root_value = total_score / score_count if score_count > 0 else 0.5
 
-                labels.append(place['name'])
-                parents.append("")
-                values.append(root_value)
-                colors.append("#FFFFFF")
+                        labels.append(place['name'])
+                        parents.append("")
+                        values.append(root_value)
+                        colors.append("#FFFFFF")
 
-                # 대분류와 세부 분류 추가
-                for main_cat, sub_scores in scores.items():
-                    main_scores = [s for s in sub_scores.values() if s is not None]
-                    main_avg = sum(main_scores) / len(main_scores) if main_scores else 0
-                    
-                    labels.append(main_cat)
-                    parents.append(place['name'])
-                    values.append(main_avg)
-                    colors.append(color_map.get(main_cat, "#CCCCCC"))
-                    
-                    for sub_cat, score in sub_scores.items():
-                        if score is not None:
-                            labels.append(f"{sub_cat}: {score:.2f}") # 점수를 라벨에 포함
-                            parents.append(main_cat)
-                            values.append(float(score))
+                        # 대분류와 세부 분류 추가
+                        for main_cat, sub_scores in scores.items():
+                            main_scores = [s for s in sub_scores.values() if s is not None]
+                            main_avg = sum(main_scores) / len(main_scores) if main_scores else 0
+                
+                            labels.append(main_cat)
+                            parents.append(place['name'])
+                            values.append(main_avg)
                             colors.append(color_map.get(main_cat, "#CCCCCC"))
                 
-                # Sunburst 차트 생성
-                try:
-                    fig_sunburst = go.Figure(go.Sunburst(
-                        labels=labels,
-                        parents=parents,
-                        values=values,
-                        branchvalues="remainder",
-                        marker=dict(colors=colors),
-                        hovertemplate='<b>%{customdata[0]}</b><br>점수: %{value:.2f}', # customdata는 사용하지 않으므로 value만 표시
-                        maxdepth=2,
-                        insidetextorientation='radial'
-                    ))
-                    
-                    fig_sunburst.update_layout(
-                        margin=dict(t=20, l=10, r=10, b=10),
-                        height=400,
-                        title_text=f"{place['name']} 장소성 종합 평가",
-                        font=dict(size=12, family="NotoSansKR, sans-serif")
-                    )
-                    
-                    st.plotly_chart(fig_sunburst, use_container_width=True, key=f"sunburst_{i}_{place.get('place_id','')}")
-                    
-                except Exception as e:
-                    # Sunburst 실패 시 Treemap 시도
-                    st.error(f"Sunburst 차트 생성 중 오류: {e}")
-                    pass
-
-                # Radar Chart 생성 함수 정의
-                def make_radar_chart(scores_dict, title="장소성 요인 특성 분포"):
-                    # 색상 매핑 (대분류 기준)
-                    fill_color_map = {
-                        "물리적 특성": "rgba(173, 216, 230, 0.5)",  # 연한 파란색
-                        "활동적 특성": "rgba(152, 251, 152, 0.5)",  # 연한 초록색
-                        "의미적 특성": "rgba(255, 182, 193, 0.5)"   # 연한 분홍색
-                    }
-                    
-                    # 전체 요인을 순서대로 배치 + 색상 매핑
-                    categories = []
-                    values = []
-                    colors = []
-                    
-                    for main_cat, subcats in scores_dict.items():
-                        for subcat, val in subcats.items():
-                            categories.append(subcat)
-                            values.append(val if val is not None else 0.5)
-                            colors.append(fill_color_map.get(main_cat, "rgba(200,200,200,0.5)"))
-                    
-                    fig = go.Figure()
-                    
-                    # Barpolar로 각 축별 색상 구분
-                    fig.add_trace(go.Barpolar(
-                        r=values,
-                        theta=categories,
-                        marker=dict(
-                            color=colors,
-                            line=dict(color="rgba(80,80,80,0.3)", width=1)
-                        ),
-                        hovertemplate='<b>%{theta}</b><br>점수: %{r:.2f}<extra></extra>',
-                        name="요인별 점수"
-                    ))
-                    
-                    # 윤곽선을 위한 Scatterpolar 추가
-                    categories_closed = categories + categories[:1]
-                    values_closed = values + values[:1]
-                    
-                    fig.add_trace(go.Scatterpolar(
-                        r=values_closed,
-                        theta=categories_closed,
-                        mode='lines',
-                        line=dict(color="rgba(60, 60, 60, 0.8)", width=2.5),
-                        showlegend=False,
-                        hoverinfo='skip'
-                    ))
-                    
-                    fig.update_layout(
-                        polar=dict(
-                            radialaxis=dict(
-                                visible=True, 
-                                range=[0, 1], 
-                                tickvals=[0.2, 0.4, 0.6, 0.8, 1.0],
-                                showline=True,
-                                gridcolor="rgba(200,200,200,0.5)"
-                            ),
-                            angularaxis=dict(rotation=90, direction="clockwise")
-                        ),
-                        showlegend=False,
-                        height=580,
-                        margin=dict(l=140, r=140, t=110, b=110),  # 여백 최대 확대
-                        title=dict(text=title, x=0.5, font=dict(size=14, family="NotoSansKR"))
-                    )
-                    
-                    return fig
+                            for sub_cat, score in sub_scores.items():
+                                if score is not None:
+                                    labels.append(f"{sub_cat}: {score:.2f}") # 점수를 라벨에 포함
+                                    parents.append(main_cat)
+                                    values.append(float(score))
+                                    colors.append(color_map.get(main_cat, "#CCCCCC"))
                 
-                st.markdown(f"**📊 장소성 요인 특성 분포도**")
-                # Radar Chart 출력
-                fig_radar = make_radar_chart(scores, title=f"{place['name']} 장소성 특성 분포")
-                st.plotly_chart(fig_radar, use_container_width=True, key=f"radar_{i}_{place.get('place_id','')}")
+                        # Sunburst 차트 생성
+                        try:
+                            fig_sunburst = go.Figure(go.Sunburst(
+                                labels=labels,
+                                parents=parents,
+                                values=values,
+                                branchvalues="remainder",
+                                marker=dict(colors=colors),
+                                hovertemplate='<b>%{customdata[0]}</b><br>점수: %{value:.2f}', # customdata는 사용하지 않으므로 value만 표시
+                                maxdepth=2,
+                                insidetextorientation='radial'
+                            ))
+                
+                            fig_sunburst.update_layout(
+                                margin=dict(t=20, l=10, r=10, b=10),
+                                height=400,
+                                title_text=f"{place['name']} 장소성 종합 평가",
+                                font=dict(size=12, family="NotoSansKR, sans-serif")
+                            )
+                
+                            st.plotly_chart(fig_sunburst, use_container_width=True, key=f"sunburst_{i}_{place.get('place_id','')}")
+                
+                        except Exception as e:
+                            # Sunburst 실패 시 Treemap 시도
+                            st.error(f"Sunburst 차트 생성 중 오류: {e}")
+                            pass
+
+                        # Radar Chart 생성 함수 정의
+                        def make_radar_chart(scores_dict, title="장소성 요인 특성 분포"):
+                            # 색상 매핑 (대분류 기준)
+                            fill_color_map = {
+                                "물리적 특성": "rgba(173, 216, 230, 0.5)",  # 연한 파란색
+                                "활동적 특성": "rgba(152, 251, 152, 0.5)",  # 연한 초록색
+                                "의미적 특성": "rgba(255, 182, 193, 0.5)"   # 연한 분홍색
+                            }
+                
+                            # 전체 요인을 순서대로 배치 + 색상 매핑
+                            categories = []
+                            values = []
+                            colors = []
+                
+                            for main_cat, subcats in scores_dict.items():
+                                for subcat, val in subcats.items():
+                                    categories.append(subcat)
+                                    values.append(val if val is not None else 0.5)
+                                    colors.append(fill_color_map.get(main_cat, "rgba(200,200,200,0.5)"))
+                
+                            fig = go.Figure()
+                
+                            # Barpolar로 각 축별 색상 구분
+                            fig.add_trace(go.Barpolar(
+                                r=values,
+                                theta=categories,
+                                marker=dict(
+                                    color=colors,
+                                    line=dict(color="rgba(80,80,80,0.3)", width=1)
+                                ),
+                                hovertemplate='<b>%{theta}</b><br>점수: %{r:.2f}<extra></extra>',
+                                name="요인별 점수"
+                            ))
+                
+                            # 윤곽선을 위한 Scatterpolar 추가
+                            categories_closed = categories + categories[:1]
+                            values_closed = values + values[:1]
+                
+                            fig.add_trace(go.Scatterpolar(
+                                r=values_closed,
+                                theta=categories_closed,
+                                mode='lines',
+                                line=dict(color="rgba(60, 60, 60, 0.8)", width=2.5),
+                                showlegend=False,
+                                hoverinfo='skip'
+                            ))
+                
+                            fig.update_layout(
+                                polar=dict(
+                                    radialaxis=dict(
+                                        visible=True, 
+                                        range=[0, 1], 
+                                        tickvals=[0.2, 0.4, 0.6, 0.8, 1.0],
+                                        showline=True,
+                                        gridcolor="rgba(200,200,200,0.5)"
+                                    ),
+                                    angularaxis=dict(rotation=90, direction="clockwise")
+                                ),
+                                showlegend=False,
+                                height=580,
+                                margin=dict(l=140, r=140, t=110, b=110),  # 여백 최대 확대
+                                title=dict(text=title, x=0.5, font=dict(size=14, family="NotoSansKR"))
+                            )
+                
+                            return fig
+                
+                        st.markdown(f"**📊 장소성 요인 특성 분포도**")
+                        # Radar Chart 출력
+                        fig_radar = make_radar_chart(scores, title=f"{place['name']} 장소성 특성 분포")
+                    st.plotly_chart(fig_radar, use_container_width=True, key=f"radar_{i}_{place.get('place_id','')}")
 
             
-            # ========== 오른쪽 열: LLM 보정 + 해설 ==========
-            with col_right:
-                # LLM 보정 내역 표시
-                corrections = place.get('corrections', [])
-                if corrections:
-                    st.markdown("**⚙️ LLM 점수 보정**")
-                    st.caption("GPT-4o 검증 결과")
-                    
-                    correction_df = pd.DataFrame(corrections)
-                    correction_df = correction_df.rename(columns={
-                        "factor": "요인",
-                        "original": "원점수",
-                        "adjusted": "보정",
-                        "delta": "Δ",
-                        "reason": "근거"
-                    })
-                    st.dataframe(
-                        correction_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "요인": st.column_config.TextColumn(width="small"),
-                            "원점수": st.column_config.NumberColumn(format="%.2f", width="small"),
-                            "보정": st.column_config.NumberColumn(format="%.2f", width="small"),
-                            "Δ": st.column_config.NumberColumn(format="%+.2f", width="small"),
-                            "근거": st.column_config.TextColumn(width="medium"),
-                        }
-                    )
+                # ========== 오른쪽 열: LLM 보정 + 해설 ==========
+                with col_right:
+                    # LLM 보정 내역 표시
+                    corrections = place.get('corrections', [])
+                    if corrections:
+                        st.markdown("**⚙️ LLM 점수 보정**")
+                        st.caption("GPT-4o 검증 결과")
+                
+                        correction_df = pd.DataFrame(corrections)
+                        correction_df = correction_df.rename(columns={
+                            "factor": "요인",
+                            "original": "원점수",
+                            "adjusted": "보정",
+                            "delta": "Δ",
+                            "reason": "근거"
+                        })
+                        st.dataframe(
+                            correction_df,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "요인": st.column_config.TextColumn(width="small"),
+                                "원점수": st.column_config.NumberColumn(format="%.2f", width="small"),
+                                "보정": st.column_config.NumberColumn(format="%.2f", width="small"),
+                                "Δ": st.column_config.NumberColumn(format="%+.2f", width="small"),
+                                "근거": st.column_config.TextColumn(width="medium"),
+                            }
+                        )
+                    else:
+                        st.markdown("**⚙️ LLM 점수 보정**")
+                        st.caption("보정 필요 없음")
+                
+                    # 점수 해설 (보정 후 최종 점수 기준)
+                    if place.get('explanation'):
+                        st.markdown("**🔎 최종 점수 해설**")
+                        st.markdown(place.get('explanation'))
+                
+                    # 워드 클라우드 시각화 (오른쪽 열 하단, 좌우 배치)
+                    if place.get('positive_keywords') or place.get('negative_keywords'):
+                        st.markdown("**📝 키워드 분석**")
+                
+                        wc_col1, wc_col2 = st.columns(2)
+                
+                        # 긍정 워드 클라우드
+                        if place.get('positive_keywords'):
+                            with wc_col1:
+                                st.caption("✅ 긍정")
+                                text = " ".join(place['positive_keywords'])
+                                if text:
+                                    img = generate_wordcloud(text, font_path, colormap="Greens")
+                                    if img is not None:
+                                        st.image(img, use_container_width=True)
+                
+                        # 부정 워드 클라우드
+                        if place.get('negative_keywords'):
+                            with wc_col2:
+                                st.caption("❌ 부정")
+                                text = " ".join(place['negative_keywords'])
+                                if text:
+                                    img = generate_wordcloud(text, font_path, colormap="Reds")
+                                    if img is not None:
+                                        st.image(img, use_container_width=True)
+                
+                # 지도 및 로드뷰 (기존 로직 유지)
+                if place.get('geometry') and place['geometry'].get('location'):
+                    lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
+                
+                    map_key = f"map_{i}_{place['place_id']}"
+                    streetview_key = f"street_{i}_{place['place_id']}"
+                
+                    if map_key not in st.session_state:
+                        st.session_state[map_key] = False
+                    if streetview_key not in st.session_state:
+                        st.session_state[streetview_key] = False
+                
+                    col1, col2 = st.columns(2)
+                
+                    # 버튼 클릭 시 상태 토글 후 재실행하여 지도 표시
+                    if col1.button("🗺️ 지도 보기", key=f"btn_{map_key}"):
+                        st.session_state[map_key] = not st.session_state[map_key]
+                        st.rerun()
+                
+                    if col2.button("🚗 로드뷰 보기", key=f"btn_{streetview_key}"):
+                        st.session_state[streetview_key] = not st.session_state[streetview_key]
+                        st.rerun()
+                
+                    if st.session_state[map_key] or st.session_state[streetview_key]:
+                        st.markdown("**📍 위치 정보**")
+                
+                        map_col1, map_col2 = st.columns(2)
+                
+                        if st.session_state[map_key]:
+                            with map_col1:
+                                st.markdown("**🗺️ 지도**")
+                                # Google Maps Embed API (전체 폭 사용)
+                                map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}"
+                                st.markdown(
+                                    f'<iframe src="{map_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
+                                    unsafe_allow_html=True
+                                )
+                
+                        if st.session_state[streetview_key]:
+                            with map_col2:
+                                st.markdown("**🚗 로드뷰**")
+                                # Google Maps Street View Embed API (전체 폭 사용)
+                                streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}"
+                                st.markdown(
+                                    f'<iframe src="{streetview_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
+                                    unsafe_allow_html=True
+                                )
                 else:
-                    st.markdown("**⚙️ LLM 점수 보정**")
-                    st.caption("보정 필요 없음")
-                
-                # 점수 해설 (보정 후 최종 점수 기준)
-                if place.get('explanation'):
-                    st.markdown("**🔎 최종 점수 해설**")
-                    st.markdown(place.get('explanation'))
-                
-                # 워드 클라우드 시각화 (오른쪽 열 하단, 좌우 배치)
-                if place.get('positive_keywords') or place.get('negative_keywords'):
-                    st.markdown("**📝 키워드 분석**")
-                    
-                    wc_col1, wc_col2 = st.columns(2)
-                    
-                    # 긍정 워드 클라우드
-                    if place.get('positive_keywords'):
-                        with wc_col1:
-                            st.caption("✅ 긍정")
-                            text = " ".join(place['positive_keywords'])
-                            if text:
-                                img = generate_wordcloud(text, font_path, colormap="Greens")
-                                if img is not None:
-                                    st.image(img, use_container_width=True)
-                    
-                    # 부정 워드 클라우드
-                    if place.get('negative_keywords'):
-                        with wc_col2:
-                            st.caption("❌ 부정")
-                            text = " ".join(place['negative_keywords'])
-                            if text:
-                                img = generate_wordcloud(text, font_path, colormap="Reds")
-                                if img is not None:
-                                    st.image(img, use_container_width=True)
-                
-            # 지도 및 로드뷰 (기존 로직 유지)
-            if place.get('geometry') and place['geometry'].get('location'):
-                lat, lng = place['geometry']['location']['lat'], place['geometry']['location']['lng']
-                
-                map_key = f"map_{i}_{place['place_id']}"
-                streetview_key = f"street_{i}_{place['place_id']}"
-                
-                if map_key not in st.session_state:
-                    st.session_state[map_key] = False
-                if streetview_key not in st.session_state:
-                    st.session_state[streetview_key] = False
-                
-                col1, col2 = st.columns(2)
-                
-                # 버튼 클릭 시 상태 토글 후 재실행하여 지도 표시
-                if col1.button("🗺️ 지도 보기", key=f"btn_{map_key}"):
-                    st.session_state[map_key] = not st.session_state[map_key]
-                    st.rerun()
-                
-                if col2.button("🚗 로드뷰 보기", key=f"btn_{streetview_key}"):
-                    st.session_state[streetview_key] = not st.session_state[streetview_key]
-                    st.rerun()
-                
-                if st.session_state[map_key] or st.session_state[streetview_key]:
-                    st.markdown("**📍 위치 정보**")
-                    
-                    map_col1, map_col2 = st.columns(2)
-                    
-                    if st.session_state[map_key]:
-                        with map_col1:
-                            st.markdown("**🗺️ 지도**")
-                            # Google Maps Embed API (전체 폭 사용)
-                            map_url = f"https://www.google.com/maps/embed/v1/place?key={st.session_state.gmaps_key}&q={lat},{lng}"
-                            st.markdown(
-                                f'<iframe src="{map_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
-                                unsafe_allow_html=True
-                            )
-                    
-                    if st.session_state[streetview_key]:
-                        with map_col2:
-                            st.markdown("**🚗 로드뷰**")
-                            # Google Maps Street View Embed API (전체 폭 사용)
-                            streetview_url = f"https://www.google.com/maps/embed/v1/streetview?key={st.session_state.gmaps_key}&location={lat},{lng}"
-                            st.markdown(
-                                f'<iframe src="{streetview_url}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>',
-                                unsafe_allow_html=True
-                            )
-            else:
-                st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")
+                    st.info("📍 위치 정보가 없어 지도를 표시할 수 없습니다.")
 
 # ========================================
 # 탭 2: 서울 전역 실험 (논문용 데이터 수집 및 검증)
