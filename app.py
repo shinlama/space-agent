@@ -2466,6 +2466,11 @@ with tab4:
                             base_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
                         st.markdown("#### 📈 리뷰 평점 vs 감성 점수 (요인 분석 전)")
                         st.write(f"상관계수(피어슨 r): **{base_corr:.3f}** (p-value={base_p_text}){base_msg}")
+                        base_slope, base_intercept, _, _, _ = stats.linregress(
+                            base_corr_df["평균평점"].astype(float),
+                            base_corr_df["평균감성점수"].astype(float),
+                        )
+                        st.caption(f"회귀선: y = {base_slope:.3f}x + {base_intercept:.3f}")
                         base_fig = px.scatter(
                             base_corr_df,
                             x="평균평점",
@@ -2590,6 +2595,11 @@ with tab4:
                         else:
                             significance_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
                         st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}")
+                        slope, intercept, _, _, _ = stats.linregress(
+                            corr_df["평균평점"].astype(float),
+                            corr_df["평균감성점수"].astype(float),
+                        )
+                        st.caption(f"회귀선: y = {slope:.3f}x + {intercept:.3f}")
                         fig_corr = px.scatter(
                             corr_df,
                             x="평균평점",
@@ -2729,6 +2739,11 @@ with tab4:
                                     title="도보 시간 vs 접근성 요인 점수",
                                 )
                                 st.plotly_chart(access_fig, use_container_width=True, key="tab4_access_corr")
+                                slope_access, intercept_access, _, _, _ = stats.linregress(
+                                    valid_access_df["walk_time_minutes"].astype(float),
+                                    valid_access_df[accessibility_col].astype(float),
+                                )
+                                st.caption(f"회귀선: y = {slope_access:.3f}x + {intercept_access:.3f}")
                             else:
                                 st.info("접근성 비교를 위한 데이터가 충분하지 않습니다.")
                         else:
