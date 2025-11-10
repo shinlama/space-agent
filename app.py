@@ -54,8 +54,10 @@ def get_font_path():
 font_path = get_font_path()
 
 # 표본 CSV 경로
-SAMPLED_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵_표본.csv"
-GOOGLE_REVIEW_CSV = Path(__file__).resolve().parent / "google_reviews_sample.csv"
+BASE_DIR = Path(__file__).resolve().parent
+SAMPLED_CAFE_CSV = BASE_DIR / "서울시_상권_카페빵_표본.csv"
+GOOGLE_REVIEW_SAMPLE_CSV = BASE_DIR / "google_reviews_sample.csv"  # 사전 수집(2500개) 파일
+GOOGLE_REVIEW_LIVE_CSV = BASE_DIR / "google_reviews_live.csv"      # 탭3에서 새로 수집한 결과
 FULL_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵.csv"
 
 
@@ -72,6 +74,18 @@ def load_sampled_cafes(csv_path: Path) -> pd.DataFrame:
 
 @st.cache_data(show_spinner="전체 카페 데이터 불러오는 중...")
 def load_full_cafes(csv_path: Path) -> pd.DataFrame:
+    if not csv_path.exists():
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {csv_path}")
+
+    try:
+        df = pd.read_csv(csv_path, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        df = pd.read_csv(csv_path, encoding="cp949")
+    return df
+
+
+@st.cache_data(show_spinner="Google 리뷰 데이터 불러오는 중...")
+def load_google_reviews_csv(csv_path: Path) -> pd.DataFrame:
     if not csv_path.exists():
         raise FileNotFoundError(f"파일을 찾을 수 없습니다: {csv_path}")
 
@@ -1147,7 +1161,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 탭 구성
-tab1, tab2, tab3 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험", "📊 표본 데이터 확인"])
+tab1, tab2, tab3, tab4 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험", "📊 표본 데이터 확인", "📁 Google 리뷰 분석"])
 
 # ========================================
 # 탭 1: 개별 장소 분석 (기존 기능)
@@ -2082,7 +2096,7 @@ with tab3:
 
             st.markdown("---")
             st.markdown("### ☕ Google 리뷰 수집 및 감성 분석 연결")
-            st.caption("Google Maps API를 이용해 표본 카페의 최신 리뷰를 수집하고, 간단한 감성 분석을 수행합니다.")
+            st.caption("Google Maps API를 이용해 표본 카페의 최신 리뷰를 수집하고, 감성 분석을 수행합니다.")
 
             max_reviews = st.slider(
                 "카페당 최대 리뷰 수",
@@ -2179,10 +2193,17 @@ with tab3:
 
                 if collected_reviews:
                     review_df = pd.DataFrame(collected_reviews)
-                    review_df.to_csv(GOOGLE_REVIEW_CSV, index=False, encoding="utf-8-sig")
-                    st.session_state["google_review_df"] = review_df
+                    try:
+                        review_df.to_csv(GOOGLE_REVIEW_LIVE_CSV, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ 총 {len(review_df)}개 리뷰 저장 완료 → `{GOOGLE_REVIEW_LIVE_CSV.name}`")
+                    except PermissionError:
+                        st.warning(
+                            f"`{GOOGLE_REVIEW_LIVE_CSV.name}` 파일이 다른 프로그램에서 열려 있어 저장하지 못했습니다. "
+                            "파일을 닫고 다시 시도해주세요."
+                        )
+                    else:
+                        st.session_state["google_review_df"] = review_df
 
-                    st.success(f"✅ 총 {len(review_df)}개 리뷰 저장 완료 → `{GOOGLE_REVIEW_CSV.name}`")
                     table_height = min(650, max(250, 38 * len(review_df)))
                     st.dataframe(
                         review_df,
@@ -2267,7 +2288,7 @@ with tab3:
                     st.download_button(
                         "📥 수집 리뷰 CSV 다운로드",
                         data=review_df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name="google_reviews_sample.csv",
+                        file_name=GOOGLE_REVIEW_LIVE_CSV.name,
                         mime="text/csv",
                         key="tab3_download_google_reviews",
                     )
@@ -2279,3 +2300,166 @@ with tab3:
                     with st.expander("오류 상세 보기"):
                         for log in error_logs[:50]:
                             st.text(log)
+
+# ========================================
+# 탭 4: Google 리뷰 CSV 기반 분석
+# ========================================
+with tab4:
+    st.markdown("### 📁 Google 리뷰 데이터 분석")
+    st.caption("리뷰 CSV(표본/최근 수집)를 불러와 감성 분석과 평점 상관 관계를 탐색합니다.")
+
+    if not GOOGLE_REVIEW_SAMPLE_CSV.exists() and not GOOGLE_REVIEW_LIVE_CSV.exists():
+        st.warning("Google 리뷰 CSV 파일이 없습니다. 탭 3에서 리뷰를 수집하거나 CSV를 준비해주세요.")
+    else:
+        available_sources = {}
+        if GOOGLE_REVIEW_SAMPLE_CSV.exists():
+            available_sources[f"표본 (전체 2500개) - {GOOGLE_REVIEW_SAMPLE_CSV.name}"] = GOOGLE_REVIEW_SAMPLE_CSV
+        if GOOGLE_REVIEW_LIVE_CSV.exists():
+            available_sources[f"최근 수집 (탭3) - {GOOGLE_REVIEW_LIVE_CSV.name}"] = GOOGLE_REVIEW_LIVE_CSV
+
+        selected_label = st.selectbox(
+            "분석할 리뷰 CSV 선택",
+            options=list(available_sources.keys()),
+            index=0,
+        )
+        selected_path = available_sources[selected_label]
+
+        try:
+            base_review_df = load_google_reviews_csv(selected_path)
+        except Exception as e:
+            st.error(f"CSV 로딩 실패: {e}")
+            base_review_df = None
+
+        if base_review_df is not None:
+            if "리뷰" not in base_review_df.columns:
+                st.error("CSV에 '리뷰' 컬럼이 없어 감성 분석을 진행할 수 없습니다.")
+            else:
+                st.success(f"✅ {len(base_review_df):,}개 리뷰 로드 완료 ({selected_path.name})")
+
+                with st.expander("🔍 필터", expanded=False):
+                    district_options = (
+                        sorted(base_review_df["시군구명"].dropna().unique().tolist())
+                        if "시군구명" in base_review_df.columns
+                        else []
+                    )
+                    selected_districts = st.multiselect(
+                        "시군구 선택",
+                        district_options,
+                        placeholder="전체 시군구",
+                        key="tab4_filter_district",
+                    )
+
+                    keyword = st.text_input(
+                        "상호명/리뷰 검색어",
+                        value="",
+                        placeholder="예: 홍대, 분위기, 친절",
+                        key="tab4_filter_keyword",
+                    ).strip()
+
+                    min_review_per_place = st.slider(
+                        "최소 리뷰 수 (집계 대상)",
+                        min_value=1,
+                        max_value=50,
+                        value=3,
+                        step=1,
+                        key="tab4_min_reviews",
+                    )
+
+                filtered_reviews = base_review_df.copy()
+                if selected_districts and "시군구명" in filtered_reviews.columns:
+                    filtered_reviews = filtered_reviews[filtered_reviews["시군구명"].isin(selected_districts)]
+                if keyword:
+                    keyword_lower = keyword.lower()
+                    filtered_reviews = filtered_reviews[
+                        filtered_reviews.apply(
+                            lambda row: any(
+                                keyword_lower in str(row.get(col, "")).lower()
+                                for col in ["상호명", "리뷰", "행정동명", "도로명주소"]
+                            ),
+                            axis=1,
+                        )
+                    ]
+
+                st.info(f"필터링 결과 리뷰 수: {len(filtered_reviews):,}건")
+
+                display_cols = [
+                    col
+                    for col in ["상호명", "시군구명", "행정동명", "place_id", "평점", "리뷰", "작성일"]
+                    if col in filtered_reviews.columns
+                ]
+                table_height = min(600, max(250, 35 * min(len(filtered_reviews), 50)))
+                st.dataframe(
+                    filtered_reviews[display_cols].head(1000),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=table_height,
+                )
+
+                group_cols = [col for col in ["place_id", "상호명", "시군구명", "행정동명"] if col in filtered_reviews.columns]
+                if not group_cols:
+                    st.error("집계를 위한 식별 컬럼(place_id 또는 상호명/시군구명 등)이 없습니다.")
+                else:
+                    aggregated = filtered_reviews.copy()
+                    aggregated["리뷰"] = aggregated["리뷰"].fillna("")
+                    grouped = (
+                        aggregated.groupby(group_cols, dropna=False)
+                        .agg(
+                            리뷰통합=("리뷰", lambda texts: "\n".join([t for t in texts if str(t).strip()])),
+                            평균평점=("평점", "mean"),
+                            리뷰수=("리뷰", lambda s: int((s.str.strip() != "").sum())),
+                        )
+                        .reset_index()
+                    )
+
+                    grouped = grouped[grouped["리뷰수"] >= min_review_per_place]
+
+                    if grouped.empty:
+                        st.warning("조건을 만족하는 집계 데이터가 없습니다.")
+                    else:
+                        sentiment_texts = grouped["리뷰통합"].fillna("").tolist()
+                        valid_indices = [i for i, text in enumerate(sentiment_texts) if text.strip()]
+                        if not valid_indices:
+                            st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
+                        else:
+                            texts = [sentiment_texts[i] for i in valid_indices]
+                            sentiment_scores = sentiment_model(texts)
+                            grouped.loc[[grouped.index[i] for i in valid_indices], "평균감성점수"] = sentiment_scores
+
+                            st.markdown("#### 📊 감성 분석 결과")
+                            analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수"]
+                            analysis_height = min(600, max(240, 38 * len(grouped)))
+                            st.dataframe(
+                                grouped[analysis_cols],
+                                use_container_width=True,
+                                hide_index=True,
+                                height=analysis_height,
+                            )
+
+                            corr_df = grouped.dropna(subset=["평균평점", "평균감성점수"])
+                            if len(corr_df) >= 2:
+                                corr_value, corr_p = stats.pearsonr(
+                                    corr_df["평균평점"].astype(float),
+                                    corr_df["평균감성점수"].astype(float),
+                                )
+                                st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
+                                st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={corr_p:.4f})")
+                                fig_corr = px.scatter(
+                                    corr_df,
+                                    x="평균평점",
+                                    y="평균감성점수",
+                                    hover_data=[col for col in group_cols if col != "place_id"],
+                                    trendline="ols",
+                                    labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
+                                    title="평균 평점 vs 평균 감성 점수",
+                                )
+                                st.plotly_chart(fig_corr, use_container_width=True, key="tab4_sentiment_corr")
+                            else:
+                                st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
+
+                            st.download_button(
+                                "📥 감성 분석 결과 CSV 다운로드",
+                                data=grouped.assign(원본파일=selected_path.name).to_csv(index=False).encode("utf-8-sig"),
+                                file_name="google_review_sentiment_summary.csv",
+                                mime="text/csv",
+                                key="tab4_download_summary",
+                            )
