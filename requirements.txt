@@ -15,3 +15,7 @@ scipy
 folium
 streamlit-folium
 requests
+selenium
+beautifulsoup4
+pandas
+tqdm

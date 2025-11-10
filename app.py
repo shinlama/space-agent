@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 import json
 import re
@@ -50,6 +51,33 @@ def get_font_path():
         return None # 폰트 경로를 찾을 수 없는 경우
 
 font_path = get_font_path()
+
+# 표본 CSV 경로
+SAMPLED_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵_표본.csv"
+FULL_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵.csv"
+
+
+@st.cache_data(show_spinner="표본 데이터 불러오는 중...")
+def load_sampled_cafes(csv_path: Path) -> pd.DataFrame:
+    if not csv_path.exists():
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {csv_path}")
+
+    try:
+        df = pd.read_csv(csv_path, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        df = pd.read_csv(csv_path, encoding="cp949")
+    return df
+
+@st.cache_data(show_spinner="전체 카페 데이터 불러오는 중...")
+def load_full_cafes(csv_path: Path) -> pd.DataFrame:
+    if not csv_path.exists():
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {csv_path}")
+
+    try:
+        df = pd.read_csv(csv_path, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        df = pd.read_csv(csv_path, encoding="cp949")
+    return df
 
 # WordCloud 이미지 캐싱 (PIL 이미지 반환)
 @st.cache_data(show_spinner=False)
@@ -1110,7 +1138,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 탭 구성
-tab1, tab2 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험"])
+tab1, tab2, tab3 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험", "📊 표본 데이터 확인"])
 
 # ========================================
 # 탭 1: 개별 장소 분석 (기존 기능)
@@ -1891,3 +1919,154 @@ with tab2:
         display_df_table.columns = ['카페명', '구', '전체 장소성', '접근성 점수', 
                               '도보(분)', '최근접 역/정류장', '유형']
         st.dataframe(display_df_table, use_container_width=True, height=300)
+
+
+# ========================================
+# 탭 3: 표본 데이터 확인
+# ========================================
+with tab3:
+    st.markdown("### 📊 서울시 상권 기반 카페 표본 데이터")
+    st.caption(
+        "`scripts/sample_cafes.py`로 생성한 `서울시_상권_카페빵_표본.csv`를 불러와 "
+        "구별 표본 분포와 개별 레코드를 확인할 수 있습니다."
+    )
+
+    if not SAMPLED_CAFE_CSV.exists():
+        st.error("`서울시_상권_카페빵_표본.csv` 파일을 찾을 수 없습니다. 먼저 표본 추출 스크립트를 실행해주세요.")
+    else:
+        try:
+            sampled_df = load_sampled_cafes(SAMPLED_CAFE_CSV)
+        except Exception as e:
+            st.error(f"CSV 로딩 중 오류가 발생했습니다: {e}")
+        else:
+            TARGET_PER_DISTRICT = 100
+            if "시군구명" in sampled_df.columns:
+                district_counts = sampled_df["시군구명"].value_counts(dropna=False)
+
+                need_resample = district_counts.min() < TARGET_PER_DISTRICT or len(district_counts) < len(SEOUL_DISTRICTS)
+                if need_resample:
+                    try:
+                        full_df = load_full_cafes(FULL_CAFE_CSV)
+                    except FileNotFoundError:
+                        st.warning(
+                            "`서울시_상권_카페빵.csv` 파일을 찾지 못해 구당 100개 재구성이 불가능합니다. "
+                            "기존 표본 데이터를 그대로 사용합니다."
+                        )
+                    except Exception as e:
+                        st.warning(
+                            f"전체 데이터 로딩 중 오류가 발생하여 구당 100개 재구성을 건너뜁니다: {e}"
+                        )
+                    else:
+                        available_counts = full_df["시군구명"].value_counts()
+                        missing_districts = [d for d in SEOUL_DISTRICTS if available_counts.get(d, 0) < TARGET_PER_DISTRICT]
+
+                        if missing_districts:
+                            st.warning(
+                                f"다음 행정구는 전체 데이터에서도 {TARGET_PER_DISTRICT}개 미만이어서 전량 사용합니다: {', '.join(missing_districts)}"
+                            )
+
+                        resampled_frames = []
+                        for district in SEOUL_DISTRICTS:
+                            district_df = full_df[full_df["시군구명"] == district]
+                            if district_df.empty:
+                                continue
+                            if len(district_df) >= TARGET_PER_DISTRICT:
+                                resampled_frames.append(
+                                    district_df.sample(n=TARGET_PER_DISTRICT, random_state=42)
+                                )
+                            else:
+                                resampled_frames.append(district_df)
+
+                        if resampled_frames:
+                            sampled_df = pd.concat(resampled_frames, ignore_index=True)
+
+            st.success(f"총 {len(sampled_df):,}개 카페 표본이 로드되었습니다.")
+
+            info_col1, info_col2, info_col3 = st.columns(3)
+            with info_col1:
+                st.metric("총 표본 수", f"{len(sampled_df):,}")
+            with info_col2:
+                st.metric("시군구 수", f"{sampled_df['시군구명'].nunique():,}")
+            with info_col3:
+                st.metric("상권업종소분류 수", f"{sampled_df['상권업종소분류명'].nunique():,}")
+
+            with st.expander("🔍 필터", expanded=True):
+                district_options = sorted(sampled_df["시군구명"].dropna().unique().tolist())
+                selected_districts = st.multiselect(
+                    "시군구 선택 (선택 시 필터 적용)",
+                    district_options,
+                    placeholder="전체 시군구",
+                    key="tab3_district_filter",
+                )
+
+                subclass_options = sorted(sampled_df["상권업종소분류명"].dropna().unique().tolist())
+                selected_subclasses = st.multiselect(
+                    "상권업종소분류명 선택",
+                    subclass_options,
+                    default=subclass_options,
+                    key="tab3_subclass_filter",
+                )
+
+                keyword = st.text_input(
+                    "카페명/주소 검색 (부분 일치)",
+                    placeholder="예: 신촌, 을지로, 베이커리",
+                    key="tab3_keyword_filter",
+                ).strip()
+
+            filtered_df = sampled_df.copy()
+
+            if selected_districts:
+                filtered_df = filtered_df[filtered_df["시군구명"].isin(selected_districts)]
+
+            if selected_subclasses:
+                filtered_df = filtered_df[filtered_df["상권업종소분류명"].isin(selected_subclasses)]
+
+            if keyword:
+                keyword_lower = keyword.lower()
+                filtered_df = filtered_df[
+                    filtered_df["상호명"].fillna("").str.lower().str.contains(keyword_lower)
+                    | filtered_df["도로명주소"].fillna("").str.lower().str.contains(keyword_lower)
+                    | filtered_df["지번주소"].fillna("").str.lower().str.contains(keyword_lower)
+                ]
+
+            st.info(f"표시 중: {len(filtered_df):,}개 카페")
+
+            summary_col1, summary_col2 = st.columns(2)
+            with summary_col1:
+                st.markdown("**시군구별 표본 수**")
+                district_summary = (
+                    filtered_df["시군구명"]
+                    .value_counts()
+                    .rename_axis("시군구명")
+                    .reset_index(name="표본수")
+                    .sort_values("시군구명")
+                )
+                st.dataframe(district_summary, hide_index=True, use_container_width=True, height=220)
+
+            with summary_col2:
+                st.markdown("**상권업종소분류별 분포**")
+                subclass_summary = (
+                    filtered_df["상권업종소분류명"]
+                    .value_counts()
+                    .rename_axis("상권업종소분류명")
+                    .reset_index(name="표본수")
+                    .sort_values("상권업종소분류명")
+                )
+                st.dataframe(subclass_summary, hide_index=True, use_container_width=True, height=220)
+
+            with st.expander("📋 데이터 미리보기", expanded=True):
+                st.dataframe(
+                    filtered_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=520,
+                )
+
+            download_bytes = filtered_df.to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                "📥 필터 결과 CSV 다운로드",
+                data=download_bytes,
+                file_name="서울시_상권_카페빵_표본_필터링.csv",
+                mime="text/csv",
+                key="tab3_download_sampled",
+            )
