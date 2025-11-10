@@ -2221,14 +2221,46 @@ with tab3:
                         summary_df = aggregation_df.rename(
                             columns={"감성점수": "평균감성점수", "리뷰수": "리뷰수량"}
                         )
+
+                        rating_summary = (
+                            review_df.groupby(group_cols, dropna=False)["평점"]
+                            .mean()
+                            .reset_index()
+                            .rename(columns={"평점": "평균평점"})
+                        )
+                        summary_df = summary_df.merge(rating_summary, on=group_cols, how="left")
+
                         st.markdown("#### 📊 통합 리뷰 감성 분석")
                         summary_height = min(550, max(240, 38 * len(summary_df)))
                         st.dataframe(
-                            summary_df[[col for col in summary_df.columns if col in ["상호명", "시군구명", "행정동명", "평균감성점수", "리뷰수량"]]],
+                            summary_df[[col for col in summary_df.columns if col in ["상호명", "시군구명", "행정동명", "평균평점", "평균감성점수", "리뷰수량"]]],
                             use_container_width=True,
                             hide_index=True,
                             height=summary_height,
                         )
+
+                        corr_df = summary_df.dropna(subset=["평균평점", "평균감성점수"])
+                        if len(corr_df) >= 2:
+                            corr_value, corr_p = stats.pearsonr(
+                                corr_df["평균평점"].astype(float),
+                                corr_df["평균감성점수"].astype(float),
+                            )
+                            st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
+                            st.write(
+                                f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={corr_p:.4f})"
+                            )
+                            fig_corr = px.scatter(
+                                corr_df,
+                                x="평균평점",
+                                y="평균감성점수",
+                                hover_data=[c for c in ["상호명", "시군구명", "행정동명"] if c in corr_df.columns],
+                                trendline="ols",
+                                labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
+                                title="평균 평점 vs 평균 감성 점수",
+                            )
+                            st.plotly_chart(fig_corr, use_container_width=True, key="tab3_sentiment_corr")
+                        else:
+                            st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
                     else:
                         st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
 
