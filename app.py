@@ -2405,6 +2405,12 @@ with tab4:
                 if not group_cols:
                     st.error("집계를 위한 식별 컬럼(place_id 또는 상호명/시군구명 등)이 없습니다.")
                 else:
+                    st.markdown("#### ⚙️ 감성 분석 실행")
+                    run_analysis = st.button("🚀 감성 분석 실행", key="tab4_run_analysis")
+                    if not run_analysis:
+                        st.info("필터를 설정한 뒤 ‘감성 분석 실행’ 버튼을 눌러 분석을 시작하세요.")
+                        st.stop()
+
                     aggregated = filtered_reviews.copy()
                     aggregated["리뷰"] = aggregated["리뷰"].fillna("")
                     grouped = (
