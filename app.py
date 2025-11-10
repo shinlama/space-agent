@@ -20,6 +20,7 @@ from folium.plugins import HeatMap, MarkerCluster
 from streamlit_folium import st_folium
 import time
 import random
+import tab4_analysis
 from scipy import stats
 
 # NLP 모델 관련 임포트 (Hugging Face Transformers)
@@ -2268,11 +2269,11 @@ with tab3:
                             )
                             st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
                             p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
-                            significance_msg = (
-                                " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
-                                if corr_p < 0.05
-                                else " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
-                            )
+                            if corr_p < 0.05:
+                                relation = "양의" if corr_value > 0 else "음의"
+                                significance_msg = f" → 통계적으로 유의미한 {relation} 상관관계가 확인됩니다 (α=0.05)."
+                            else:
+                                significance_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
                             st.write(
                                 f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}"
                             )
@@ -2427,57 +2428,271 @@ with tab4:
 
                     if grouped.empty:
                         st.warning("조건을 만족하는 집계 데이터가 없습니다.")
-                    else:
-                        sentiment_texts = grouped["리뷰통합"].fillna("").tolist()
-                        valid_indices = [i for i, text in enumerate(sentiment_texts) if text.strip()]
-                        if not valid_indices:
-                            st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
-                        else:
-                            texts = [sentiment_texts[i] for i in valid_indices]
-                            sentiment_scores = sentiment_model(texts)
-                            grouped.loc[[grouped.index[i] for i in valid_indices], "평균감성점수"] = sentiment_scores
+                        st.stop()
 
-                            st.markdown("#### 📊 감성 분석 결과")
-                            analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수"]
-                            analysis_height = min(600, max(240, 38 * len(grouped)))
-                            st.dataframe(
-                                grouped[analysis_cols],
-                                use_container_width=True,
-                                hide_index=True,
-                                height=analysis_height,
-                            )
+                    sentiment_texts = grouped["리뷰통합"].fillna("").tolist()
+                    valid_indices = [i for i, text in enumerate(sentiment_texts) if text.strip()]
+                    if not valid_indices:
+                        st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
+                        st.stop()
 
-                            corr_df = grouped.dropna(subset=["평균평점", "평균감성점수"])
-                            if len(corr_df) >= 2:
-                                corr_value, corr_p = stats.pearsonr(
-                                    corr_df["평균평점"].astype(float),
-                                    corr_df["평균감성점수"].astype(float),
-                                )
-                                st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
-                                p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
-                                significance_msg = (
-                                    " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
-                                    if corr_p < 0.05
-                                    else " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
-                                )
-                                st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}")
-                                fig_corr = px.scatter(
-                                    corr_df,
-                                    x="평균평점",
-                                    y="평균감성점수",
-                                    hover_data=[col for col in group_cols if col != "place_id"],
-                                    trendline="ols",
-                                    labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
-                                    title="평균 평점 vs 평균 감성 점수",
-                                )
-                                st.plotly_chart(fig_corr, use_container_width=True, key="tab4_sentiment_corr")
+                    texts = [sentiment_texts[i] for i in valid_indices]
+                    sentiment_scores = sentiment_model(texts)
+                    grouped.loc[[grouped.index[i] for i in valid_indices], "평균감성점수"] = sentiment_scores
+
+                    st.markdown("#### 📊 감성 분석 결과")
+                    base_analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수"]
+                    base_height = min(400, max(240, 38 * len(grouped)))
+                    st.dataframe(
+                        grouped[base_analysis_cols],
+                        use_container_width=True,
+                        hide_index=True,
+                        height=base_height,
+                    )
+
+                    base_corr_df = grouped.dropna(subset=["평균평점", "평균감성점수"])
+                    if len(base_corr_df) >= 2:
+                        base_corr, base_p = stats.pearsonr(
+                            base_corr_df["평균평점"].astype(float),
+                            base_corr_df["평균감성점수"].astype(float),
+                        )
+                        base_p_text = f"{base_p:.4f}" if base_p >= 1e-4 else f"{base_p:.2e}"
+                        if base_p < 0.05:
+                            if base_corr > 0:
+                                base_msg = " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
                             else:
-                                st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
+                                base_msg = " → 통계적으로 유의미한 음의 상관관계가 확인됩니다 (α=0.05).\n   ※ 기대와 다른 방향의 상관관계이므로 데이터 분포나 모델 결과를 추가 검토하세요."
+                        else:
+                            base_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                        st.markdown("#### 📈 리뷰 평점 vs 감성 점수 (요인 분석 전)")
+                        st.write(f"상관계수(피어슨 r): **{base_corr:.3f}** (p-value={base_p_text}){base_msg}")
+                        base_fig = px.scatter(
+                            base_corr_df,
+                            x="평균평점",
+                            y="평균감성점수",
+                            trendline="ols",
+                            labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
+                            title="평균 평점 vs 감성 점수",
+                        )
+                        st.plotly_chart(base_fig, use_container_width=True, key="tab4_pre_factor_corr")
+                    else:
+                        st.info("기본 감성 분석 상관관계를 계산하기 위한 데이터가 충분하지 않습니다.")
 
-                            st.download_button(
-                                "📥 감성 분석 결과 CSV 다운로드",
-                                data=grouped.assign(원본파일=selected_path.name).to_csv(index=False).encode("utf-8-sig"),
-                                file_name="google_review_sentiment_summary.csv",
-                                mime="text/csv",
-                                key="tab4_download_summary",
+                    st.markdown("---")
+                    st.markdown("#### 🧪 장소성 요인별 상세 분석")
+                    st.caption("장소성 요인별 분석에는 다소 시간이 소요될 수 있습니다.")
+
+                    progress_placeholder = st.empty()
+                    with progress_placeholder:
+                        with st.spinner("장소성 요인별 분석 수행 중..."):
+                            analysis_results = tab4_analysis.analyze_review_groups(
+                                review_df=filtered_reviews,
+                                group_cols=group_cols,
+                                sentiment_model=sentiment_model,
+                                embed_model=embed_model,
+                                category_embeddings=category_embeddings,
+                                score_template=new_score_structure_template,
+                                semantic_split_fn=cached_semantic_split,
                             )
+                    progress_placeholder.empty()
+
+                    analysis_results = analysis_results[analysis_results["리뷰수"] >= min_review_per_place]
+
+                    if analysis_results.empty:
+                        st.warning("장소성 요인 분석을 위한 데이터가 충분하지 않습니다.")
+                        st.stop()
+
+                    score_columns = []
+                    accessibility_col = None
+                    if not analysis_results["scores"].dropna().empty:
+                        example_scores = analysis_results["scores"].dropna().iloc[0]
+                        score_columns = [
+                            f"{main}/{sub}"
+                            for main, subdict in example_scores.items()
+                            for sub in subdict.keys()
+                        ]
+                        expanded_scores = analysis_results["scores"].apply(
+                            lambda score_dict: {
+                                f"{main}/{sub}": subdict.get(sub)
+                                for main, subdict in score_dict.items()
+                                for sub in subdict.keys()
+                            }
+                            if isinstance(score_dict, dict)
+                            else {}
+                        )
+                        expanded_df = pd.DataFrame(list(expanded_scores), index=analysis_results.index)
+                        analysis_results = pd.concat([analysis_results, expanded_df], axis=1)
+                        if "물리적 특성/접근성" in analysis_results.columns:
+                            analysis_results = analysis_results.rename(columns={"물리적 특성/접근성": "접근성_요인점수"})
+                            accessibility_col = "접근성_요인점수"
+                            score_columns = [
+                                "접근성_요인점수" if col == "물리적 특성/접근성" else col
+                                for col in score_columns
+                            ]
+
+                    st.markdown("#### 📊 감성 분석 결과 (장소성 요인 반영)")
+                    analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수", "리뷰문장수"]
+                    display_cols = analysis_cols + score_columns
+                    analysis_height = min(600, max(240, 38 * len(analysis_results)))
+                    st.dataframe(
+                        analysis_results[display_cols] if score_columns else analysis_results[analysis_cols],
+                        use_container_width=True,
+                        hide_index=True,
+                        height=analysis_height,
+                    )
+
+                    corr_df = analysis_results.dropna(subset=["평균평점", "평균감성점수"])
+                    if len(corr_df) >= 2:
+                        corr_value, corr_p = stats.pearsonr(
+                            corr_df["평균평점"].astype(float),
+                            corr_df["평균감성점수"].astype(float),
+                        )
+                        st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 (장소성 요인 반영)")
+                        p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
+                        if corr_p < 0.05:
+                            if corr_value > 0:
+                                significance_msg = " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
+                            else:
+                                significance_msg = " → 통계적으로 유의미한 음의 상관관계가 확인됩니다 (α=0.05).\n   ※ 기대와 다른 방향의 상관관계이므로 데이터 분포나 모델 결과를 추가 검토하세요."
+                        else:
+                            significance_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                        st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}")
+                        fig_corr = px.scatter(
+                            corr_df,
+                            x="평균평점",
+                            y="평균감성점수",
+                            hover_data=[col for col in group_cols if col != "place_id"],
+                            trendline="ols",
+                            labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
+                            title="평균 평점 vs 감성 점수 (장소성 요인 반영)",
+                        )
+                        st.plotly_chart(fig_corr, use_container_width=True, key="tab4_sentiment_corr")
+                    else:
+                        st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
+
+                    # 좌표/접근성 데이터 보강
+                    if (
+                        ("lat" not in analysis_results.columns or analysis_results["lat"].isna().all())
+                        and "place_id" in analysis_results.columns
+                    ):
+                        with st.spinner("지도 좌표 정보를 불러오는 중입니다..."):
+                            coord_cache = {}
+                            for pid in analysis_results["place_id"].dropna().unique():
+                                try:
+                                    detail = gmaps.place(place_id=pid, language="ko")
+                                    loc = (
+                                        detail.get("result", {})
+                                        .get("geometry", {})
+                                        .get("location", {})
+                                    )
+                                    if loc:
+                                        coord_cache[pid] = (loc.get("lat"), loc.get("lng"))
+                                except Exception:
+                                    coord_cache[pid] = (np.nan, np.nan)
+                            analysis_results["lat"] = analysis_results["place_id"].map(
+                                lambda pid: coord_cache.get(pid, (np.nan, np.nan))[0]
+                            )
+                            analysis_results["lng"] = analysis_results["place_id"].map(
+                                lambda pid: coord_cache.get(pid, (np.nan, np.nan))[1]
+                            )
+
+                    if (
+                        {"walk_time_minutes", "nearest_station", "transit_type"}.issubset(analysis_results.columns)
+                        is False
+                    ) and {"lat", "lng"}.issubset(analysis_results.columns):
+                        with st.spinner("접근성(도보 시간) 데이터를 계산 중입니다..."):
+                            walk_times, stations, transit_types = [], [], []
+                            for _, row in analysis_results.iterrows():
+                                lat_val, lng_val = row.get("lat"), row.get("lng")
+                                if pd.isna(lat_val) or pd.isna(lng_val):
+                                    walk_times.append(np.nan)
+                                    stations.append(None)
+                                    transit_types.append(None)
+                                    continue
+                                try:
+                                    walk_time, station_name, transit_type = calculate_transit_accessibility(
+                                        lat_val, lng_val
+                                    )
+                                except Exception:
+                                    walk_time, station_name, transit_type = (np.nan, None, None)
+                                walk_times.append(walk_time)
+                                stations.append(station_name)
+                                transit_types.append(transit_type)
+                            analysis_results["walk_time_minutes"] = walk_times
+                            analysis_results["nearest_station"] = stations
+                            analysis_results["transit_type"] = transit_types
+
+                        download_df = analysis_results.copy()
+                        download_df["scores"] = download_df["scores"].apply(lambda s: json.dumps(s, ensure_ascii=False))
+                        download_df["원본파일"] = selected_path.name
+                        st.download_button(
+                            "📥 감성 분석 결과 CSV 다운로드",
+                            data=download_df.to_csv(index=False).encode("utf-8-sig"),
+                            file_name="google_review_sentiment_summary.csv",
+                            mime="text/csv",
+                            key="tab4_download_summary",
+                        )
+
+                        # 지도 시각화
+                        valid_map_df = (
+                            analysis_results.dropna(subset=["lat", "lng"])
+                            if {"lat", "lng"}.issubset(analysis_results.columns)
+                            else pd.DataFrame()
+                        )
+                        if not valid_map_df.empty:
+                            st.markdown("#### 🗺️ 서울 지도 시각화")
+
+                            metric_options = ["평균감성점수"] + score_columns
+                            selected_metric = st.selectbox(
+                                "지도에 표시할 지표",
+                                options=metric_options,
+                                index=0,
+                                key="tab4_map_metric",
+                            )
+                            st.caption("HeatMap은 선택한 지표 값을 이용해 가중치를 계산합니다.")
+
+                            try:
+                                placeness_map = tab4_analysis.build_placeness_map(
+                                    valid_map_df,
+                                    value_col=selected_metric,
+                                )
+                                st_folium(placeness_map, width=None, height=500, key="tab4_map")
+                            except Exception as map_err:
+                                st.warning(f"지도 시각화에 실패했습니다: {map_err}")
+                        else:
+                            st.info("지도 표시를 위한 좌표 정보가 부족합니다.")
+
+                        # 접근성 비교 (도보 시간 vs 접근성 점수)
+                        if accessibility_col and {"walk_time_minutes", accessibility_col}.issubset(analysis_results.columns):
+                            st.markdown("#### 🚇 접근성 실험")
+                            valid_access_df = analysis_results.dropna(subset=["walk_time_minutes", accessibility_col])
+                            if not valid_access_df.empty:
+                                corr_access, p_access = stats.pearsonr(
+                                    valid_access_df["walk_time_minutes"].astype(float),
+                                    valid_access_df[accessibility_col].astype(float),
+                                )
+                                p_access_text = f"{p_access:.4f}" if p_access >= 1e-4 else f"{p_access:.2e}"
+                                relation_access = "양의" if corr_access > 0 else "음의"
+                                st.write(
+                                    f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
+                                    f"→ 통계적으로 유의미한 {relation_access} 상관관계가 확인됩니다 (α=0.05)."
+                                    if p_access < 0.05
+                                    else (
+                                        f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
+                                        "→ 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                                    )
+                                )
+
+                                access_fig = px.scatter(
+                                    valid_access_df,
+                                    x="walk_time_minutes",
+                                    y=accessibility_col,
+                                    trendline="ols",
+                                    labels={"walk_time_minutes": "도보 시간(분)", accessibility_col: "접근성 요인 점수"},
+                                    title="도보 시간 vs 접근성 요인 점수",
+                                )
+                                st.plotly_chart(access_fig, use_container_width=True, key="tab4_access_corr")
+                            else:
+                                st.info("접근성 비교를 위한 데이터가 충분하지 않습니다.")
+                        else:
+                            st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
