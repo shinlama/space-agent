@@ -2267,8 +2267,14 @@ with tab3:
                                 corr_df["평균감성점수"].astype(float),
                             )
                             st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
+                            p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
+                            significance_msg = (
+                                " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
+                                if corr_p < 0.05
+                                else " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                            )
                             st.write(
-                                f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={corr_p:.4f})"
+                                f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}"
                             )
                             fig_corr = px.scatter(
                                 corr_df,
@@ -2442,7 +2448,13 @@ with tab4:
                                     corr_df["평균감성점수"].astype(float),
                                 )
                                 st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
-                                st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={corr_p:.4f})")
+                                p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
+                                significance_msg = (
+                                    " → 통계적으로 유의미한 양의 상관관계가 확인됩니다 (α=0.05)."
+                                    if corr_p < 0.05
+                                    else " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                                )
+                                st.write(f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}")
                                 fig_corr = px.scatter(
                                     corr_df,
                                     x="평균평점",
