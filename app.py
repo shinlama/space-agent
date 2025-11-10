@@ -466,17 +466,17 @@ def analyze_reviews(state: AgentState):
 
         for i, unit in enumerate(review_units):
             raw_sent = float(sentiment_scores[i]) if i < len(sentiment_scores) else 0.5
-            # 감성 보정: 하한 0.3 기준으로 추가 완화
-            sent_adj = np.clip((raw_sent - 0.3) / 0.7, 0, 1)
+            # 감성 보정: 하한을 0.2까지 낮추고 범위를 0.6으로 확장
+            sent_adj = np.clip((raw_sent - 0.2) / 0.6, 0, 1)
             sims = sim_mat[i]
             for j, sim in enumerate(sims):
-                # 유사도 보정: 0.3 기준으로 추가 완화 (더 많은 문장 포함)
-                sim_adj = np.clip((float(sim) - 0.3) / 0.5, 0, 1)
+                # 유사도 보정: 0.2 기준으로 완화하고 상한 폭 확장
+                sim_adj = np.clip((float(sim) - 0.2) / 0.4, 0, 1)
                 if sim_adj > 0:
                     f_name = subcat_list[j]
                     combined = ALPHA * sim_adj + BETA * sent_adj
-                    # 시그모이드: 중심 0.4, 기울기 2.2로 상한 확장
-                    score_scaled = 1 / (1 + np.exp(-2.2 * (combined - 0.4)))
+                    # 시그모이드: 중심 0.3, 기울기 1.6로 더 부드럽게
+                    score_scaled = 1 / (1 + np.exp(-1.6 * (combined - 0.3)))
                     factor_sentiments[f_name].append(float(score_scaled))
 
         # 3) 키워드 기반 부스팅 (임베딩 한계 보완)
@@ -569,11 +569,11 @@ def analyze_reviews(state: AgentState):
                 vals = factor_sentiments.get(subcat, [])
                 if vals and vmax > vmin:
                     raw = float(np.mean(vals))
-                    # 0.30~1.0 범위로 min-max 정규화
-                    normed = 0.30 + 0.70 * ((raw - vmin) / (vmax - vmin + 1e-8))
-                    scores[main_cat][subcat] = float(np.clip(normed, 0.30, 1.0))
+                    # 0.20~1.0 범위로 min-max 정규화
+                    normed = 0.20 + 0.80 * ((raw - vmin) / (vmax - vmin + 1e-8))
+                    scores[main_cat][subcat] = float(np.clip(normed, 0.20, 1.0))
                 elif vals:
-                    scores[main_cat][subcat] = float(np.clip(vals[0], 0.30, 1.0))
+                    scores[main_cat][subcat] = float(np.clip(vals[0], 0.20, 1.0))
                 else:
                     scores[main_cat][subcat] = 0.5
 
@@ -601,7 +601,7 @@ def analyze_reviews(state: AgentState):
 1. 각 요인의 정의와 키워드를 **정확히** 확인하세요.
    예: "감각적 경험"은 음악, 향기, 질감 등 오감 자극 / "문화적 맥락"은 역사, 전통, 지역 배경
 2. 리뷰에서 해당 요인 정의에 맞는 언급이 있는데 점수가 낮거나, 언급이 없는데 점수가 높으면 delta 제안
-3. delta는 -0.3 ~ +0.3 범위
+3. delta는 -0.5 ~ +0.5 범위
 4. 근거는 한 문장으로만 작성
 
 ## 접근성 특별 검토 가이드
@@ -648,7 +648,7 @@ def analyze_reviews(state: AgentState):
                     for main_cat, subcats in corrected_scores.items():
                         if factor_name in subcats:
                             old_val = subcats[factor_name]
-                            new_val = np.clip(old_val + delta, 0.30, 1.0)
+                            new_val = np.clip(old_val + delta, 0.20, 1.0)
                             corrected_scores[main_cat][factor_name] = float(new_val)
                             correction_log.append({
                                 "factor": factor_name,
@@ -2482,7 +2482,11 @@ with tab4:
                     st.markdown("#### 🧪 장소성 요인별 상세 분석")
                     st.caption("장소성 요인별 분석에는 다소 시간이 소요될 수 있습니다.")
 
+                    with open("factors.json", "r", encoding="utf-8") as f:
+                        factor_definitions_tab4 = json.load(f)
+
                     progress_placeholder = st.empty()
+                    status_placeholder = st.empty()
                     with progress_placeholder:
                         with st.spinner("장소성 요인별 분석 수행 중..."):
                             analysis_results = tab4_analysis.analyze_review_groups(
@@ -2493,8 +2497,15 @@ with tab4:
                                 category_embeddings=category_embeddings,
                                 score_template=new_score_structure_template,
                                 semantic_split_fn=cached_semantic_split,
+                                llm_client=client,
+                                factor_definitions=factor_definitions_tab4,
+                                llm_delta_limit=0.5,
+                                progress_callback=lambda current, total, context: (
+                                    status_placeholder.text(f"분석 진행 중: {current}/{total} - {context}")
+                                ),
                             )
                     progress_placeholder.empty()
+                    status_placeholder.empty()
 
                     analysis_results = analysis_results[analysis_results["리뷰수"] >= min_review_per_place]
 
@@ -2540,6 +2551,28 @@ with tab4:
                         hide_index=True,
                         height=analysis_height,
                     )
+
+                    if "corrections" in analysis_results.columns:
+                        total_corrections = analysis_results["corrections"].apply(lambda logs: len(logs) if isinstance(logs, list) else 0).sum()
+                        st.caption(f"LLM 보정 건수: {total_corrections}건")
+                        with st.expander("LLM 보정 상세", expanded=False):
+                            correction_rows = []
+                            for _, row in analysis_results.iterrows():
+                                logs = row.get("corrections") or []
+                                for log in logs:
+                                    correction_rows.append(
+                                        {
+                                            "상호명": row.get("상호명"),
+                                            "시군구명": row.get("시군구명"),
+                                            "행정동명": row.get("행정동명"),
+                                            **log,
+                                        }
+                                    )
+                            if correction_rows:
+                                correction_df = pd.DataFrame(correction_rows)
+                                st.dataframe(correction_df, use_container_width=True, hide_index=True)
+                            else:
+                                st.write("보정된 항목이 없습니다.")
 
                     corr_df = analysis_results.dropna(subset=["평균평점", "평균감성점수"])
                     if len(corr_df) >= 2:
@@ -2622,8 +2655,12 @@ with tab4:
                             analysis_results["nearest_station"] = stations
                             analysis_results["transit_type"] = transit_types
 
-                        download_df = analysis_results.copy()
-                        download_df["scores"] = download_df["scores"].apply(lambda s: json.dumps(s, ensure_ascii=False))
+                    download_df = analysis_results.copy()
+                    download_df["scores"] = download_df["scores"].apply(lambda s: json.dumps(s, ensure_ascii=False))
+                    if "corrections" in download_df.columns:
+                        download_df["corrections"] = download_df["corrections"].apply(
+                            lambda logs: json.dumps(logs, ensure_ascii=False) if isinstance(logs, list) else "[]"
+                        )
                         download_df["원본파일"] = selected_path.name
                         st.download_button(
                             "📥 감성 분석 결과 CSV 다운로드",

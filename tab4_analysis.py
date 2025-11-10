@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -90,16 +90,108 @@ def _compute_factor_sentiments(
 
     for i, unit in enumerate(review_units):
         raw_sent = float(sentiment_scores[i]) if i < len(sentiment_scores) else 0.5
-        sent_adj = np.clip((raw_sent - 0.3) / 0.7, 0, 1)
+        sent_adj = np.clip((raw_sent - 0.2) / 0.6, 0, 1)
         sims = sim_mat[i]
         for j, sim in enumerate(sims):
-            sim_adj = np.clip((float(sim) - 0.3) / 0.5, 0, 1)
+            sim_adj = np.clip((float(sim) - 0.2) / 0.4, 0, 1)
             if sim_adj > 0:
                 factor_name = subcat_list[j]
                 combined = ALPHA * sim_adj + BETA * sent_adj
-                score_scaled = 1 / (1 + np.exp(-2.2 * (combined - 0.4)))
+                score_scaled = 1 / (1 + np.exp(-1.6 * (combined - 0.3)))
                 factor_sentiments[factor_name].append(float(score_scaled))
     return factor_sentiments
+
+
+def _llm_adjust_scores(
+    llm_client,
+    factor_definitions: Dict[str, Dict[str, str]],
+    raw_scores: Dict[str, Dict[str, float]],
+    review_samples: Sequence[str],
+    delta_limit: float = 0.5,
+) -> Tuple[Dict[str, Dict[str, float]], List[Dict[str, Any]]]:
+    if llm_client is None:
+        return raw_scores, []
+
+    sample_reviews = "\n".join(list(review_samples)[:3])
+    prompt = f"""
+당신은 장소성 평가 감사자입니다.
+입력된 점수는 SBERT + 감성 회귀모델로 산출된 값입니다.
+각 요인별 점수의 타당성을 **요인의 정의에 따라** 정확히 검토하세요.
+
+## 요인 정의 (반드시 참고)
+{json.dumps(factor_definitions, ensure_ascii=False, indent=2)}
+
+## 현재 점수
+{json.dumps(raw_scores, ensure_ascii=False, indent=2)}
+
+## 리뷰 내용
+{sample_reviews}
+
+## 검토 규칙
+1. 각 요인의 정의와 키워드를 **정확히** 확인하세요.
+   예: "감각적 경험"은 음악, 향기, 질감 등 오감 자극 / "문화적 맥락"은 역사, 전통, 지역 배경
+2. 리뷰에서 해당 요인 정의에 맞는 언급이 있는데 점수가 낮거나, 언급이 없는데 점수가 높으면 delta 제안
+3. delta는 -{delta_limit:.1f} ~ +{delta_limit:.1f} 범위
+4. 근거는 한 문장으로만 작성
+
+## 출력 형식 (JSON만)
+{{
+  "corrections": [
+    {{"factor": "쾌적성", "delta": 0.15, "reason": "청결, 화장실, 충전시설 긍정 언급 많음"}},
+    {{"factor": "감각적 경험", "delta": 0.12, "reason": "디저트 맛과 다양성 강조"}}
+  ]
+}}
+
+보정 불필요 시: {{"corrections": []}}
+"""
+
+    try:
+        resp = llm_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.1,
+            max_tokens=500,
+        )
+        correction_result = json.loads(resp.choices[0].message.content)
+        corrections = correction_result.get("corrections", [])
+    except Exception:
+        return raw_scores, []
+
+    corrected_scores = json.loads(json.dumps(raw_scores))
+    correction_log: List[Dict[str, Any]] = []
+
+    for correction in corrections:
+        if not isinstance(correction, dict):
+            continue
+        factor_name = correction.get("factor")
+        try:
+            delta = float(correction.get("delta", 0))
+        except (TypeError, ValueError):
+            continue
+        reason = correction.get("reason", "")
+
+        found = False
+        for main_cat, subcats in corrected_scores.items():
+            if factor_name in subcats:
+                old_val = subcats[factor_name]
+                new_val = np.clip(old_val + delta, 0.20, 1.0)
+                corrected_scores[main_cat][factor_name] = float(new_val)
+                correction_log.append(
+                    {
+                        "factor": factor_name,
+                        "original": round(old_val, 2),
+                        "adjusted": round(float(new_val), 2),
+                        "delta": round(delta, 2),
+                        "reason": reason,
+                    }
+                )
+                found = True
+                break
+        if not found:
+            continue
+
+    return corrected_scores, correction_log
 
 
 def evaluate_reviews_for_place(
@@ -109,7 +201,10 @@ def evaluate_reviews_for_place(
     category_embeddings: Dict[str, np.ndarray],
     score_template: Dict[str, Dict[str, Optional[float]]],
     semantic_split_fn: Callable[[str], List[str]],
-) -> Optional[Tuple[Dict[str, Dict[str, float]], float, int]]:
+    llm_client=None,
+    factor_definitions: Optional[Dict[str, Dict[str, str]]] = None,
+    llm_delta_limit: float = 0.5,
+) -> Optional[Tuple[Dict[str, Dict[str, float]], float, int, List[Dict[str, Any]]]]:
     cleaned_reviews = [str(text).strip() for text in review_texts if str(text).strip()]
     if not cleaned_reviews:
         return None
@@ -136,16 +231,24 @@ def evaluate_reviews_for_place(
             vals = factor_sentiments.get(subcat, [])
             if vals and vmax > vmin:
                 raw = float(np.mean(vals))
-                normed = 0.30 + 0.70 * ((raw - vmin) / (vmax - vmin + 1e-8))
-                scores[main_cat][subcat] = float(np.clip(normed, 0.30, 1.0))
+                normed = 0.20 + 0.80 * ((raw - vmin) / (vmax - vmin + 1e-8))
+                scores[main_cat][subcat] = float(np.clip(normed, 0.20, 1.0))
             elif vals:
-                scores[main_cat][subcat] = float(np.clip(vals[0], 0.30, 1.0))
+                scores[main_cat][subcat] = float(np.clip(vals[0], 0.20, 1.0))
             else:
                 scores[main_cat][subcat] = 0.5
 
-    flat_scores = [score for sub in scores.values() for score in sub.values() if score is not None]
+    corrected_scores, correction_log = _llm_adjust_scores(
+        llm_client=llm_client,
+        factor_definitions=factor_definitions or {},
+        raw_scores=scores,
+        review_samples=cleaned_reviews,
+        delta_limit=llm_delta_limit,
+    ) if llm_client and factor_definitions else (scores, [])
+
+    flat_scores = [score for sub in corrected_scores.values() for score in sub.values() if score is not None]
     mean_score = float(np.mean(flat_scores)) if flat_scores else 0.5
-    return scores, mean_score, len(review_units)
+    return corrected_scores, mean_score, len(review_units), correction_log
 
 
 def analyze_review_groups(
@@ -156,10 +259,26 @@ def analyze_review_groups(
     category_embeddings: Dict[str, np.ndarray],
     score_template: Dict[str, Dict[str, Optional[float]]],
     semantic_split_fn: Callable[[str], List[str]],
+    llm_client=None,
+    factor_definitions: Optional[Dict[str, Dict[str, str]]] = None,
+    llm_delta_limit: float = 0.5,
+    progress_callback: Optional[Callable[[int, int, Optional[str]], None]] = None,
 ) -> pd.DataFrame:
     results: List[Dict[str, object]] = []
+    factor_defs = factor_definitions
+    if llm_client is not None and factor_defs is None:
+        try:
+            with open("factors.json", "r", encoding="utf-8") as f:
+                factor_defs = json.load(f)
+        except Exception:
+            factor_defs = None
 
-    for group_key, group in review_df.groupby(list(group_cols), dropna=False):
+    grouped_iter = review_df.groupby(list(group_cols), dropna=False)
+    total_groups = grouped_iter.ngroups
+    for idx, (group_key, group) in enumerate(grouped_iter, start=1):
+        if progress_callback:
+            context = " / ".join(str(k) for k in group_key if k)
+            progress_callback(idx, total_groups, context)
         if not isinstance(group_key, tuple):
             group_key = (group_key,)
         key_dict = {col: val for col, val in zip(group_cols, group_key)}
@@ -172,11 +291,14 @@ def analyze_review_groups(
             category_embeddings=category_embeddings,
             score_template=score_template,
             semantic_split_fn=semantic_split_fn,
+            llm_client=llm_client,
+            factor_definitions=factor_defs,
+            llm_delta_limit=llm_delta_limit,
         )
         if evaluation is None:
             continue
 
-        scores, mean_score, unit_count = evaluation
+        scores, mean_score, unit_count, correction_log = evaluation
         result: Dict[str, object] = dict(key_dict)
         result["리뷰수"] = int(sum(1 for text in review_texts if str(text).strip()))
         result["리뷰문장수"] = unit_count
@@ -189,6 +311,7 @@ def analyze_review_groups(
         result["평균감성점수"] = mean_score
         result["scores"] = scores
         result["리뷰통합"] = "\n".join([str(text).strip() for text in review_texts if str(text).strip()])
+        result["corrections"] = correction_log
 
         if "lat" in group.columns and "lng" in group.columns:
             result["lat"] = group["lat"].iloc[0]
