@@ -19,6 +19,7 @@ import folium
 from folium.plugins import HeatMap, MarkerCluster
 from streamlit_folium import st_folium
 import time
+import random
 from scipy import stats
 
 # NLP 모델 관련 임포트 (Hugging Face Transformers)
@@ -54,6 +55,7 @@ font_path = get_font_path()
 
 # 표본 CSV 경로
 SAMPLED_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵_표본.csv"
+GOOGLE_REVIEW_CSV = Path(__file__).resolve().parent / "google_reviews_sample.csv"
 FULL_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵.csv"
 
 
@@ -346,13 +348,20 @@ def load_sentiment_model_tabularis():
     model_name = "tabularisai/multilingual-sentiment-analysis"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
-    pipe = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
+    pipe = pipeline(
+        "text-classification",
+        model=model,
+        tokenizer=tokenizer,
+        return_all_scores=True,
+        truncation=True,
+        max_length=512,
+    )
     weights = np.linspace(0, 1, 5)  # [0.0, 0.25, 0.5, 0.75, 1.0]
 
     def predict_score(sentences: List[str]):
         if not sentences:
             return []
-        results = pipe(sentences)
+        results = pipe(sentences, truncation=True, max_length=512)
         scores = []
         for res in results:
             probs = np.array([r['score'] for r in res])
@@ -2070,3 +2079,171 @@ with tab3:
                 mime="text/csv",
                 key="tab3_download_sampled",
             )
+
+            st.markdown("---")
+            st.markdown("### ☕ Google 리뷰 수집 및 감성 분석 연결")
+            st.caption("Google Maps API를 이용해 표본 카페의 최신 리뷰를 수집하고, 간단한 감성 분석을 수행합니다.")
+
+            max_reviews = st.slider(
+                "카페당 최대 리뷰 수",
+                min_value=5,
+                max_value=40,
+                value=10,
+                step=5,
+                key="tab3_google_max_reviews",
+            )
+            sample_count = st.slider(
+                "리뷰를 수집할 카페 수",
+                min_value=10,
+                max_value=min(len(filtered_df), 2500),
+                value=min(len(filtered_df), 100),
+                step=10,
+                help="API 호출 한도를 고려해 한 번에 처리할 카페 수를 제한하세요.",
+                key="tab3_google_sample_count",
+            )
+
+            sleep_min, sleep_max = st.slider(
+                "API 호출 간 랜덤 대기 (초)",
+                min_value=0.2,
+                max_value=2.0,
+                value=(0.8, 1.5),
+                step=0.1,
+                key="tab3_google_sleep_range",
+            )
+
+            target_df = (
+                filtered_df.sample(n=sample_count, random_state=42).reset_index(drop=True)
+                if sample_count < len(filtered_df)
+                else filtered_df.copy()
+            )
+
+            st.caption(f"📌 수집 대상 카페 수: {len(target_df)}")
+            st.dataframe(
+                target_df[[col for col in ["상호명", "시군구명", "행정동명", "도로명주소"] if col in target_df.columns]].head(10),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            if st.button("🚀 Google 리뷰 수집 시작", key="tab3_btn_collect_google_reviews"):
+                progress_bar = st.progress(0.0)
+                status_placeholder = st.empty()
+                collected_reviews = []
+                error_logs = []
+
+                for idx, row in enumerate(target_df.itertuples(index=False), start=1):
+                    name = getattr(row, "상호명")
+                    district = getattr(row, "시군구명")
+                    eupmyeon = getattr(row, "행정동명", "") or ""
+                    query = " ".join([s for s in [district, eupmyeon, name] if s])
+
+                    status_placeholder.text(f"[{idx}/{len(target_df)}] {query} 리뷰 수집 중...")
+
+                    try:
+                        search_resp = gmaps.places(query=query, language="ko", region="kr")
+                        candidates = search_resp.get("results") or []
+                        if not candidates:
+                            continue
+
+                        place = candidates[0]
+                        place_id = place.get("place_id")
+                        if not place_id:
+                            continue
+
+                        details = gmaps.place(place_id=place_id, language="ko")
+                        place_result = details.get("result") or {}
+                        reviews = place_result.get("reviews") or []
+
+                        for review in reviews[:max_reviews]:
+                            collected_reviews.append(
+                                {
+                                    "상호명": name,
+                                    "시군구명": district,
+                                    "행정동명": eupmyeon,
+                                    "place_id": place_id,
+                                    "평점": review.get("rating"),
+                                    "리뷰": review.get("text", ""),
+                                    "작성일": review.get("relative_time_description"),
+                                    "언어": review.get("language"),
+                                    "작성자": review.get("author_name"),
+                                }
+                            )
+
+                    except Exception as e:
+                        error_logs.append(f"{query}: {e}")
+
+                    progress_bar.progress(idx / len(target_df))
+                    time.sleep(random.uniform(min(sleep_min, sleep_max), max(sleep_min, sleep_max)))
+
+                progress_bar.empty()
+                status_placeholder.empty()
+
+                if collected_reviews:
+                    review_df = pd.DataFrame(collected_reviews)
+                    review_df.to_csv(GOOGLE_REVIEW_CSV, index=False, encoding="utf-8-sig")
+                    st.session_state["google_review_df"] = review_df
+
+                    st.success(f"✅ 총 {len(review_df)}개 리뷰 저장 완료 → `{GOOGLE_REVIEW_CSV.name}`")
+                    table_height = min(650, max(250, 38 * len(review_df)))
+                    st.dataframe(
+                        review_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        height=table_height,
+                    )
+
+                    # place_id 또는 (상호명, 시군구명) 기준으로 리뷰 합치기
+                    if "place_id" in review_df.columns:
+                        group_cols = ["place_id", "상호명", "시군구명", "행정동명"]
+                    else:
+                        group_cols = ["상호명", "시군구명", "행정동명"]
+
+                    grouped_reviews = (
+                        review_df.groupby(group_cols, dropna=False, as_index=False)["리뷰"]
+                        .apply(lambda texts: "\n".join([t for t in texts if (t or "").strip()]))
+                        .rename(columns={"리뷰": "리뷰통합"})
+                    )
+
+                    # 감성 분석
+                    grouped_reviews["리뷰통합"] = grouped_reviews["리뷰통합"].fillna("")
+                    valid_mask = grouped_reviews["리뷰통합"].str.strip() != ""
+                    if valid_mask.any():
+                        texts = grouped_reviews.loc[valid_mask, "리뷰통합"].tolist()
+                        sentiments = sentiment_model(texts)
+                        grouped_reviews.loc[valid_mask, "감성점수"] = sentiments
+
+                        aggregation_df = grouped_reviews.copy()
+                        aggregation_df["리뷰수"] = (
+                            aggregation_df["리뷰통합"]
+                            .str.split("\n")
+                            .apply(lambda parts: len([p for p in parts if p.strip()]))
+                        )
+
+                        summary_df = aggregation_df.rename(
+                            columns={"감성점수": "평균감성점수", "리뷰수": "리뷰수량"}
+                        )
+                        st.markdown("#### 📊 통합 리뷰 감성 분석")
+                        summary_height = min(550, max(240, 38 * len(summary_df)))
+                        st.dataframe(
+                            summary_df[[col for col in summary_df.columns if col in ["상호명", "시군구명", "행정동명", "평균감성점수", "리뷰수량"]]],
+                            use_container_width=True,
+                            hide_index=True,
+                            height=summary_height,
+                        )
+                    else:
+                        st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
+
+                    st.download_button(
+                        "📥 수집 리뷰 CSV 다운로드",
+                        data=review_df.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="google_reviews_sample.csv",
+                        mime="text/csv",
+                        key="tab3_download_google_reviews",
+                    )
+                else:
+                    st.warning("리뷰를 수집하지 못했습니다. 검색어 또는 API 설정을 확인하세요.")
+
+                if error_logs:
+                    st.warning(f"⚠️ {len(error_logs)}건의 항목에서 오류가 발생했습니다.")
+                    with st.expander("오류 상세 보기"):
+                        for log in error_logs[:50]:
+                            st.text(log)
