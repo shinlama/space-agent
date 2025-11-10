@@ -19,3 +19,4 @@ selenium
 beautifulsoup4
 pandas
 tqdm
+statsmodels
