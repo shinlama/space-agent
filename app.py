@@ -2219,30 +2219,26 @@ with tab3:
                     else:
                         group_cols = ["상호명", "시군구명", "행정동명"]
 
-                    grouped_reviews = (
-                        review_df.groupby(group_cols, dropna=False, as_index=False)["리뷰"]
-                        .apply(lambda texts: "\n".join([t for t in texts if (t or "").strip()]))
-                        .rename(columns={"리뷰": "리뷰통합"})
-                    )
+                    review_proc = review_df.copy()
+                    review_proc["리뷰"] = review_proc["리뷰"].fillna("").astype(str)
+                    review_proc["리뷰정제"] = review_proc["리뷰"].str.strip()
+                    review_proc["리뷰감성점수"] = np.nan
 
-                    # 감성 분석
-                    grouped_reviews["리뷰통합"] = grouped_reviews["리뷰통합"].fillna("")
-                    valid_mask = grouped_reviews["리뷰통합"].str.strip() != ""
+                    valid_mask = review_proc["리뷰정제"] != ""
                     if valid_mask.any():
-                        texts = grouped_reviews.loc[valid_mask, "리뷰통합"].tolist()
+                        texts = review_proc.loc[valid_mask, "리뷰정제"].tolist()
                         sentiments = sentiment_model(texts)
-                        grouped_reviews.loc[valid_mask, "감성점수"] = sentiments
+                        review_proc.loc[valid_mask, "리뷰감성점수"] = sentiments
 
-                        aggregation_df = grouped_reviews.copy()
-                        aggregation_df["리뷰수"] = (
-                            aggregation_df["리뷰통합"]
-                            .str.split("\n")
-                            .apply(lambda parts: len([p for p in parts if p.strip()]))
+                        summary_df = (
+                            review_proc.groupby(group_cols, dropna=False)
+                            .agg(
+                                평균감성점수=("리뷰감성점수", "mean"),
+                                리뷰수량=("리뷰정제", lambda s: int((s != "").sum())),
+                            )
+                            .reset_index()
                         )
-
-                        summary_df = aggregation_df.rename(
-                            columns={"감성점수": "평균감성점수", "리뷰수": "리뷰수량"}
-                        )
+                        summary_df = summary_df[summary_df["리뷰수량"] > 0]
 
                         rating_summary = (
                             review_df.groupby(group_cols, dropna=False)["평점"]
@@ -2413,13 +2409,25 @@ with tab4:
                         st.stop()
 
                     aggregated = filtered_reviews.copy()
-                    aggregated["리뷰"] = aggregated["리뷰"].fillna("")
+                    aggregated["리뷰"] = aggregated["리뷰"].fillna("").astype(str)
+                    aggregated["리뷰정제"] = aggregated["리뷰"].str.strip()
+                    aggregated["리뷰감성점수"] = np.nan
+
+                    valid_mask = aggregated["리뷰정제"] != ""
+                    if not valid_mask.any():
+                        st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
+                        st.stop()
+
+                    texts = aggregated.loc[valid_mask, "리뷰정제"].tolist()
+                    sentiment_scores = sentiment_model(texts)
+                    aggregated.loc[valid_mask, "리뷰감성점수"] = sentiment_scores
+
                     grouped = (
                         aggregated.groupby(group_cols, dropna=False)
                         .agg(
-                            리뷰통합=("리뷰", lambda texts: "\n".join([t for t in texts if str(t).strip()])),
                             평균평점=("평점", "mean"),
-                            리뷰수=("리뷰", lambda s: int((s.str.strip() != "").sum())),
+                            리뷰수=("리뷰정제", lambda s: int((s != "").sum())),
+                            평균감성점수=("리뷰감성점수", "mean"),
                         )
                         .reset_index()
                     )
@@ -2429,16 +2437,6 @@ with tab4:
                     if grouped.empty:
                         st.warning("조건을 만족하는 집계 데이터가 없습니다.")
                         st.stop()
-
-                    sentiment_texts = grouped["리뷰통합"].fillna("").tolist()
-                    valid_indices = [i for i, text in enumerate(sentiment_texts) if text.strip()]
-                    if not valid_indices:
-                        st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
-                        st.stop()
-
-                    texts = [sentiment_texts[i] for i in valid_indices]
-                    sentiment_scores = sentiment_model(texts)
-                    grouped.loc[[grouped.index[i] for i in valid_indices], "평균감성점수"] = sentiment_scores
 
                     st.markdown("#### 📊 감성 분석 결과")
                     base_analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수"]
