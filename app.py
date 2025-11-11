@@ -2473,6 +2473,7 @@ with tab4:
                             base_corr_df,
                             x="평균평점",
                             y="평균감성점수",
+                            hover_data=[col for col in group_cols if col != "place_id" and col in base_corr_df.columns],
                             trendline="ols",
                             labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
                             title="평균 평점 vs 감성 점수",
@@ -2537,12 +2538,7 @@ with tab4:
                         expanded_df = pd.DataFrame(list(expanded_scores), index=analysis_results.index)
                         analysis_results = pd.concat([analysis_results, expanded_df], axis=1)
                         if "물리적 특성/접근성" in analysis_results.columns:
-                            analysis_results = analysis_results.rename(columns={"물리적 특성/접근성": "접근성_요인점수"})
-                            accessibility_col = "접근성_요인점수"
-                            score_columns = [
-                                "접근성_요인점수" if col == "물리적 특성/접근성" else col
-                                for col in score_columns
-                            ]
+                            accessibility_col = "물리적 특성/접근성"
 
                     st.markdown("#### 📊 감성 분석 결과 (장소성 요인 반영)")
                     analysis_cols = [c for c in group_cols if c != "place_id"] + ["평균평점", "평균감성점수", "리뷰수", "리뷰문장수"]
@@ -2662,6 +2658,22 @@ with tab4:
                             analysis_results["walk_time_minutes"] = walk_times
                             analysis_results["nearest_station"] = stations
                             analysis_results["transit_type"] = transit_types
+                    access_info_cols = [
+                        col
+                        for col in ["walk_time_minutes", "nearest_station", "transit_type", accessibility_col]
+                        if col and col in analysis_results.columns
+                    ]
+                    if access_info_cols:
+                        st.markdown("#### 🚇 주변 대중교통 접근성 요약")
+                        st.caption("Google Places Nearby + Distance Matrix API 기반으로 최근접 역/정류장과 예상 도보 시간을 추정했습니다.")
+                        access_display_cols = [c for c in group_cols if c != "place_id"] + access_info_cols
+                        access_height = min(400, max(240, 38 * len(analysis_results)))
+                        st.dataframe(
+                            analysis_results[access_display_cols],
+                            use_container_width=True,
+                            hide_index=True,
+                            height=access_height,
+                        )
 
                     download_df = analysis_results.copy()
                     download_df["scores"] = download_df["scores"].apply(lambda s: json.dumps(s, ensure_ascii=False))

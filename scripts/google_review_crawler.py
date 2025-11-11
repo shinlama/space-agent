@@ -121,12 +121,19 @@ def get_google_reviews(
         return reviews
 
     detail_result = details.get("result") or {}
+    geometry = detail_result.get("geometry", {}).get("location", {}) if detail_result else {}
+    lat = geometry.get("lat")
+    lng = geometry.get("lng")
+
     for review in (detail_result.get("reviews") or [])[:max_reviews]:
         reviews.append(
             {
                 NAME_COL: name,
                 DISTRICT_COL: district,
                 "행정동명": eupmyeon,
+                "place_id": place_id,
+                "lat": lat,
+                "lng": lng,
                 "작성자": review.get("author_name"),
                 "평점": review.get("rating"),
                 "리뷰": review.get("text"),
