@@ -800,12 +800,12 @@ def collect_all_cafes_seoul(_gmaps_client, max_per_district: int = 30) -> pd.Dat
     
     return df
 
-def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 600) -> Tuple[float, str, str]:
+def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 600) -> Tuple[float, str, str, float, float]:
     """
     특정 위치에서 가장 가까운 지하철역/버스정류장까지의 도보 시간을 계산합니다.
     
     Returns:
-        (도보_분, 최근접_역명, 타입)
+        (도보_분, 최근접_역명, 타입, 도보_거리(m), 직선_거리(m))
     """
     try:
         print(f"[DEBUG] 접근성 계산 시작: lat={lat}, lng={lng}")
@@ -839,7 +839,7 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
         # 검색 결과가 없으면 조기 반환
         if not subway_results and not bus_results:
             print(f"[WARN] 600m 내 역/정류장 없음")
-            return None, "정보 없음", "없음"
+            return None, "정보 없음", "없음", float("nan"), float("nan")
         
         from math import radians, cos, sin, asin, sqrt
 
@@ -909,6 +909,8 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
 
         # 가장 가까운 역/정류장 찾기
         min_walk_time = 999
+        min_walk_distance = float("inf")
+        min_straight_distance = float("inf")
         nearest_name = "정보 없음"
         nearest_type = "없음"
         distance_matrix_success = False
@@ -920,12 +922,15 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                 station_name = station.get('name', '지하철역')
                 print(f"[DEBUG] [{idx+1}/3] 지하철역 도보 시간 계산: {station_name}")
                 
-                duration, _, source = compute_walking_time(
+                straight_distance = haversine(lat, lng, station_loc['lat'], station_loc['lng'])
+                duration, distance_m, _ = compute_walking_time(
                     station_loc['lat'], station_loc['lng'], station_name, '지하철역'
                 )
                 distance_matrix_success = True
                 if duration < min_walk_time:
                     min_walk_time = duration
+                    min_walk_distance = distance_m
+                    min_straight_distance = straight_distance
                     nearest_name = station_name
                     nearest_type = '지하철역'
                     
@@ -941,12 +946,15 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                 bus_name = bus.get('name', '버스정류장')
                 print(f"[DEBUG] [{idx+1}/3] 버스정류장 도보 시간 계산: {bus_name}")
                 
-                duration, _, source = compute_walking_time(
+                straight_distance = haversine(lat, lng, bus_loc['lat'], bus_loc['lng'])
+                duration, distance_m, _ = compute_walking_time(
                     bus_loc['lat'], bus_loc['lng'], bus_name, '버스정류장'
                 )
                 distance_matrix_success = True
                 if duration < min_walk_time:
                     min_walk_time = duration
+                    min_walk_distance = distance_m
+                    min_straight_distance = straight_distance
                     nearest_name = bus_name
                     nearest_type = '버스정류장'
                     
@@ -963,21 +971,27 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
             print(f"  2. API 키에 Distance Matrix API 권한이 없음")
             print(f"  3. Billing이 활성화되지 않음")
             print(f"  4. API quota 초과")
-            return None, "Distance Matrix 실패", "오류"
+            return None, "Distance Matrix 실패", "오류", float("nan"), float("nan")
         
         # 결과 반환
-        if min_walk_time < 999:
+        if min_walk_time < 999 and min_walk_distance != float("inf"):
             print(f"[SUCCESS] 최근접: {nearest_name} ({nearest_type}), 도보 {min_walk_time:.1f}분")
-            return round(min_walk_time, 1), nearest_name, nearest_type
+            return (
+                round(min_walk_time, 1),
+                nearest_name,
+                nearest_type,
+                float(min_walk_distance),
+                float(min_straight_distance),
+            )
         else:
             print(f"[WARN] Distance Matrix 호출은 성공했지만 유효한 경로를 찾지 못함")
-            return None, "경로 없음", "없음"
+            return None, "경로 없음", "없음", float("nan"), float("nan")
     
     except Exception as e:
         print(f"[CRITICAL ERROR] 접근성 계산 치명적 오류: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
-        return None, "치명적 오류", "오류"
+        return None, "치명적 오류", "오류", float("nan"), float("nan")
 
 def calculate_placeness_batch(df: pd.DataFrame, sample_size: int = None, progress_callback=None) -> pd.DataFrame:
     """
@@ -1577,10 +1591,9 @@ with tab2:
                 status_text.text(f"계산 중: {row['name']} ({counter}/{len(sample_df)})")
                 
                 try:
-                    walk_time, nearest_name, transit_type = calculate_transit_accessibility(
+                    walk_time, nearest_name, transit_type, walk_distance, straight_distance = calculate_transit_accessibility(
                         row['lat'], row['lng']
                     )
-                    
                     results.append({
                         'place_id': row['place_id'],
                         'name': row['name'],
@@ -1591,7 +1604,9 @@ with tab2:
                         'accessibility_score': row['accessibility_score'],
                         'walk_time_minutes': walk_time,
                         'nearest_station': nearest_name,
-                        'transit_type': transit_type
+                        'transit_type': transit_type,
+                        'walk_distance_m': walk_distance,
+                        'straight_distance_m': straight_distance,
                     })
                     
                     if walk_time is None:
@@ -1609,7 +1624,9 @@ with tab2:
                         'accessibility_score': row['accessibility_score'],
                         'walk_time_minutes': None,
                         'nearest_station': '오류',
-                        'transit_type': '오류'
+                        'transit_type': '오류',
+                        'walk_distance_m': None,
+                        'straight_distance_m': None,
                     })
                 
                 progress_bar.progress(counter / len(sample_df))
@@ -2628,34 +2645,49 @@ with tab4:
                                 lambda pid: coord_cache.get(pid, (np.nan, np.nan))[1]
                             )
 
-                    if (
-                        {"walk_time_minutes", "nearest_station", "transit_type"}.issubset(analysis_results.columns)
-                        is False
-                    ) and {"lat", "lng"}.issubset(analysis_results.columns):
+                    accessibility_required_cols = {"walk_time_minutes", "walk_distance_m", "straight_distance_m", "nearest_station", "transit_type"}
+                    has_accessibility_cols = accessibility_required_cols.issubset(analysis_results.columns)
+                    needs_accessibility = not has_accessibility_cols
+                    if has_accessibility_cols:
+                        needs_accessibility = analysis_results[
+                            list({"walk_time_minutes", "walk_distance_m", "straight_distance_m"} & set(analysis_results.columns))
+                        ].isna().any().any()
+
+                    if needs_accessibility and {"lat", "lng"}.issubset(analysis_results.columns):
                         with st.spinner("접근성(도보 시간) 데이터를 계산 중입니다..."):
-                            walk_times, stations, transit_types = [], [], []
+                            walk_times, walk_path_distances, walk_straight_distances, stations, transit_types = [], [], [], [], []
                             for _, row in analysis_results.iterrows():
                                 lat_val, lng_val = row.get("lat"), row.get("lng")
                                 if pd.isna(lat_val) or pd.isna(lng_val):
                                     walk_times.append(np.nan)
+                                    walk_path_distances.append(np.nan)
+                                    walk_straight_distances.append(np.nan)
                                     stations.append(None)
                                     transit_types.append(None)
                                     continue
                                 try:
-                                    walk_time, station_name, transit_type = calculate_transit_accessibility(
+                                    walk_time, station_name, transit_type, walk_distance, straight_distance = calculate_transit_accessibility(
                                         lat_val, lng_val
                                     )
                                 except Exception:
-                                    walk_time, station_name, transit_type = (np.nan, None, None)
+                                    walk_time, station_name, transit_type, walk_distance, straight_distance = (np.nan, None, None, np.nan, np.nan)
                                 walk_times.append(walk_time)
+                                walk_path_distances.append(walk_distance)
+                                walk_straight_distances.append(straight_distance)
                                 stations.append(station_name)
                                 transit_types.append(transit_type)
                             analysis_results["walk_time_minutes"] = walk_times
+                            analysis_results["walk_distance_m"] = walk_path_distances
+                            analysis_results["straight_distance_m"] = walk_straight_distances
                             analysis_results["nearest_station"] = stations
                             analysis_results["transit_type"] = transit_types
+
+                    for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m"]:
+                        if col in analysis_results.columns:
+                            analysis_results[col] = pd.to_numeric(analysis_results[col], errors="coerce")
                     access_info_cols = [
                         col
-                        for col in ["walk_time_minutes", "nearest_station", "transit_type", accessibility_col]
+                        for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m", "nearest_station", "transit_type", accessibility_col]
                         if col and col in analysis_results.columns
                     ]
                     if access_info_cols:
@@ -2715,40 +2747,92 @@ with tab4:
                             st.info("지도 표시를 위한 좌표 정보가 부족합니다.")
 
                         # 접근성 비교 (도보 시간 vs 접근성 점수)
+                        if (
+                            accessibility_col
+                            and {accessibility_col}.issubset(analysis_results.columns)
+                        ):
+                            analysis_results[accessibility_col] = pd.to_numeric(
+                                analysis_results[accessibility_col], errors="coerce"
+                            )
+
                         if accessibility_col and {"walk_time_minutes", accessibility_col}.issubset(analysis_results.columns):
                             st.markdown("#### 🚇 접근성 실험")
                             valid_access_df = analysis_results.dropna(subset=["walk_time_minutes", accessibility_col])
-                            if not valid_access_df.empty:
-                                corr_access, p_access = stats.pearsonr(
-                                    valid_access_df["walk_time_minutes"].astype(float),
-                                    valid_access_df[accessibility_col].astype(float),
-                                )
-                                p_access_text = f"{p_access:.4f}" if p_access >= 1e-4 else f"{p_access:.2e}"
-                                relation_access = "양의" if corr_access > 0 else "음의"
-                                st.write(
-                                    f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
-                                    f"→ 통계적으로 유의미한 {relation_access} 상관관계가 확인됩니다 (α=0.05)."
-                                    if p_access < 0.05
-                                    else (
-                                        f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
-                                        "→ 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                            if len(valid_access_df) >= 2:
+                                try:
+                                    corr_access, p_access = stats.pearsonr(
+                                        valid_access_df["walk_time_minutes"].astype(float),
+                                        valid_access_df[accessibility_col].astype(float),
                                     )
-                                )
+                                    p_access_text = f"{p_access:.4f}" if p_access >= 1e-4 else f"{p_access:.2e}"
+                                    relation_access = "양의" if corr_access > 0 else "음의"
+                                    st.write(
+                                        f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
+                                        f"→ 통계적으로 유의미한 {relation_access} 상관관계가 확인됩니다 (α=0.05)."
+                                        if p_access < 0.05
+                                        else (
+                                            f"접근성 상관계수: **{corr_access:.3f}** (p-value={p_access_text}) "
+                                            "→ 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                                        )
+                                    )
 
-                                access_fig = px.scatter(
-                                    valid_access_df,
-                                    x="walk_time_minutes",
-                                    y=accessibility_col,
-                                    trendline="ols",
-                                    labels={"walk_time_minutes": "도보 시간(분)", accessibility_col: "접근성 요인 점수"},
-                                    title="도보 시간 vs 접근성 요인 점수",
-                                )
-                                st.plotly_chart(access_fig, use_container_width=True, key="tab4_access_corr")
-                                slope_access, intercept_access, _, _, _ = stats.linregress(
-                                    valid_access_df["walk_time_minutes"].astype(float),
-                                    valid_access_df[accessibility_col].astype(float),
-                                )
-                                st.caption(f"회귀선: y = {slope_access:.3f}x + {intercept_access:.3f}")
+                                    access_fig = px.scatter(
+                                        valid_access_df,
+                                        x="walk_time_minutes",
+                                        y=accessibility_col,
+                                        trendline="ols",
+                                        labels={"walk_time_minutes": "도보 시간(분)", accessibility_col: "접근성 요인 점수"},
+                                        title="도보 시간 vs 접근성 요인 점수",
+                                    )
+                                    st.plotly_chart(access_fig, use_container_width=True, key="tab4_access_corr")
+                                    slope_access, intercept_access, _, _, _ = stats.linregress(
+                                        valid_access_df["walk_time_minutes"].astype(float),
+                                        valid_access_df[accessibility_col].astype(float),
+                                    )
+                                    st.caption(f"회귀선: y = {slope_access:.3f}x + {intercept_access:.3f}")
+                                except Exception as access_err:
+                                    st.warning(f"도보 시간 상관 분석 중 오류가 발생했습니다: {access_err}")
+                            else:
+                                st.info("도보 시간 상관 분석을 위해서는 최소 2개 이상의 유효한 데이터가 필요합니다.")
+
+                            if "straight_distance_m" in valid_access_df.columns and valid_access_df["straight_distance_m"].notna().any():
+                                st.markdown("#### 🚇 직선거리 기반 접근성 실험")
+                                valid_distance_df = valid_access_df.dropna(subset=["straight_distance_m"])
+                                if len(valid_distance_df) >= 2:
+                                    try:
+                                        corr_dist, p_dist = stats.pearsonr(
+                                            valid_distance_df["straight_distance_m"].astype(float),
+                                            valid_distance_df[accessibility_col].astype(float),
+                                        )
+                                        p_dist_text = f"{p_dist:.4f}" if p_dist >= 1e-4 else f"{p_dist:.2e}"
+                                        relation_dist = "양의" if corr_dist > 0 else "음의"
+                                        st.write(
+                                            f"직선거리 상관계수: **{corr_dist:.3f}** (p-value={p_dist_text}) "
+                                            f"→ 통계적으로 유의미한 {relation_dist} 상관관계가 확인됩니다 (α=0.05)."
+                                            if p_dist < 0.05
+                                            else (
+                                                f"직선거리 상관계수: **{corr_dist:.3f}** (p-value={p_dist_text}) "
+                                                "→ 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
+                                            )
+                                        )
+                                        distance_fig = px.scatter(
+                                            valid_distance_df,
+                                            x="straight_distance_m",
+                                            y=accessibility_col,
+                                            trendline="ols",
+                                            labels={"straight_distance_m": "직선 거리(m)", accessibility_col: "접근성 요인 점수"},
+                                            title="직선 거리 vs 접근성 요인 점수",
+                                        )
+                                        st.plotly_chart(distance_fig, use_container_width=True, key="tab4_access_dist_corr")
+                                        slope_dist, intercept_dist, _, _, _ = stats.linregress(
+                                            valid_distance_df["straight_distance_m"].astype(float),
+                                            valid_distance_df[accessibility_col].astype(float),
+                                        )
+                                        st.caption(f"회귀선: y = {slope_dist:.3f}x + {intercept_dist:.3f}")
+                                    except Exception as dist_err:
+                                        st.warning(f"직선거리 상관 분석 중 오류가 발생했습니다: {dist_err}")
+                                else:
+                                    st.info("직선거리 상관 분석을 위해서는 최소 2개 이상의 유효한 데이터가 필요합니다.")
                             else:
                                 st.info("접근성 비교를 위한 데이터가 충분하지 않습니다.")
                         else:
