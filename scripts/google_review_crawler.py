@@ -124,6 +124,10 @@ def get_google_reviews(
     geometry = detail_result.get("geometry", {}).get("location", {}) if detail_result else {}
     lat = geometry.get("lat")
     lng = geometry.get("lng")
+    if lat is None or lng is None:
+        search_geom = (results[0].get("geometry") or {}).get("location", {})
+        lat = search_geom.get("lat", lat)
+        lng = search_geom.get("lng", lng)
 
     for review in (detail_result.get("reviews") or [])[:max_reviews]:
         reviews.append(

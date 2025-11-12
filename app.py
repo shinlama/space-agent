@@ -841,6 +841,72 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
             print(f"[WARN] 600m 내 역/정류장 없음")
             return None, "정보 없음", "없음"
         
+        from math import radians, cos, sin, asin, sqrt
+
+        def haversine(lat1, lon1, lat2, lon2):
+            lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+            dlon = lon2 - lon1
+            dlat = lat2 - lat1
+            a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+            c = 2 * asin(sqrt(a))
+            return 6371 * c * 1000  # meters
+
+        def compute_walking_time(target_lat, target_lng, target_name, target_type):
+            attempts = [
+                ((lat, lng), (target_lat, target_lng), "카페→대중교통"),
+                ((target_lat, target_lng), (lat, lng), "대중교통→카페"),
+            ]
+            for origin, destination, attempt_label in attempts:
+                try:
+                    result = gmaps.distance_matrix(
+                        origins=[origin],
+                        destinations=[destination],
+                        mode="walking",
+                        language="ko",
+                        region="kr",
+                    )
+                    status = result["rows"][0]["elements"][0]["status"]
+                    print(f"[DEBUG] Distance Matrix 응답 status ({attempt_label}): {status}")
+                    if status == "OK":
+                        duration_sec = result["rows"][0]["elements"][0]["duration"]["value"]
+                        distance_m = result["rows"][0]["elements"][0]["distance"]["value"]
+                        print(
+                            f"[DEBUG] ✓ {target_name} ({target_type}) - Distance Matrix({attempt_label}): "
+                            f"{duration_sec/60:.1f}분 ({distance_m}m)"
+                        )
+                        return duration_sec / 60.0, distance_m, "distance_matrix"
+                except Exception as e:
+                    print(f"[WARN] Distance Matrix 호출 실패 ({attempt_label}): {e}")
+
+            try:
+                directions = gmaps.directions(
+                    origin=(lat, lng),
+                    destination=(target_lat, target_lng),
+                    mode="walking",
+                    language="ko",
+                    region="kr",
+                )
+                if directions:
+                    leg = directions[0]["legs"][0]
+                    duration_sec = leg["duration"]["value"]
+                    distance_m = leg["distance"]["value"]
+                    print(
+                        f"[DEBUG] ✓ {target_name} ({target_type}) - Directions API: "
+                        f"{duration_sec/60:.1f}분 ({distance_m}m)"
+                    )
+                    return duration_sec / 60.0, distance_m, "directions"
+                print(f"[WARN] Directions API 결과 없음: {target_name} ({target_type})")
+            except Exception as e:
+                print(f"[WARN] Directions API 호출 실패: {target_name} ({target_type}) → {e}")
+            distance_m = haversine(lat, lng, target_lat, target_lng)
+            actual_distance_m = distance_m * 1.4
+            duration = actual_distance_m / 67.0
+            print(
+                f"[DEBUG] ⚠ {target_name} ({target_type}): {duration:.1f}분 "
+                f"(직선 {distance_m:.0f}m → 실제경로 추정 {actual_distance_m:.0f}m)"
+            )
+            return duration, actual_distance_m, "fallback"
+
         # 가장 가까운 역/정류장 찾기
         min_walk_time = 999
         nearest_name = "정보 없음"
@@ -854,54 +920,10 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                 station_name = station.get('name', '지하철역')
                 print(f"[DEBUG] [{idx+1}/3] 지하철역 도보 시간 계산: {station_name}")
                 
-                # Distance Matrix API로 도보 시간 계산 시도
-                try:
-                    result = gmaps.distance_matrix(
-                        origins=[(station_loc['lat'], station_loc['lng'])],  # 출발: 역/정류장
-                        destinations=[(lat, lng)],  # 도착: 카페
-                        mode='walking',
-                        language='ko',
-                        region='kr'  # 한국 지역 명시
-                    )
-                    
-                    status = result['rows'][0]['elements'][0]['status']
-                    print(f"[DEBUG] Distance Matrix 응답 status: {status}")
-                    
-                    if status == 'OK':
-                        duration = result['rows'][0]['elements'][0]['duration']['value'] / 60  # 초 -> 분
-                        distance = result['rows'][0]['elements'][0]['distance']['value']  # 미터
-                        print(f"[DEBUG] ✓ {station_name}: {duration:.1f}분 ({distance}m)")
-                        distance_matrix_success = True
-                        
-                        if duration < min_walk_time:
-                            min_walk_time = duration
-                            nearest_name = station_name
-                            nearest_type = '지하철역'
-                        continue  # 성공했으므로 fallback 불필요
-                    else:
-                        print(f"[WARN] {station_name}: Distance Matrix 상태 - {status}, 직선거리로 대체")
-                except Exception as e:
-                    print(f"[WARN] Distance Matrix API 오류: {e}, 직선거리로 대체")
-                
-                # ZERO_RESULTS 또는 오류 시 직선 거리로 fallback
-                from math import radians, cos, sin, asin, sqrt
-                
-                def haversine(lat1, lon1, lat2, lon2):
-                    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-                    dlon = lon2 - lon1
-                    dlat = lat2 - lat1
-                    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-                    c = 2 * asin(sqrt(a))
-                    return 6371 * c * 1000  # km to meters
-                
-                distance_m = haversine(lat, lng, station_loc['lat'], station_loc['lng'])
-                # 직선거리에 우회계수 적용 (도시 지역 실제 도보 경로는 직선의 약 1.4배)
-                actual_distance_m = distance_m * 1.4
-                # 평균 도보 속도: 67m/분 (4km/h)
-                duration = actual_distance_m / 67.0
-                print(f"[DEBUG] ⚠ {station_name}: {duration:.1f}분 (직선 {distance_m:.0f}m → 실제경로 추정 {actual_distance_m:.0f}m)")
-                distance_matrix_success = True  # fallback도 성공으로 간주
-                
+                duration, _, source = compute_walking_time(
+                    station_loc['lat'], station_loc['lng'], station_name, '지하철역'
+                )
+                distance_matrix_success = True
                 if duration < min_walk_time:
                     min_walk_time = duration
                     nearest_name = station_name
@@ -919,54 +941,10 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                 bus_name = bus.get('name', '버스정류장')
                 print(f"[DEBUG] [{idx+1}/3] 버스정류장 도보 시간 계산: {bus_name}")
                 
-                # Distance Matrix API로 도보 시간 계산 시도
-                try:
-                    result = gmaps.distance_matrix(
-                        origins=[(bus_loc['lat'], bus_loc['lng'])],  # 출발: 역/정류장
-                        destinations=[(lat, lng)],  # 도착: 카페
-                        mode='walking',
-                        language='ko',
-                        region='kr'  # 한국 지역 명시
-                    )
-                    
-                    status = result['rows'][0]['elements'][0]['status']
-                    print(f"[DEBUG] Distance Matrix 응답 status: {status}")
-                    
-                    if status == 'OK':
-                        duration = result['rows'][0]['elements'][0]['duration']['value'] / 60
-                        distance = result['rows'][0]['elements'][0]['distance']['value']
-                        print(f"[DEBUG] ✓ {bus_name}: {duration:.1f}분 ({distance}m)")
-                        distance_matrix_success = True
-                        
-                        if duration < min_walk_time:
-                            min_walk_time = duration
-                            nearest_name = bus_name
-                            nearest_type = '버스정류장'
-                        continue  # 성공했으므로 fallback 불필요
-                    else:
-                        print(f"[WARN] {bus_name}: Distance Matrix 상태 - {status}, 직선거리로 대체")
-                except Exception as e:
-                    print(f"[WARN] Distance Matrix API 오류: {e}, 직선거리로 대체")
-                
-                # ZERO_RESULTS 또는 오류 시 직선 거리로 fallback
-                from math import radians, cos, sin, asin, sqrt
-                
-                def haversine(lat1, lon1, lat2, lon2):
-                    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-                    dlon = lon2 - lon1
-                    dlat = lat2 - lat1
-                    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-                    c = 2 * asin(sqrt(a))
-                    return 6371 * c * 1000  # km to meters
-                
-                distance_m = haversine(lat, lng, bus_loc['lat'], bus_loc['lng'])
-                # 직선거리에 우회계수 적용 (도시 지역 실제 도보 경로는 직선의 약 1.4배)
-                actual_distance_m = distance_m * 1.4
-                # 평균 도보 속도: 67m/분 (4km/h)
-                duration = actual_distance_m / 67.0
-                print(f"[DEBUG] ⚠ {bus_name}: {duration:.1f}분 (직선 {distance_m:.0f}m → 실제경로 추정 {actual_distance_m:.0f}m)")
-                distance_matrix_success = True  # fallback도 성공으로 간주
-                
+                duration, _, source = compute_walking_time(
+                    bus_loc['lat'], bus_loc['lng'], bus_name, '버스정류장'
+                )
+                distance_matrix_success = True
                 if duration < min_walk_time:
                     min_walk_time = duration
                     nearest_name = bus_name
@@ -2166,6 +2144,13 @@ with tab3:
 
                         details = gmaps.place(place_id=place_id, language="ko")
                         place_result = details.get("result") or {}
+                        geometry = place_result.get("geometry", {}).get("location", {}) if place_result else {}
+                        lat_detail = geometry.get("lat")
+                        lng_detail = geometry.get("lng")
+                        if lat_detail is None or lng_detail is None:
+                            search_geometry = place.get("geometry", {}).get("location", {})
+                            lat_detail = search_geometry.get("lat")
+                            lng_detail = search_geometry.get("lng")
                         reviews = place_result.get("reviews") or []
 
                         for review in reviews[:max_reviews]:
@@ -2175,6 +2160,8 @@ with tab3:
                                     "시군구명": district,
                                     "행정동명": eupmyeon,
                                     "place_id": place_id,
+                                    "lat": lat_detail,
+                                    "lng": lng_detail,
                                     "평점": review.get("rating"),
                                     "리뷰": review.get("text", ""),
                                     "작성일": review.get("relative_time_description"),
@@ -2239,6 +2226,14 @@ with tab3:
                             .reset_index()
                         )
                         summary_df = summary_df[summary_df["리뷰수량"] > 0]
+
+                        if {"lat", "lng"}.issubset(review_proc.columns):
+                            coord_summary = (
+                                review_proc.groupby(group_cols, dropna=False)[["lat", "lng"]]
+                                .mean()
+                                .reset_index()
+                            )
+                            summary_df = summary_df.merge(coord_summary, on=group_cols, how="left")
 
                         rating_summary = (
                             review_df.groupby(group_cols, dropna=False)["평점"]
