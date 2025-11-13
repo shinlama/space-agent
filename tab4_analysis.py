@@ -77,10 +77,10 @@ def _compute_factor_sentiments(
     sentiment_model: Callable[[List[str]], List[float]],
     embed_model,
     category_embeddings: Dict[str, np.ndarray],
-) -> Dict[str, List[float]]:
+) -> Tuple[Dict[str, List[float]], List[float]]:
     factor_sentiments: Dict[str, List[float]] = {key: [] for key in category_embeddings.keys()}
     if not review_units:
-        return factor_sentiments
+        return factor_sentiments, []
 
     sentiment_scores = sentiment_model(review_units)
     unit_embs = embed_model.encode(review_units, normalize_embeddings=True)
@@ -99,7 +99,7 @@ def _compute_factor_sentiments(
                 combined = ALPHA * sim_adj + BETA * sent_adj
                 score_scaled = 1 / (1 + np.exp(-1.6 * (combined - 0.3)))
                 factor_sentiments[factor_name].append(float(score_scaled))
-    return factor_sentiments
+    return factor_sentiments, [float(score) for score in sentiment_scores]
 
 
 def _llm_adjust_scores(
@@ -214,7 +214,9 @@ def evaluate_reviews_for_place(
     if not review_units:
         return None
 
-    factor_sentiments = _compute_factor_sentiments(review_units, sentiment_model, embed_model, category_embeddings)
+    factor_sentiments, sentiment_scores = _compute_factor_sentiments(
+        review_units, sentiment_model, embed_model, category_embeddings
+    )
     _apply_keyword_boosts(review_text, factor_sentiments)
     _apply_accessibility_boost(review_text, factor_sentiments)
 
@@ -248,7 +250,8 @@ def evaluate_reviews_for_place(
 
     flat_scores = [score for sub in corrected_scores.values() for score in sub.values() if score is not None]
     mean_score = float(np.mean(flat_scores)) if flat_scores else 0.5
-    return corrected_scores, mean_score, len(review_units), correction_log
+    mean_sentiment = float(np.mean(sentiment_scores)) if sentiment_scores else np.nan
+    return corrected_scores, mean_score, len(review_units), correction_log, mean_sentiment
 
 
 def analyze_review_groups(
@@ -298,7 +301,7 @@ def analyze_review_groups(
         if evaluation is None:
             continue
 
-        scores, mean_score, unit_count, correction_log = evaluation
+        scores, mean_score, unit_count, correction_log, mean_sentiment = evaluation
         result: Dict[str, object] = dict(key_dict)
         result["리뷰수"] = int(sum(1 for text in review_texts if str(text).strip()))
         result["리뷰문장수"] = unit_count
@@ -308,7 +311,8 @@ def analyze_review_groups(
         else:
             result["평균평점"] = np.nan
 
-        result["평균감성점수"] = mean_score
+        result["평균감성점수"] = mean_sentiment
+        result["평균장소성점수"] = mean_score
         result["scores"] = scores
         result["리뷰통합"] = "\n".join([str(text).strip() for text in review_texts if str(text).strip()])
         result["corrections"] = correction_log
@@ -319,7 +323,15 @@ def analyze_review_groups(
 
         results.append(result)
 
-    columns = list(group_cols) + ["리뷰수", "리뷰문장수", "평균평점", "평균감성점수", "scores", "리뷰통합"]
+    columns = list(group_cols) + [
+        "리뷰수",
+        "리뷰문장수",
+        "평균평점",
+        "평균감성점수",
+        "평균장소성점수",
+        "scores",
+        "리뷰통합",
+    ]
     if results and "lat" in results[0]:
         columns += ["lat", "lng"]
 
@@ -328,7 +340,7 @@ def analyze_review_groups(
 
 def build_placeness_map(
     df: pd.DataFrame,
-    value_col: str = "평균감성점수",
+    value_col: str = "평균장소성점수",
     center: Tuple[float, float] = (37.5665, 126.9780),
     zoom_start: int = 11,
 ) -> folium.Map:

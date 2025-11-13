@@ -1,9 +1,6 @@
 import requests
-import os
-import dotenv
 
-url = "https://apis.openapi.sk.com/transit/routes/"
-apikey = os.getenv("SK_API_KEY")
+url = "https://apis.openapi.sk.com/transit/routes/sub/"
 
 payload = {
     "startX": "126.9386",
