@@ -2408,6 +2408,7 @@ with tab4:
                     st.session_state["tab4_analysis_config"] = current_config
                     st.session_state.pop("tab4_grouped_df", None)
                     st.session_state.pop("tab4_analysis_results_raw", None)
+                    st.session_state.pop("tab4_analysis_results_final", None)
                     st.session_state["tab4_analysis_active"] = False
 
                 display_cols = [
@@ -2528,6 +2529,7 @@ with tab4:
                         factor_definitions_tab4 = json.load(f)
 
                     raw_results_state = st.session_state.get("tab4_analysis_results_raw")
+                    final_results_state = st.session_state.get("tab4_analysis_results_final")
                     if run_analysis or raw_results_state is None:
                         progress_placeholder = st.empty()
                         status_placeholder = st.empty()
@@ -2554,26 +2556,29 @@ with tab4:
                     else:
                         raw_results = raw_results_state.copy()
 
-                    analysis_results = raw_results.copy()
+                    if run_analysis or final_results_state is None:
+                        analysis_results = raw_results.copy()
 
-                    # 문장 단위 감성 평균을 별도 보관하고, 테이블용 평균감성점수는 상단 집계값으로 덮어쓰기
-                    if "평균감성점수" in analysis_results.columns:
-                        analysis_results = analysis_results.rename(
-                            columns={"평균감성점수": "평균감성점수(문장단위)"}
-                        )
+                        # 문장 단위 감성 평균을 별도 보관하고, 테이블용 평균감성점수는 상단 집계값으로 덮어쓰기
+                        if "평균감성점수" in analysis_results.columns:
+                            analysis_results = analysis_results.rename(
+                                columns={"평균감성점수": "평균감성점수(문장단위)"}
+                            )
 
-                    merge_keys = [col for col in group_cols if col in grouped.columns and col in analysis_results.columns]
-                    if merge_keys:
-                        base_sentiments = grouped[merge_keys + ["평균감성점수"]].copy()
-                        analysis_results = analysis_results.merge(base_sentiments, on=merge_keys, how="left")
+                        merge_keys = [col for col in group_cols if col in grouped.columns and col in analysis_results.columns]
+                        if merge_keys:
+                            base_sentiments = grouped[merge_keys + ["평균감성점수"]].copy()
+                            analysis_results = analysis_results.merge(base_sentiments, on=merge_keys, how="left")
+                        else:
+                            analysis_results["평균감성점수"] = np.nan
+
+                        analysis_results = analysis_results[analysis_results["리뷰수"] >= min_review_per_place]
+
+                        if analysis_results.empty:
+                            st.warning("장소성 요인 분석을 위한 데이터가 충분하지 않습니다.")
+                            st.stop()
                     else:
-                        analysis_results["평균감성점수"] = np.nan
-
-                    analysis_results = analysis_results[analysis_results["리뷰수"] >= min_review_per_place]
-
-                    if analysis_results.empty:
-                        st.warning("장소성 요인 분석을 위한 데이터가 충분하지 않습니다.")
-                        st.stop()
+                        analysis_results = final_results_state.copy()
 
                     score_columns = []
                     accessibility_col = None
@@ -2599,14 +2604,19 @@ with tab4:
                             accessibility_col = "물리적 특성/접근성"
 
                     st.markdown("#### 📊 장소성 분석 결과 (요인별 평균)")
-                    analysis_cols = (
-                        [c for c in group_cols if c != "place_id"]
-                        + ["평균평점", "평균감성점수", "평균장소성점수", "리뷰수", "리뷰문장수"]
-                    )
-                    display_cols = analysis_cols + score_columns
+                    analysis_cols = [
+                        col
+                        for col in (
+                            [c for c in group_cols if c != "place_id"]
+                            + ["평균평점", "평균감성점수", "평균장소성점수", "리뷰수", "리뷰문장수"]
+                        )
+                        if col in analysis_results.columns
+                    ]
+                    score_display_cols = [col for col in score_columns if col in analysis_results.columns]
+                    display_cols = analysis_cols + score_display_cols
                     analysis_height = min(600, max(240, 38 * len(analysis_results)))
                     st.dataframe(
-                        analysis_results[display_cols] if score_columns else analysis_results[analysis_cols],
+                        analysis_results[display_cols] if display_cols else analysis_results,
                         use_container_width=True,
                         hide_index=True,
                         height=analysis_height,
@@ -2704,32 +2714,116 @@ with tab4:
 
                     if needs_accessibility and {"lat", "lng"}.issubset(analysis_results.columns):
                         with st.spinner("접근성(도보 시간) 데이터를 계산 중입니다..."):
-                            walk_times, walk_path_distances, walk_straight_distances, stations, transit_types = [], [], [], [], []
-                            for _, row in analysis_results.iterrows():
-                                lat_val, lng_val = row.get("lat"), row.get("lng")
-                                if pd.isna(lat_val) or pd.isna(lng_val):
-                                    walk_times.append(np.nan)
-                                    walk_path_distances.append(np.nan)
-                                    walk_straight_distances.append(np.nan)
-                                    stations.append(None)
-                                    transit_types.append(None)
-                                    continue
-                                try:
-                                    walk_time, station_name, transit_type, walk_distance, straight_distance = calculate_transit_accessibility(
-                                        lat_val, lng_val
-                                    )
-                                except Exception:
-                                    walk_time, station_name, transit_type, walk_distance, straight_distance = (np.nan, None, None, np.nan, np.nan)
-                                walk_times.append(walk_time)
-                                walk_path_distances.append(walk_distance)
-                                walk_straight_distances.append(straight_distance)
-                                stations.append(station_name)
-                                transit_types.append(transit_type)
-                            analysis_results["walk_time_minutes"] = walk_times
-                            analysis_results["walk_distance_m"] = walk_path_distances
-                            analysis_results["straight_distance_m"] = walk_straight_distances
-                            analysis_results["nearest_station"] = stations
-                            analysis_results["transit_type"] = transit_types
+                            # 사전 계산된 접근성 CSV 로드 시도
+                            if "precomputed_transit" not in st.session_state:
+                                transit_csv = Path("서울시_상권_카페빵_표본_with_transit.csv")
+                                if transit_csv.exists():
+                                    try:
+                                        precomputed_df = pd.read_csv(transit_csv)
+                                        required_cols = {"상호명", "위도", "경도", "nearest_station", "transit_type", "walk_time_minutes", "walk_distance_m", "straight_distance_m"}
+                                        if required_cols.issubset(precomputed_df.columns):
+                                            precomputed_df["위도"] = precomputed_df["위도"].astype(float)
+                                            precomputed_df["경도"] = precomputed_df["경도"].astype(float)
+                                            st.session_state["precomputed_transit"] = precomputed_df
+                                        else:
+                                            st.warning("사전 계산된 접근성 CSV에 필요한 컬럼이 모두 존재하지 않습니다. API 호출을 진행합니다.")
+                                    except Exception as transit_load_err:
+                                        st.warning(f"사전 계산된 접근성 CSV 로딩 실패: {transit_load_err}")
+                                else:
+                                    st.info("사전 계산된 접근성 CSV가 없어 API 기반으로 접근성을 계산합니다.")
+
+                            precomputed_df = st.session_state.get("precomputed_transit")
+
+                            if precomputed_df is not None and not precomputed_df.empty:
+                                merged = analysis_results.merge(
+                                    precomputed_df[
+                                        [
+                                            "상호명",
+                                            "위도",
+                                            "경도",
+                                            "nearest_station",
+                                            "transit_type",
+                                            "walk_time_minutes",
+                                            "walk_distance_m",
+                                            "straight_distance_m",
+                                        ]
+                                    ],
+                                    how="left",
+                                    left_on=["상호명", "lat", "lng"],
+                                    right_on=["상호명", "위도", "경도"],
+                                    suffixes=("", "_precomputed"),
+                                )
+
+                                for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m", "nearest_station", "transit_type"]:
+                                    pre_col = f"{col}_precomputed"
+                                    if pre_col in merged.columns:
+                                        merged[col] = merged[col].combine_first(merged[pre_col])
+                                        merged = merged.drop(columns=[pre_col])
+
+                                if "위도" in merged.columns and "경도" in merged.columns:
+                                    merged = merged.drop(columns=["위도", "경도"])
+
+                                analysis_results = merged
+
+                            missing_after_merge = analysis_results[
+                                ["walk_time_minutes", "walk_distance_m", "straight_distance_m"]
+                            ].isna().any(axis=1)
+
+                            if missing_after_merge.any():
+                                st.info("사전 계산된 데이터가 없는 카페에 대해 API 호출로 접근성을 계산합니다.")
+                                walk_times, walk_path_distances, walk_straight_distances, stations, transit_types = [], [], [], [], []
+                                for _, row in analysis_results.iterrows():
+                                    lat_val, lng_val = row.get("lat"), row.get("lng")
+                                    if pd.isna(lat_val) or pd.isna(lng_val):
+                                        walk_times.append(np.nan)
+                                        walk_path_distances.append(np.nan)
+                                        walk_straight_distances.append(np.nan)
+                                        stations.append(None)
+                                        transit_types.append(None)
+                                        continue
+
+                                    if (
+                                        row.get("walk_time_minutes") is not None
+                                        and not pd.isna(row.get("walk_time_minutes"))
+                                        and row.get("walk_distance_m") is not None
+                                        and not pd.isna(row.get("walk_distance_m"))
+                                    ):
+                                        walk_times.append(row.get("walk_time_minutes"))
+                                        walk_path_distances.append(row.get("walk_distance_m"))
+                                        walk_straight_distances.append(row.get("straight_distance_m"))
+                                        stations.append(row.get("nearest_station"))
+                                        transit_types.append(row.get("transit_type"))
+                                        continue
+
+                                    try:
+                                        (
+                                            walk_time,
+                                            station_name,
+                                            transit_type,
+                                            walk_distance,
+                                            straight_distance,
+                                        ) = calculate_transit_accessibility(lat_val, lng_val)
+                                    except Exception:
+                                        walk_time, station_name, transit_type, walk_distance, straight_distance = (
+                                            np.nan,
+                                            None,
+                                            None,
+                                            np.nan,
+                                            np.nan,
+                                        )
+                                    walk_times.append(walk_time)
+                                    walk_path_distances.append(walk_distance)
+                                    walk_straight_distances.append(straight_distance)
+                                    stations.append(station_name)
+                                    transit_types.append(transit_type)
+                                analysis_results["walk_time_minutes"] = walk_times
+                                analysis_results["walk_distance_m"] = walk_path_distances
+                                analysis_results["straight_distance_m"] = walk_straight_distances
+                                analysis_results["nearest_station"] = stations
+                                analysis_results["transit_type"] = transit_types
+
+                    if run_analysis or final_results_state is None:
+                        st.session_state["tab4_analysis_results_final"] = analysis_results.copy()
 
                     for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m"]:
                         if col in analysis_results.columns:
@@ -2741,7 +2835,7 @@ with tab4:
                     ]
                     if access_info_cols:
                         st.markdown("#### 🚇 주변 대중교통 접근성 요약")
-                        st.caption("Google Places Nearby + Distance Matrix API 기반으로 최근접 역/정류장과 예상 도보 시간을 추정했습니다.")
+                        st.caption("Google Places Nearby + Distance Matrix API 기반으로 최근접 역/정류장과 직선거리를 가져와서 예상 도보 시간을 추정합니다.")
                         access_display_cols = [c for c in group_cols if c != "place_id"] + access_info_cols
                         access_height = min(400, max(240, 38 * len(analysis_results)))
                         st.dataframe(
