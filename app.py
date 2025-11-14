@@ -60,6 +60,7 @@ SAMPLED_CAFE_CSV = BASE_DIR / "서울시_상권_카페빵_표본.csv"
 GOOGLE_REVIEW_SAMPLE_CSV = BASE_DIR / "google_reviews_sample.csv"  # 사전 수집(2500개) 파일
 GOOGLE_REVIEW_LIVE_CSV = BASE_DIR / "google_reviews_live.csv"      # 탭3에서 새로 수집한 결과
 FULL_CAFE_CSV = Path(__file__).resolve().parent / "서울시_상권_카페빵.csv"
+SAMPLED_CAFE_WITH_TRANSIT_CSV = BASE_DIR / "서울시_상권_카페빵_표본_with_transit.csv"
 
 
 @st.cache_data(show_spinner="표본 데이터 불러오는 중...")
@@ -95,6 +96,16 @@ def load_google_reviews_csv(csv_path: Path) -> pd.DataFrame:
     except UnicodeDecodeError:
         df = pd.read_csv(csv_path, encoding="cp949")
     return df
+
+
+@st.cache_data(show_spinner=False)
+def load_csv_generic(csv_path: Path) -> pd.DataFrame:
+    if not csv_path.exists():
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {csv_path}")
+    try:
+        return pd.read_csv(csv_path, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        return pd.read_csv(csv_path, encoding="cp949")
 
 # WordCloud 이미지 캐싱 (PIL 이미지 반환)
 @st.cache_data(show_spinner=False)
@@ -906,7 +917,7 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                 f"(직선 {distance_m:.0f}m → 실제경로 추정 {actual_distance_m:.0f}m)"
             )
             return duration, actual_distance_m, "fallback"
-
+        
         # 가장 가까운 역/정류장 찾기
         min_walk_time = 999
         min_walk_distance = float("inf")
@@ -918,13 +929,13 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
         # 지하철역 처리
         for idx, station in enumerate(subway_results[:3]):  # 상위 3개만 검사
             try:
-                station_loc = station['geometry']['location']
-                station_name = station.get('name', '지하철역')
+                station_loc = station["geometry"]["location"]
+                station_name = station.get("name", "지하철역")
                 print(f"[DEBUG] [{idx+1}/3] 지하철역 도보 시간 계산: {station_name}")
-                
-                straight_distance = haversine(lat, lng, station_loc['lat'], station_loc['lng'])
+
+                straight_distance = haversine(lat, lng, station_loc["lat"], station_loc["lng"])
                 duration, distance_m, _ = compute_walking_time(
-                    station_loc['lat'], station_loc['lng'], station_name, '지하철역'
+                    station_loc["lat"], station_loc["lng"], station_name, "지하철역"
                 )
                 distance_matrix_success = True
                 if duration < min_walk_time:
@@ -932,23 +943,24 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                     min_walk_distance = distance_m
                     min_straight_distance = straight_distance
                     nearest_name = station_name
-                    nearest_type = '지하철역'
-                    
+                    nearest_type = "지하철역"
+
             except Exception as e:
                 print(f"[ERROR] 지하철역 '{station_name}' 처리 오류: {type(e).__name__}: {e}")
                 import traceback
+
                 traceback.print_exc()
-        
+
         # 버스정류장 처리
         for idx, bus in enumerate(bus_results[:3]):
             try:
-                bus_loc = bus['geometry']['location']
-                bus_name = bus.get('name', '버스정류장')
+                bus_loc = bus["geometry"]["location"]
+                bus_name = bus.get("name", "버스정류장")
                 print(f"[DEBUG] [{idx+1}/3] 버스정류장 도보 시간 계산: {bus_name}")
-                
-                straight_distance = haversine(lat, lng, bus_loc['lat'], bus_loc['lng'])
+
+                straight_distance = haversine(lat, lng, bus_loc["lat"], bus_loc["lng"])
                 duration, distance_m, _ = compute_walking_time(
-                    bus_loc['lat'], bus_loc['lng'], bus_name, '버스정류장'
+                    bus_loc["lat"], bus_loc["lng"], bus_name, "버스정류장"
                 )
                 distance_matrix_success = True
                 if duration < min_walk_time:
@@ -956,11 +968,12 @@ def calculate_transit_accessibility(lat: float, lng: float, max_distance: int = 
                     min_walk_distance = distance_m
                     min_straight_distance = straight_distance
                     nearest_name = bus_name
-                    nearest_type = '버스정류장'
-                    
+                    nearest_type = "버스정류장"
+
             except Exception as e:
                 print(f"[ERROR] 버스정류장 '{bus_name}' 처리 오류: {type(e).__name__}: {e}")
                 import traceback
+
                 traceback.print_exc()
         
         # Distance Matrix API가 한 번도 성공하지 못했다면
@@ -1154,7 +1167,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 탭 구성
-tab1, tab2, tab3, tab4 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험", "📊 표본 데이터 확인", "📁 Google 리뷰 분석"])
+tab1, tab2, tab4 = st.tabs(["🔍 개별 장소 분석", "🗺️ 서울 전역 실험", "📁 Google 리뷰 분석"])
 
 # ========================================
 # 탭 1: 개별 장소 분석 (기존 기능)
@@ -1941,385 +1954,39 @@ with tab2:
 
 
 # ========================================
-# 탭 3: 표본 데이터 확인
-# ========================================
-with tab3:
-    st.markdown("### 📊 서울시 상권 기반 카페 표본 데이터")
-    st.caption(
-        "`scripts/sample_cafes.py`로 생성한 `서울시_상권_카페빵_표본.csv`를 불러와 "
-        "구별 표본 분포와 개별 레코드를 확인할 수 있습니다."
-    )
-
-    if not SAMPLED_CAFE_CSV.exists():
-        st.error("`서울시_상권_카페빵_표본.csv` 파일을 찾을 수 없습니다. 먼저 표본 추출 스크립트를 실행해주세요.")
-    else:
-        try:
-            sampled_df = load_sampled_cafes(SAMPLED_CAFE_CSV)
-        except Exception as e:
-            st.error(f"CSV 로딩 중 오류가 발생했습니다: {e}")
-        else:
-            TARGET_PER_DISTRICT = 100
-            if "시군구명" in sampled_df.columns:
-                district_counts = sampled_df["시군구명"].value_counts(dropna=False)
-
-                need_resample = district_counts.min() < TARGET_PER_DISTRICT or len(district_counts) < len(SEOUL_DISTRICTS)
-                if need_resample:
-                    try:
-                        full_df = load_full_cafes(FULL_CAFE_CSV)
-                    except FileNotFoundError:
-                        st.warning(
-                            "`서울시_상권_카페빵.csv` 파일을 찾지 못해 구당 100개 재구성이 불가능합니다. "
-                            "기존 표본 데이터를 그대로 사용합니다."
-                        )
-                    except Exception as e:
-                        st.warning(
-                            f"전체 데이터 로딩 중 오류가 발생하여 구당 100개 재구성을 건너뜁니다: {e}"
-                        )
-                    else:
-                        available_counts = full_df["시군구명"].value_counts()
-                        missing_districts = [d for d in SEOUL_DISTRICTS if available_counts.get(d, 0) < TARGET_PER_DISTRICT]
-
-                        if missing_districts:
-                            st.warning(
-                                f"다음 행정구는 전체 데이터에서도 {TARGET_PER_DISTRICT}개 미만이어서 전량 사용합니다: {', '.join(missing_districts)}"
-                            )
-
-                        resampled_frames = []
-                        for district in SEOUL_DISTRICTS:
-                            district_df = full_df[full_df["시군구명"] == district]
-                            if district_df.empty:
-                                continue
-                            if len(district_df) >= TARGET_PER_DISTRICT:
-                                resampled_frames.append(
-                                    district_df.sample(n=TARGET_PER_DISTRICT, random_state=42)
-                                )
-                            else:
-                                resampled_frames.append(district_df)
-
-                        if resampled_frames:
-                            sampled_df = pd.concat(resampled_frames, ignore_index=True)
-
-            st.success(f"총 {len(sampled_df):,}개 카페 표본이 로드되었습니다.")
-
-            info_col1, info_col2, info_col3 = st.columns(3)
-            with info_col1:
-                st.metric("총 표본 수", f"{len(sampled_df):,}")
-            with info_col2:
-                st.metric("시군구 수", f"{sampled_df['시군구명'].nunique():,}")
-            with info_col3:
-                st.metric("상권업종소분류 수", f"{sampled_df['상권업종소분류명'].nunique():,}")
-
-            with st.expander("🔍 필터", expanded=True):
-                district_options = sorted(sampled_df["시군구명"].dropna().unique().tolist())
-                selected_districts = st.multiselect(
-                    "시군구 선택 (선택 시 필터 적용)",
-                    district_options,
-                    placeholder="전체 시군구",
-                    key="tab3_district_filter",
-                )
-
-                subclass_options = sorted(sampled_df["상권업종소분류명"].dropna().unique().tolist())
-                selected_subclasses = st.multiselect(
-                    "상권업종소분류명 선택",
-                    subclass_options,
-                    default=subclass_options,
-                    key="tab3_subclass_filter",
-                )
-
-                keyword = st.text_input(
-                    "카페명/주소 검색 (부분 일치)",
-                    placeholder="예: 신촌, 을지로, 베이커리",
-                    key="tab3_keyword_filter",
-                ).strip()
-
-            filtered_df = sampled_df.copy()
-
-            if selected_districts:
-                filtered_df = filtered_df[filtered_df["시군구명"].isin(selected_districts)]
-
-            if selected_subclasses:
-                filtered_df = filtered_df[filtered_df["상권업종소분류명"].isin(selected_subclasses)]
-
-            if keyword:
-                keyword_lower = keyword.lower()
-                filtered_df = filtered_df[
-                    filtered_df["상호명"].fillna("").str.lower().str.contains(keyword_lower)
-                    | filtered_df["도로명주소"].fillna("").str.lower().str.contains(keyword_lower)
-                    | filtered_df["지번주소"].fillna("").str.lower().str.contains(keyword_lower)
-                ]
-
-            st.info(f"표시 중: {len(filtered_df):,}개 카페")
-
-            summary_col1, summary_col2 = st.columns(2)
-            with summary_col1:
-                st.markdown("**시군구별 표본 수**")
-                district_summary = (
-                    filtered_df["시군구명"]
-                    .value_counts()
-                    .rename_axis("시군구명")
-                    .reset_index(name="표본수")
-                    .sort_values("시군구명")
-                )
-                st.dataframe(district_summary, hide_index=True, use_container_width=True, height=220)
-
-            with summary_col2:
-                st.markdown("**상권업종소분류별 분포**")
-                subclass_summary = (
-                    filtered_df["상권업종소분류명"]
-                    .value_counts()
-                    .rename_axis("상권업종소분류명")
-                    .reset_index(name="표본수")
-                    .sort_values("상권업종소분류명")
-                )
-                st.dataframe(subclass_summary, hide_index=True, use_container_width=True, height=220)
-
-            with st.expander("📋 데이터 미리보기", expanded=True):
-                st.dataframe(
-                    filtered_df,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=520,
-                )
-
-            download_bytes = filtered_df.to_csv(index=False).encode("utf-8-sig")
-            st.download_button(
-                "📥 필터 결과 CSV 다운로드",
-                data=download_bytes,
-                file_name="서울시_상권_카페빵_표본_필터링.csv",
-                mime="text/csv",
-                key="tab3_download_sampled",
-            )
-
-            st.markdown("---")
-            st.markdown("### ☕ Google 리뷰 수집 및 감성 분석 연결")
-            st.caption("Google Maps API를 이용해 표본 카페의 최신 리뷰를 수집하고, 감성 분석을 수행합니다.")
-
-            max_reviews = st.slider(
-                "카페당 최대 리뷰 수",
-                min_value=5,
-                max_value=40,
-                value=10,
-                step=5,
-                key="tab3_google_max_reviews",
-            )
-            sample_count = st.slider(
-                "리뷰를 수집할 카페 수",
-                min_value=10,
-                max_value=min(len(filtered_df), 2500),
-                value=min(len(filtered_df), 100),
-                step=10,
-                help="API 호출 한도를 고려해 한 번에 처리할 카페 수를 제한하세요.",
-                key="tab3_google_sample_count",
-            )
-
-            sleep_min, sleep_max = st.slider(
-                "API 호출 간 랜덤 대기 (초)",
-                min_value=0.2,
-                max_value=2.0,
-                value=(0.8, 1.5),
-                step=0.1,
-                key="tab3_google_sleep_range",
-            )
-
-            target_df = (
-                filtered_df.sample(n=sample_count, random_state=42).reset_index(drop=True)
-                if sample_count < len(filtered_df)
-                else filtered_df.copy()
-            )
-
-            st.caption(f"📌 수집 대상 카페 수: {len(target_df)}")
-            st.dataframe(
-                target_df[[col for col in ["상호명", "시군구명", "행정동명", "도로명주소"] if col in target_df.columns]].head(10),
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            if st.button("🚀 Google 리뷰 수집 시작", key="tab3_btn_collect_google_reviews"):
-                progress_bar = st.progress(0.0)
-                status_placeholder = st.empty()
-                collected_reviews = []
-                error_logs = []
-
-                for idx, row in enumerate(target_df.itertuples(index=False), start=1):
-                    name = getattr(row, "상호명")
-                    district = getattr(row, "시군구명")
-                    eupmyeon = getattr(row, "행정동명", "") or ""
-                    query = " ".join([s for s in [district, eupmyeon, name] if s])
-
-                    status_placeholder.text(f"[{idx}/{len(target_df)}] {query} 리뷰 수집 중...")
-
-                    try:
-                        search_resp = gmaps.places(query=query, language="ko", region="kr")
-                        candidates = search_resp.get("results") or []
-                        if not candidates:
-                            continue
-
-                        place = candidates[0]
-                        place_id = place.get("place_id")
-                        if not place_id:
-                            continue
-
-                        details = gmaps.place(place_id=place_id, language="ko")
-                        place_result = details.get("result") or {}
-                        geometry = place_result.get("geometry", {}).get("location", {}) if place_result else {}
-                        lat_detail = geometry.get("lat")
-                        lng_detail = geometry.get("lng")
-                        if lat_detail is None or lng_detail is None:
-                            search_geometry = place.get("geometry", {}).get("location", {})
-                            lat_detail = search_geometry.get("lat")
-                            lng_detail = search_geometry.get("lng")
-                        reviews = place_result.get("reviews") or []
-
-                        for review in reviews[:max_reviews]:
-                            collected_reviews.append(
-                                {
-                                    "상호명": name,
-                                    "시군구명": district,
-                                    "행정동명": eupmyeon,
-                                    "place_id": place_id,
-                                    "lat": lat_detail,
-                                    "lng": lng_detail,
-                                    "평점": review.get("rating"),
-                                    "리뷰": review.get("text", ""),
-                                    "작성일": review.get("relative_time_description"),
-                                    "언어": review.get("language"),
-                                    "작성자": review.get("author_name"),
-                                }
-                            )
-
-                    except Exception as e:
-                        error_logs.append(f"{query}: {e}")
-
-                    progress_bar.progress(idx / len(target_df))
-                    time.sleep(random.uniform(min(sleep_min, sleep_max), max(sleep_min, sleep_max)))
-
-                progress_bar.empty()
-                status_placeholder.empty()
-
-                if collected_reviews:
-                    review_df = pd.DataFrame(collected_reviews)
-                    try:
-                        review_df.to_csv(GOOGLE_REVIEW_LIVE_CSV, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ 총 {len(review_df)}개 리뷰 저장 완료 → `{GOOGLE_REVIEW_LIVE_CSV.name}`")
-                    except PermissionError:
-                        st.warning(
-                            f"`{GOOGLE_REVIEW_LIVE_CSV.name}` 파일이 다른 프로그램에서 열려 있어 저장하지 못했습니다. "
-                            "파일을 닫고 다시 시도해주세요."
-                        )
-                    else:
-                        st.session_state["google_review_df"] = review_df
-
-                    table_height = min(650, max(250, 38 * len(review_df)))
-                    st.dataframe(
-                        review_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        height=table_height,
-                    )
-
-                    # place_id 또는 (상호명, 시군구명) 기준으로 리뷰 합치기
-                    if "place_id" in review_df.columns:
-                        group_cols = ["place_id", "상호명", "시군구명", "행정동명"]
-                    else:
-                        group_cols = ["상호명", "시군구명", "행정동명"]
-
-                    review_proc = review_df.copy()
-                    review_proc["리뷰"] = review_proc["리뷰"].fillna("").astype(str)
-                    review_proc["리뷰정제"] = review_proc["리뷰"].str.strip()
-                    review_proc["리뷰감성점수"] = np.nan
-
-                    valid_mask = review_proc["리뷰정제"] != ""
-                    if valid_mask.any():
-                        texts = review_proc.loc[valid_mask, "리뷰정제"].tolist()
-                        sentiments = sentiment_model(texts)
-                        review_proc.loc[valid_mask, "리뷰감성점수"] = sentiments
-
-                        summary_df = (
-                            review_proc.groupby(group_cols, dropna=False)
-                            .agg(
-                                평균감성점수=("리뷰감성점수", "mean"),
-                                리뷰수량=("리뷰정제", lambda s: int((s != "").sum())),
-                            )
-                            .reset_index()
-                        )
-                        summary_df = summary_df[summary_df["리뷰수량"] > 0]
-
-                        if {"lat", "lng"}.issubset(review_proc.columns):
-                            coord_summary = (
-                                review_proc.groupby(group_cols, dropna=False)[["lat", "lng"]]
-                                .mean()
-                                .reset_index()
-                            )
-                            summary_df = summary_df.merge(coord_summary, on=group_cols, how="left")
-
-                        rating_summary = (
-                            review_df.groupby(group_cols, dropna=False)["평점"]
-                            .mean()
-                            .reset_index()
-                            .rename(columns={"평점": "평균평점"})
-                        )
-                        summary_df = summary_df.merge(rating_summary, on=group_cols, how="left")
-
-                        st.markdown("#### 📊 통합 리뷰 감성 분석")
-                        summary_height = min(550, max(240, 38 * len(summary_df)))
-                        st.dataframe(
-                            summary_df[[col for col in summary_df.columns if col in ["상호명", "시군구명", "행정동명", "평균평점", "평균감성점수", "리뷰수량"]]],
-                            use_container_width=True,
-                            hide_index=True,
-                            height=summary_height,
-                        )
-
-                        corr_df = summary_df.dropna(subset=["평균평점", "평균감성점수"])
-                        if len(corr_df) >= 2:
-                            corr_value, corr_p = stats.pearsonr(
-                                corr_df["평균평점"].astype(float),
-                                corr_df["평균감성점수"].astype(float),
-                            )
-                            st.markdown("#### 📈 리뷰 평점 vs 감성 분석 점수 상관 관계")
-                            p_text = f"{corr_p:.4f}" if corr_p >= 1e-4 else f"{corr_p:.2e}"
-                            if corr_p < 0.05:
-                                relation = "양의" if corr_value > 0 else "음의"
-                                significance_msg = f" → 통계적으로 유의미한 {relation} 상관관계가 확인됩니다 (α=0.05)."
-                            else:
-                                significance_msg = " → 통계적으로 유의미한 상관관계로 보기 어렵습니다 (α=0.05)."
-                            st.write(
-                                f"상관계수(피어슨 r): **{corr_value:.3f}** (p-value={p_text}){significance_msg}"
-                            )
-                            fig_corr = px.scatter(
-                                corr_df,
-                                x="평균평점",
-                                y="평균감성점수",
-                                hover_data=[c for c in ["상호명", "시군구명", "행정동명"] if c in corr_df.columns],
-                                trendline="ols",
-                                labels={"평균평점": "Google 평점 평균", "평균감성점수": "감성 점수 평균"},
-                                title="평균 평점 vs 평균 감성 점수",
-                            )
-                            st.plotly_chart(fig_corr, use_container_width=True, key="tab3_sentiment_corr")
-                        else:
-                            st.info("상관 분석을 수행하기 위한 데이터가 충분하지 않습니다.")
-                    else:
-                        st.info("유효한 리뷰 텍스트가 없어 감성 분석을 수행할 수 없습니다.")
-
-                    st.download_button(
-                        "📥 수집 리뷰 CSV 다운로드",
-                        data=review_df.to_csv(index=False).encode("utf-8-sig"),
-                        file_name=GOOGLE_REVIEW_LIVE_CSV.name,
-                        mime="text/csv",
-                        key="tab3_download_google_reviews",
-                    )
-                else:
-                    st.warning("리뷰를 수집하지 못했습니다. 검색어 또는 API 설정을 확인하세요.")
-
-                if error_logs:
-                    st.warning(f"⚠️ {len(error_logs)}건의 항목에서 오류가 발생했습니다.")
-                    with st.expander("오류 상세 보기"):
-                        for log in error_logs[:50]:
-                            st.text(log)
-
-# ========================================
 # 탭 4: Google 리뷰 CSV 기반 분석
 # ========================================
 with tab4:
+    st.markdown("### 📚 데이터셋 확인")
+    dataset_targets = [
+        ("서울시 카페 표본 (접근성 포함)", SAMPLED_CAFE_WITH_TRANSIT_CSV),
+        ("Google 리뷰 표본", GOOGLE_REVIEW_SAMPLE_CSV),
+    ]
+    for dataset_title, dataset_path in dataset_targets:
+        st.markdown(f"#### {dataset_title}")
+        if dataset_path.exists():
+            try:
+                dataset_df = load_csv_generic(dataset_path)
+                preview_height = min(520, max(240, 35 * min(len(dataset_df), 50)))
+                st.dataframe(
+                    dataset_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=preview_height,
+                )
+                st.download_button(
+                    f"📥 {dataset_path.name} 다운로드",
+                    data=dataset_df.to_csv(index=False).encode("utf-8-sig"),
+                    file_name=dataset_path.name,
+                    mime="text/csv",
+                    key=f"download_{dataset_path.stem}",
+                )
+            except Exception as dataset_err:
+                st.error(f"데이터 로딩에 실패했습니다: {dataset_err}")
+        else:
+            st.info(f"`{dataset_path.name}` 파일을 찾을 수 없습니다.")
+
+    st.divider()
     st.markdown("### 📁 Google 리뷰 데이터 분석")
     st.caption("리뷰 CSV(표본/최근 수집)를 불러와 감성 분석과 평점 상관 관계를 탐색합니다.")
 
@@ -2599,7 +2266,9 @@ with tab4:
                             else {}
                         )
                         expanded_df = pd.DataFrame(list(expanded_scores), index=analysis_results.index)
-                        analysis_results = pd.concat([analysis_results, expanded_df], axis=1)
+                        new_score_cols = [col for col in expanded_df.columns if col not in analysis_results.columns]
+                        if new_score_cols:
+                            analysis_results = pd.concat([analysis_results, expanded_df[new_score_cols]], axis=1)
                         if "물리적 특성/접근성" in analysis_results.columns:
                             accessibility_col = "물리적 특성/접근성"
 
@@ -2617,8 +2286,8 @@ with tab4:
                     analysis_height = min(600, max(240, 38 * len(analysis_results)))
                     st.dataframe(
                         analysis_results[display_cols] if display_cols else analysis_results,
-                        use_container_width=True,
-                        hide_index=True,
+                    use_container_width=True,
+                    hide_index=True,
                         height=analysis_height,
                     )
 
@@ -2720,10 +2389,9 @@ with tab4:
                                 if transit_csv.exists():
                                     try:
                                         precomputed_df = pd.read_csv(transit_csv)
-                                        required_cols = {"상호명", "위도", "경도", "nearest_station", "transit_type", "walk_time_minutes", "walk_distance_m", "straight_distance_m"}
+                                        required_cols = {"상호명", "행정동명", "nearest_station", "transit_type", "walk_time_minutes", "walk_distance_m", "straight_distance_m"}
                                         if required_cols.issubset(precomputed_df.columns):
-                                            precomputed_df["위도"] = precomputed_df["위도"].astype(float)
-                                            precomputed_df["경도"] = precomputed_df["경도"].astype(float)
+                                            precomputed_df = precomputed_df.copy()
                                             st.session_state["precomputed_transit"] = precomputed_df
                                         else:
                                             st.warning("사전 계산된 접근성 CSV에 필요한 컬럼이 모두 존재하지 않습니다. API 호출을 진행합니다.")
@@ -2735,35 +2403,37 @@ with tab4:
                             precomputed_df = st.session_state.get("precomputed_transit")
 
                             if precomputed_df is not None and not precomputed_df.empty:
-                                merged = analysis_results.merge(
-                                    precomputed_df[
-                                        [
-                                            "상호명",
-                                            "위도",
-                                            "경도",
-                                            "nearest_station",
-                                            "transit_type",
-                                            "walk_time_minutes",
-                                            "walk_distance_m",
-                                            "straight_distance_m",
-                                        ]
-                                    ],
-                                    how="left",
-                                    left_on=["상호명", "lat", "lng"],
-                                    right_on=["상호명", "위도", "경도"],
-                                    suffixes=("", "_precomputed"),
-                                )
+                                analysis_results = analysis_results.copy()
 
-                                for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m", "nearest_station", "transit_type"]:
-                                    pre_col = f"{col}_precomputed"
-                                    if pre_col in merged.columns:
-                                        merged[col] = merged[col].combine_first(merged[pre_col])
-                                        merged = merged.drop(columns=[pre_col])
+                                # 행정동명 + 상호명으로 매칭
+                                merge_keys = ["상호명", "행정동명"]
+                                if all(col in analysis_results.columns for col in merge_keys) and all(col in precomputed_df.columns for col in merge_keys):
+                                    merged = analysis_results.merge(
+                                        precomputed_df[
+                                            [
+                                                "상호명",
+                                                "행정동명",
+                                                "nearest_station",
+                                                "transit_type",
+                                                "walk_time_minutes",
+                                                "walk_distance_m",
+                                                "straight_distance_m",
+                                            ]
+                                        ],
+                                        how="left",
+                                        on=merge_keys,
+                                        suffixes=("", "_precomputed"),
+                                    )
 
-                                if "위도" in merged.columns and "경도" in merged.columns:
-                                    merged = merged.drop(columns=["위도", "경도"])
+                                    for col in ["walk_time_minutes", "walk_distance_m", "straight_distance_m", "nearest_station", "transit_type"]:
+                                        pre_col = f"{col}_precomputed"
+                                        if pre_col in merged.columns:
+                                            merged[col] = merged[col].combine_first(merged[pre_col])
+                                            merged = merged.drop(columns=[pre_col])
 
-                                analysis_results = merged
+                                    analysis_results = merged
+                                else:
+                                    st.warning("매칭을 위한 '상호명' 또는 '행정동명' 컬럼이 없어 사전 계산된 접근성 데이터를 사용할 수 없습니다.")
 
                             missing_after_merge = analysis_results[
                                 ["walk_time_minutes", "walk_distance_m", "straight_distance_m"]
@@ -2821,6 +2491,7 @@ with tab4:
                                 analysis_results["straight_distance_m"] = walk_straight_distances
                                 analysis_results["nearest_station"] = stations
                                 analysis_results["transit_type"] = transit_types
+                                analysis_results = analysis_results.drop(columns=[col for col in ["lat_key", "lng_key"] if col in analysis_results.columns])
 
                     if run_analysis or final_results_state is None:
                         st.session_state["tab4_analysis_results_final"] = analysis_results.copy()
