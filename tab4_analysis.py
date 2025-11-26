@@ -74,32 +74,45 @@ def _apply_accessibility_boost(review_text: str, factor_sentiments: Dict[str, Li
 
 def _compute_factor_sentiments(
     review_units: List[str],
-    sentiment_model: Callable[[List[str]], List[float]],
+    sentiment_model: Callable[[List[str]], List[Tuple[str, float]]],
     embed_model,
     category_embeddings: Dict[str, np.ndarray],
 ) -> Tuple[Dict[str, List[float]], List[float]]:
+    """
+    리뷰 단위별 요인별 감성 점수 계산
+    - sentiment_model: 리뷰 리스트를 받아 [(label, score), ...] 반환
+    """
     factor_sentiments: Dict[str, List[float]] = {key: [] for key in category_embeddings.keys()}
     if not review_units:
         return factor_sentiments, []
 
-    sentiment_scores = sentiment_model(review_units)
+    # 리뷰별 감성 분석 (label, score) 튜플 리스트
+    sentiment_results = sentiment_model(review_units)
+    sentiment_scores = [score for _, score in sentiment_results]
+    
+    # SBERT 임베딩 및 유사도 계산
     unit_embs = embed_model.encode(review_units, normalize_embeddings=True)
     subcat_list = list(category_embeddings.keys())
     factor_mat = np.stack([category_embeddings[name] for name in subcat_list], axis=0)
     sim_mat = np.matmul(unit_embs, factor_mat.T)
 
     for i, unit in enumerate(review_units):
-        raw_sent = float(sentiment_scores[i]) if i < len(sentiment_scores) else 0.5
-        sent_adj = np.clip((raw_sent - 0.2) / 0.6, 0, 1)
+        # 감성 점수 (0.0~1.0, 이미 정규화됨)
+        sent_score = sentiment_scores[i] if i < len(sentiment_scores) else 0.5
+        
+        # 유사도 계산
         sims = sim_mat[i]
         for j, sim in enumerate(sims):
-            sim_adj = np.clip((float(sim) - 0.2) / 0.4, 0, 1)
-            if sim_adj > 0:
+            # 유사도 정규화 (0.0~1.0)
+            sim_adj = np.clip(float(sim), 0.0, 1.0)
+            
+            if sim_adj > 0.3:  # 유사도 임계값
                 factor_name = subcat_list[j]
-                combined = ALPHA * sim_adj + BETA * sent_adj
-                score_scaled = 1 / (1 + np.exp(-1.6 * (combined - 0.3)))
-                factor_sentiments[factor_name].append(float(score_scaled))
-    return factor_sentiments, [float(score) for score in sentiment_scores]
+                # 유사도와 감성 점수 결합
+                combined = ALPHA * sim_adj + BETA * sent_score
+                factor_sentiments[factor_name].append(float(combined))
+    
+    return factor_sentiments, sentiment_scores
 
 
 def _llm_adjust_scores(
@@ -196,7 +209,7 @@ def _llm_adjust_scores(
 
 def evaluate_reviews_for_place(
     review_texts: Sequence[str],
-    sentiment_model: Callable[[List[str]], List[float]],
+    sentiment_model: Callable[[List[str]], List[Tuple[str, float]]],
     embed_model,
     category_embeddings: Dict[str, np.ndarray],
     score_template: Dict[str, Dict[str, Optional[float]]],
@@ -204,60 +217,85 @@ def evaluate_reviews_for_place(
     llm_client=None,
     factor_definitions: Optional[Dict[str, Dict[str, str]]] = None,
     llm_delta_limit: float = 0.5,
-) -> Optional[Tuple[Dict[str, Dict[str, float]], float, int, List[Dict[str, Any]]]]:
+) -> Optional[Tuple[Dict[str, Dict[str, float]], float, int, List[Dict[str, Any]], float]]:
     cleaned_reviews = [str(text).strip() for text in review_texts if str(text).strip()]
     if not cleaned_reviews:
         return None
 
-    review_text = "\n".join(cleaned_reviews)
-    review_units = semantic_split_fn(review_text)
-    if not review_units:
+    # 리뷰별 감성 분석 (1:1 매핑)
+    sentiment_results = sentiment_model(cleaned_reviews)
+    review_sentiment_scores = [score for _, score in sentiment_results]
+    
+    # 각 리뷰를 개별적으로 평가
+    all_review_scores: List[Dict[str, Dict[str, float]]] = []
+    total_units = 0
+    
+    for review_text_single in cleaned_reviews:
+        # 각 리뷰를 의미 단위로 분리
+        review_units = semantic_split_fn(review_text_single)
+        if not review_units:
+            continue
+        
+        total_units += len(review_units)
+        
+        # 각 리뷰에 대해 요인별 감성 점수 계산
+        factor_sentiments, _ = _compute_factor_sentiments(
+            review_units, sentiment_model, embed_model, category_embeddings
+        )
+        
+        # 키워드 부스팅 (각 리뷰별로 적용)
+        _apply_keyword_boosts(review_text_single, factor_sentiments)
+        # 접근성 부스팅 (각 리뷰별로 적용)
+        _apply_accessibility_boost(review_text_single, factor_sentiments)
+        
+        # 각 리뷰별 점수 계산 (단순 평균)
+        scores = _clone_score_template(score_template)
+        for main_cat, subcats in scores.items():
+            for subcat in subcats.keys():
+                vals = factor_sentiments.get(subcat, [])
+                if vals:
+                    scores[main_cat][subcat] = float(np.mean(vals))
+                else:
+                    scores[main_cat][subcat] = 0.5
+        
+        all_review_scores.append(scores)
+    
+    if not all_review_scores:
         return None
-
-    factor_sentiments, sentiment_scores = _compute_factor_sentiments(
-        review_units, sentiment_model, embed_model, category_embeddings
-    )
-    _apply_keyword_boosts(review_text, factor_sentiments)
-    _apply_accessibility_boost(review_text, factor_sentiments)
-
-    scores = _clone_score_template(score_template)
-    all_values: List[float] = [val for vals in factor_sentiments.values() for val in vals]
-
-    if all_values:
-        vmin, vmax = float(np.min(all_values)), float(np.max(all_values))
-    else:
-        vmin, vmax = 0.5, 0.5
-
-    for main_cat, subcats in scores.items():
+    
+    # 리뷰별 점수의 평균 계산
+    averaged_scores = _clone_score_template(score_template)
+    for main_cat, subcats in averaged_scores.items():
         for subcat in subcats.keys():
-            vals = factor_sentiments.get(subcat, [])
-            if vals and vmax > vmin:
-                raw = float(np.mean(vals))
-                normed = 0.20 + 0.80 * ((raw - vmin) / (vmax - vmin + 1e-8))
-                scores[main_cat][subcat] = float(np.clip(normed, 0.20, 1.0))
-            elif vals:
-                scores[main_cat][subcat] = float(np.clip(vals[0], 0.20, 1.0))
+            subcat_scores = [
+                review_score[main_cat][subcat]
+                for review_score in all_review_scores
+                if main_cat in review_score and subcat in review_score[main_cat]
+            ]
+            if subcat_scores:
+                averaged_scores[main_cat][subcat] = float(np.mean(subcat_scores))
             else:
-                scores[main_cat][subcat] = 0.5
-
+                averaged_scores[main_cat][subcat] = 0.5
+    
+    # LLM 점수 보정 (선택적)
     corrected_scores, correction_log = _llm_adjust_scores(
         llm_client=llm_client,
         factor_definitions=factor_definitions or {},
-        raw_scores=scores,
+        raw_scores=averaged_scores,
         review_samples=cleaned_reviews,
         delta_limit=llm_delta_limit,
-    ) if llm_client and factor_definitions else (scores, [])
-
+    ) if llm_client and factor_definitions else (averaged_scores, [])
+    
     flat_scores = [score for sub in corrected_scores.values() for score in sub.values() if score is not None]
     mean_score = float(np.mean(flat_scores)) if flat_scores else 0.5
-    mean_sentiment = float(np.mean(sentiment_scores)) if sentiment_scores else np.nan
-    return corrected_scores, mean_score, len(review_units), correction_log, mean_sentiment
+    mean_sentiment = float(np.mean(review_sentiment_scores)) if review_sentiment_scores else np.nan
+    return corrected_scores, mean_score, total_units, correction_log, mean_sentiment
 
 
 def analyze_review_groups(
     review_df: pd.DataFrame,
     group_cols: Sequence[str],
-    sentiment_model: Callable[[List[str]], List[float]],
+    sentiment_model: Callable[[List[str]], List[Tuple[str, float]]],
     embed_model,
     category_embeddings: Dict[str, np.ndarray],
     score_template: Dict[str, Dict[str, Optional[float]]],
