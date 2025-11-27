@@ -8,6 +8,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
 import warnings
 
+# Streamlit 페이지 설정 (wide 모드로 전체 너비 사용)
+st.set_page_config(layout="wide")
+
 warnings.filterwarnings("ignore")
 
 # --- 1. 장소성 요인 정의 (Sentence-BERT Input) ---
@@ -373,16 +376,59 @@ def main():
     # 데이터 미리보기
     st.markdown("---")
     st.header("📋 데이터 미리보기")
-    preview_cols = ['cafe_name', 'review_text']
-    if len(df_reviews) > 0:
-        preview_df = df_reviews[preview_cols].head(10000)
+    
+    # 전체 데이터 로드 (미리보기용)
+    try:
+        df_preview = pd.read_csv(file_path, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        df_preview = pd.read_csv(file_path, encoding="cp949")
+    
+    # 필요한 컬럼 확인 및 선택
+    required_cols = ['상호명', '시군구명', '행정동명', '평점', '리뷰']
+    available_cols = [col for col in required_cols if col in df_preview.columns]
+    
+    if len(available_cols) == len(required_cols):
+        # 행정구별로 정렬 (시군구명, 상호명, 행정동명 순)
+        df_preview_sorted = df_preview[available_cols].copy()
+        df_preview_sorted = df_preview_sorted.sort_values(by=['시군구명', '상호명', '행정동명'], ascending=[True, True, True])
+        
+        # 표를 화면 전체 너비로 표시하기 위한 CSS 스타일
+        st.markdown("""
+        <style>
+        .stDataFrame {
+            width: 100% !important;
+        }
+        div[data-testid="stDataFrame"] {
+            width: 100% !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         st.dataframe(
-            preview_df,
+            df_preview_sorted,
             use_container_width=True,
             hide_index=True,
-            height=400
+            height=600
         )
-        st.caption(f"상위 10000개 리뷰 미리보기 (전체 {len(df_reviews):,}개)")
+        st.caption(f"전체 {len(df_preview_sorted):,}개 리뷰 (행정구별 정렬)")
+    else:
+        st.warning(f"필요한 컬럼이 없습니다. 현재 컬럼: {list(df_preview.columns)}")
+        # 기본 컬럼으로 표시
+        if '상호명' in df_preview.columns or 'cafe_name' in df_preview.columns:
+            cafe_col = '상호명' if '상호명' in df_preview.columns else 'cafe_name'
+            review_col = '리뷰' if '리뷰' in df_preview.columns else 'review_text'
+            preview_cols = [cafe_col, review_col]
+            if all(col in df_preview.columns for col in preview_cols):
+                df_preview_sorted = df_preview[preview_cols].copy()
+                if '시군구명' in df_preview.columns:
+                    df_preview_sorted = df_preview_sorted.sort_values(by='시군구명', ascending=True)
+                st.dataframe(
+                    df_preview_sorted,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=600
+                )
+                st.caption(f"전체 {len(df_preview_sorted):,}개 리뷰")
     
     # 세션 상태 초기화
     if 'df_review_scores' not in st.session_state:
