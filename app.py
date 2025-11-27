@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
 import warnings
+import re
 
 # Streamlit 페이지 설정 (wide 모드로 전체 너비 사용)
 st.set_page_config(layout="wide")
@@ -46,9 +47,13 @@ SIMILARITY_THRESHOLD = 0.4  # 리뷰와 요인 정의 간 최소 코사인 유�
 # 권장값: 0.5 (중간 필터링) - 너무 낮으면(0.3~0.4) 관련 없는 리뷰 포함, 너무 높으면(0.7~0.8) 관련 리뷰 누락
 
 # --- 3. 모델 로드 및 캐싱 (Streamlit 성능 최적화) ---
+# 전역 변수로 모델 이름 저장
+_sentiment_model_name = None
+
 @st.cache_resource
 def load_models():
     """Sentence-BERT와 감성 분석 모델을 로드합니다."""
+    global _sentiment_model_name
     # 1. Sentence-BERT 모델 로드 (임베딩 및 유사도 계산용)
     with st.spinner("모델 로드 중: Sentence-BERT (유사도용)..."):
         try:
@@ -57,39 +62,190 @@ def load_models():
             st.warning(f"기본 모델 로드 실패, 대체 모델 사용: {e}")
             sbert_model = SentenceTransformer('snunlp/KR-SBERT-V40K-klueNLI-augSTS')
     
-    # 2. 감성 분석 모델 로드 (KoBERT/KoELECTRA 기반)
-    with st.spinner("모델 로드 중: KoELECTRA/KoBERT 기반 감성분석..."):
-        try:
-            # KoELECTRA 우선 시도
-            sentiment_model_name = "beomi/KcELECTRA-base"
-            tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
-            model = AutoModelForSequenceClassification.from_pretrained(sentiment_model_name, num_labels=2)
-            device = 0 if torch.cuda.is_available() else -1
-            sentiment_pipeline = pipeline(
-                "sentiment-analysis",
-                model=model,
-                tokenizer=tokenizer,
-                device=device
-            )
-        except Exception as e:
-            st.warning(f"KoELECTRA 로드 실패, KoBERT 사용: {e}")
+    # 2. 감성 분석 모델 로드 (한국어 리뷰 감성 분석 특화 모델)
+    with st.spinner("모델 로드 중: 한국어 감성 분석 모델..."):
+        sentiment_pipeline = None
+        model_loaded = False
+        
+        # 우선순위 1: 한국어 감성 분석 전용 fine-tuned 모델
+        model_candidates = [
+            {
+                "name": "matthewburke/korean_sentiment",
+                "description": "한국어 감성 분석 전용 모델"
+            },
+            {
+                "name": "nlptown/bert-base-multilingual-uncased-sentiment",
+                "description": "다국어 감성 분석 모델 (한국어 포함, 5단계 감성)"
+            },
+            {
+                "name": "beomi/KoELECTRA-v3-discriminator",
+                "description": "KoELECTRA v3 (최신 버전)"
+            },
+            {
+                "name": "beomi/KcELECTRA-base",
+                "description": "KoELECTRA base (기존)"
+            },
+            {
+                "name": "monologg/kobert-base-v1",
+                "description": "KoBERT (fallback)"
+            }
+        ]
+        
+        for model_info in model_candidates:
             try:
-                # KoBERT 대체 시도
-                sentiment_model_name = "monologg/kobert-base-v1"
-                tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
-                model = AutoModelForSequenceClassification.from_pretrained(sentiment_model_name, num_labels=2)
-                device = 0 if torch.cuda.is_available() else -1
-                sentiment_pipeline = pipeline(
-                    "sentiment-analysis",
-                    model=model,
-                    tokenizer=tokenizer,
-                    device=device
-                )
-            except Exception as e2:
-                st.error(f"감성 분석 모델 로드 실패: {e2}")
-                st.stop()
+                sentiment_model_name = model_info["name"]
+                st.info(f"시도 중: {model_info['description']} ({sentiment_model_name})")
+                
+                # 특별 처리: nlptown 모델은 이미 fine-tuned되어 있음
+                if "nlptown" in sentiment_model_name:
+                    sentiment_pipeline = pipeline(
+                        "sentiment-analysis",
+                        model=sentiment_model_name,
+                        device=0 if torch.cuda.is_available() else -1
+                    )
+                else:
+                    tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
+                    # num_labels 확인 (nlptown은 5, 나머지는 2 또는 3)
+                    if "nlptown" in sentiment_model_name or "multilingual" in sentiment_model_name:
+                        num_labels = 5
+                    else:
+                        num_labels = 2
+                    
+                    model = AutoModelForSequenceClassification.from_pretrained(
+                        sentiment_model_name, 
+                        num_labels=num_labels
+                    )
+                    device = 0 if torch.cuda.is_available() else -1
+                    sentiment_pipeline = pipeline(
+                        "sentiment-analysis",
+                        model=model,
+                        tokenizer=tokenizer,
+                        device=device
+                    )
+                
+                st.success(f"✅ 모델 로드 성공: {model_info['description']}")
+                _sentiment_model_name = sentiment_model_name
+                model_loaded = True
+                break
+                
+            except Exception as e:
+                st.warning(f"모델 로드 실패 ({model_info['name']}): {e}")
+                continue
+        
+        if not model_loaded or sentiment_pipeline is None:
+            st.error("모든 감성 분석 모델 로드 실패. 인터넷 연결을 확인하거나 다른 모델을 시도해주세요.")
+            st.stop()
+
+    return sbert_model, sentiment_pipeline, _sentiment_model_name
+
+# --- 3-1. 숫자-only 텍스트 확인 함수 ---
+def is_numeric_only(text: str) -> bool:
+    """
+    텍스트가 숫자만 포함되어 있는지 확인합니다.
     
-    return sbert_model, sentiment_pipeline
+    Args:
+        text: 확인할 텍스트
+    
+    Returns:
+        bool: 숫자만 포함되어 있으면 True
+    """
+    if text is None:
+        return False
+    text = str(text).strip()
+    return bool(re.fullmatch(r"[0-9]+(\.[0-9]+)?", text))
+
+# --- 3-1-1. 메타데이터-only 텍스트 확인 함수 ---
+def is_metadata_only(text: str) -> bool:
+    """
+    텍스트가 메타데이터만 포함되어 있는지 확인합니다.
+    (예: "서비스매장 내 식사식사 유형아침 식사", "식사 유형브런치" 등)
+    
+    Args:
+        text: 확인할 텍스트
+    
+    Returns:
+        bool: 메타데이터만 포함되어 있으면 True
+    """
+    if text is None:
+        return False
+    text = str(text).strip()
+    
+    # 메타데이터 패턴들
+    metadata_patterns = [
+        r'^서비스.*식사.*유형',
+        r'^식사.*유형',
+        r'^서비스.*매장.*내.*식사',
+        r'^음식:\s*\d+.*서비스:\s*\d+.*분위기:\s*\d+$',  # "음식: 5서비스: 5분위기: 5" 같은 패턴
+        r'^음식:\s*\d+$',  # "음식: 5" 같은 패턴
+        r'^서비스:\s*\d+$',
+        r'^분위기:\s*\d+$',
+    ]
+    
+    for pattern in metadata_patterns:
+        if re.match(pattern, text, re.IGNORECASE):
+            return True
+    
+    # 매우 짧은 텍스트 (10자 이하)도 메타데이터로 간주할 수 있음
+    # 하지만 이건 너무 광범위할 수 있으므로 주석 처리
+    # if len(text) <= 10:
+    #     return True
+    
+    return False
+
+# --- 3-2. 감성 분석 결과 처리 헬퍼 함수 ---
+def process_sentiment_result(result, model_name=""):
+    """
+    다양한 감성 분석 모델의 결과를 통일된 형식(긍정/부정, 점수)으로 변환합니다.
+    
+    Args:
+        result: sentiment_pipeline의 결과 (dict 또는 list)
+        model_name: 사용된 모델 이름 (선택적)
+    
+    Returns:
+        tuple: (label: str, score: float) - '긍정'/'부정'/'중립', 0.0~1.0 점수
+    """
+    if isinstance(result, list):
+        # 배치 결과인 경우 첫 번째 결과 사용
+        result = result[0] if len(result) > 0 else {}
+    
+    label = str(result.get('label', '')).upper()
+    score = float(result.get('score', 0.5))
+    
+    # nlptown 모델 처리 (5단계: 1-5점)
+    if 'nlptown' in model_name.lower() or 'multilingual' in model_name.lower():
+        # label 형식: "1 star", "2 stars", "3 stars", "4 stars", "5 stars"
+        if '5' in label or 'FIVE' in label:
+            return ('긍정', 0.9)
+        elif '4' in label or 'FOUR' in label:
+            return ('긍정', 0.7)
+        elif '3' in label or 'THREE' in label:
+            return ('중립', 0.5)
+        elif '2' in label or 'TWO' in label:
+            return ('부정', 0.3)
+        elif '1' in label or 'ONE' in label:
+            return ('부정', 0.1)
+        else:
+            # 점수 기반으로 판단
+            if score >= 0.6:
+                return ('긍정', score)
+            elif score <= 0.4:
+                return ('부정', 1 - score)
+            else:
+                return ('중립', 0.5)
+    
+    # 일반적인 2단계 모델 처리 (긍정/부정)
+    if any(pos in label for pos in ['POSITIVE', '긍정', 'LABEL_1', '1', 'POS']):
+        return ('긍정', score)
+    elif any(neg in label for neg in ['NEGATIVE', '부정', 'LABEL_0', '0', 'NEG']):
+        return ('부정', 1 - score)
+    else:
+        # 레이블을 알 수 없는 경우 점수로 판단
+        if score >= 0.6:
+            return ('긍정', score)
+        elif score <= 0.4:
+            return ('부정', 1 - score)
+        else:
+            return ('중립', 0.5)
 
 # --- 4. 데이터 로드 및 전처리 ---
 @st.cache_data
@@ -99,9 +255,41 @@ def load_data(file_path: Path):
         raise FileNotFoundError(f"파일을 찾을 수 없습니다: {file_path}")
     
     try:
-        df = pd.read_csv(file_path, encoding="utf-8-sig")
+        df = pd.read_csv(
+            file_path, 
+            encoding="utf-8-sig",
+            on_bad_lines='skip',  # 잘못된 라인은 건너뛰기
+            quoting=1,  # QUOTE_ALL
+            escapechar='\\'
+        )
     except UnicodeDecodeError:
-        df = pd.read_csv(file_path, encoding="cp949")
+        df = pd.read_csv(
+            file_path, 
+            encoding="cp949",
+            on_bad_lines='skip',
+            quoting=1,
+            escapechar='\\'
+        )
+    except Exception as e:
+        st.warning(f"CSV 읽기 중 일부 오류 발생: {e}")
+        # 오류가 있어도 계속 진행
+        try:
+            df = pd.read_csv(
+                file_path, 
+                encoding="utf-8-sig",
+                on_bad_lines='skip',
+                engine='python'
+            )
+        except:
+            df = pd.read_csv(
+                file_path, 
+                encoding="utf-8-sig",
+                on_bad_lines='skip',
+                sep=',',
+                quotechar='"',
+                escapechar='\\',
+                engine='python'
+            )
     
     # 컬럼명 정규화 (한국어 컬럼명 처리)
     column_mapping = {
@@ -204,14 +392,7 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                     # 해당 리뷰에 대한 감성 분석
                     try:
                         sentiment_result = sentiment_pipeline([review_text])[0]
-                        label = sentiment_result['label']
-                        score = sentiment_result['score']
-                        
-                        # 긍정 확률 계산
-                        if any(pos in str(label).upper() for pos in ['POSITIVE', '긍정', 'LABEL_1', '1']):
-                            positive_prob = score
-                        else:
-                            positive_prob = 1 - score
+                        label, positive_prob = process_sentiment_result(sentiment_result, _sentiment_model_name)
                         
                         # 유사도와 감성 점수를 결합 (가중 평균)
                         combined_score = 0.6 * similarity_score + 0.4 * positive_prob
@@ -234,21 +415,15 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
             if len(relevant_review_indices) > 0:
                 relevant_texts = [review_texts[idx] for idx in relevant_review_indices]
                 
-                # 4-2. BERT 감성 분석 적용 (0~1 긍정 점수)
+                # 4-2. 감성 분석 적용 (0~1 긍정 점수)
                 try:
                     sentiment_results = sentiment_pipeline(relevant_texts)
                     
-                    # 감성 점수 추출 (레이블에 따라 긍정 확률 계산)
+                    # 헬퍼 함수를 사용하여 감성 점수 추출
                     sentiment_scores = []
                     for res in sentiment_results:
-                        label = res['label']
-                        score = res['score']
-                        
-                        # 레이블이 'POSITIVE', '긍정', 'LABEL_1' 등인 경우
-                        if any(pos in str(label).upper() for pos in ['POSITIVE', '긍정', 'LABEL_1', '1']):
-                            sentiment_scores.append(score)
-                        else:
-                            sentiment_scores.append(1 - score)
+                        label, score = process_sentiment_result(res, _sentiment_model_name)
+                        sentiment_scores.append(score)
                     
                     # 4-3. 세부 항목 최종 점수 산출 (산술 평균)
                     avg_score = np.mean(sentiment_scores) if sentiment_scores else 0.5
@@ -274,14 +449,29 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
     
     return df_cafe_scores, df_review_scores
 
-# --- 6. 알고리즘 핵심: 개별 리뷰 감성 분석 (KoBERT 활용) ---
-def run_sentiment_analysis(df_reviews, sentiment_pipeline):
+# --- 6. 알고리즘 핵심: 개별 리뷰 감성 분석 (한국어 감성 분석 모델 활용) ---
+def run_sentiment_analysis(df_reviews, sentiment_pipeline, model_name="", ratings=None):
     """
-    개별 리뷰 텍스트에 대해 KoBERT/KoELECTRA 기반 감성 분석을 수행합니다.
+    개별 리뷰 텍스트에 대해 한국어 감성 분석 모델을 사용하여 감성 분석을 수행합니다.
+    
+    Args:
+        df_reviews: 리뷰 데이터프레임
+        sentiment_pipeline: 감성 분석 파이프라인
+        model_name: 모델 이름
+        ratings: 평점 리스트 (선택적, 메타데이터-only 리뷰 처리용)
     """
-    st.subheader("2. 개별 리뷰 감성 분석 (KoBERT/KoELECTRA 기반)")
+    st.subheader("2. 개별 리뷰 감성 분석 (한국어 감성 분석 모델)")
     
     review_texts = df_reviews['review_text'].astype(str).tolist()
+    
+    # 평점 정보 추출 (있으면 사용)
+    if ratings is None:
+        if '평점' in df_reviews.columns:
+            ratings = df_reviews['평점'].astype(float).tolist()
+        elif 'rating' in df_reviews.columns:
+            ratings = df_reviews['rating'].astype(float).tolist()
+        else:
+            ratings = [None] * len(review_texts)
     
     # 진행 상황 표시
     progress_bar = st.progress(0)
@@ -289,6 +479,7 @@ def run_sentiment_analysis(df_reviews, sentiment_pipeline):
     total_batches = (len(review_texts) + batch_size - 1) // batch_size
     
     sentiment_scores = []
+    sentiment_labels = []
     
     for batch_idx in range(total_batches):
         start_idx = batch_idx * batch_size
@@ -298,21 +489,64 @@ def run_sentiment_analysis(df_reviews, sentiment_pipeline):
         progress_bar.progress((batch_idx + 1) / total_batches)
         
         try:
-            # KoBERT/KoELECTRA 모델을 사용하여 긍정 확률을 산출
-            batch_results = sentiment_pipeline(batch_texts)
+            # 숫자-only 리뷰와 일반 텍스트 리뷰 분리
+            text_batch = []
+            batch_results_map = {}  # 인덱스 -> 결과 매핑
             
-            # 긍정 점수 추출
-            for res in batch_results:
-                label = res['label']
-                score = res['score']
+            for idx, text in enumerate(batch_texts):
+                global_idx = start_idx + idx
+                rating = ratings[global_idx] if global_idx < len(ratings) and ratings[global_idx] is not None else None
                 
-                if any(pos in str(label).upper() for pos in ['POSITIVE', '긍정', 'LABEL_1', '1']):
-                    sentiment_scores.append(score)
+                # 숫자-only 리뷰는 별점 기반으로 처리
+                if is_numeric_only(text):
+                    try:
+                        rating_value = float(text)
+                        if rating_value >= 4.0:
+                            batch_results_map[idx] = ("긍정", 0.9)
+                        elif rating_value >= 3.0:
+                            batch_results_map[idx] = ("중립", 0.5)
+                        else:
+                            batch_results_map[idx] = ("부정", 0.1)
+                    except ValueError:
+                        # 숫자 변환 실패 시 중립 처리
+                        batch_results_map[idx] = ("중립", 0.5)
+                # 메타데이터-only 리뷰도 별점 기반으로 처리
+                elif is_metadata_only(text) and rating is not None:
+                    try:
+                        rating_value = float(rating)
+                        if rating_value >= 4.0:
+                            batch_results_map[idx] = ("긍정", 0.9)
+                        elif rating_value >= 3.0:
+                            batch_results_map[idx] = ("중립", 0.5)
+                        else:
+                            batch_results_map[idx] = ("부정", 0.1)
+                    except (ValueError, TypeError):
+                        # 평점 변환 실패 시 중립 처리
+                        batch_results_map[idx] = ("중립", 0.5)
                 else:
-                    sentiment_scores.append(1 - score)
+                    # 일반 텍스트 리뷰는 모델 사용을 위해 수집
+                    text_batch.append((idx, text))
+            
+            # 일반 텍스트 리뷰는 모델 사용
+            if text_batch:
+                text_only = [text for _, text in text_batch]
+                model_results = sentiment_pipeline(text_only)
+                
+                # 모델 결과를 인덱스에 매핑
+                for (idx, _), res in zip(text_batch, model_results):
+                    label, score = process_sentiment_result(res, model_name)
+                    batch_results_map[idx] = (label, score)
+            
+            # 원래 순서대로 결과 추가
+            for idx in range(len(batch_texts)):
+                label, score = batch_results_map[idx]
+                sentiment_labels.append(label)
+                sentiment_scores.append(score)
+                
         except Exception as e:
             st.warning(f"배치 {batch_idx+1} 처리 중 오류: {e}")
             # 오류 발생 시 중립 점수 할당
+            sentiment_labels.extend(['중립'] * len(batch_texts))
             sentiment_scores.extend([0.5] * len(batch_texts))
     
     progress_bar.empty()
@@ -320,11 +554,7 @@ def run_sentiment_analysis(df_reviews, sentiment_pipeline):
     # 리뷰 데이터프레임에 추가
     df_reviews = df_reviews.copy()
     df_reviews['sentiment_score'] = sentiment_scores
-    
-    # 감성 레이블 추가 (0.5 기준으로 긍정/부정 분류)
-    df_reviews['sentiment_label'] = df_reviews['sentiment_score'].apply(
-        lambda x: '긍정' if x >= 0.5 else '부정'
-    )
+    df_reviews['sentiment_label'] = sentiment_labels
     
     # 카페별 평균 감성 점수 산출
     avg_sentiment = df_reviews.groupby('cafe_name')['sentiment_score'].mean().reset_index()
@@ -342,7 +572,7 @@ def main():
     file_path = GOOGLE_REVIEW_SAMPLE_CSV
     
     # 1. 모델 로드
-    sbert_model, sentiment_pipeline = load_models()
+    sbert_model, sentiment_pipeline, sentiment_model_name = load_models()
     
     # 2. 데이터 로드
     if not file_path.exists():
@@ -379,9 +609,41 @@ def main():
     
     # 전체 데이터 로드 (미리보기용)
     try:
-        df_preview = pd.read_csv(file_path, encoding="utf-8-sig")
+        df_preview = pd.read_csv(
+            file_path, 
+            encoding="utf-8-sig",
+            on_bad_lines='skip',  # 잘못된 라인은 건너뛰기
+            quoting=1,  # QUOTE_ALL (모든 필드를 따옴표로 감싸기)
+            escapechar='\\'  # 이스케이프 문자
+        )
     except UnicodeDecodeError:
-        df_preview = pd.read_csv(file_path, encoding="cp949")
+        df_preview = pd.read_csv(
+            file_path, 
+            encoding="cp949",
+            on_bad_lines='skip',
+            quoting=1,
+            escapechar='\\'
+        )
+    except Exception as e:
+        st.warning(f"CSV 읽기 중 일부 오류 발생: {e}")
+        # 오류가 있어도 계속 진행 (최선의 노력으로 읽기)
+        try:
+            df_preview = pd.read_csv(
+                file_path, 
+                encoding="utf-8-sig",
+                on_bad_lines='skip',
+                engine='python'  # Python 엔진 사용 (더 관대함)
+            )
+        except:
+            df_preview = pd.read_csv(
+                file_path, 
+                encoding="utf-8-sig",
+                on_bad_lines='skip',
+                sep=',',
+                quotechar='"',
+                escapechar='\\',
+                engine='python'
+            )
     
     # 필요한 컬럼 확인 및 선택
     required_cols = ['상호명', '시군구명', '행정동명', '평점', '리뷰']
@@ -394,16 +656,16 @@ def main():
         
         # 표를 화면 전체 너비로 표시하기 위한 CSS 스타일
         st.markdown("""
-        <style>
+<style>
         .stDataFrame {
             width: 100% !important;
         }
         div[data-testid="stDataFrame"] {
             width: 100% !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
+    }
+</style>
+""", unsafe_allow_html=True)
+
         st.dataframe(
             df_preview_sorted,
             use_container_width=True,
@@ -411,6 +673,137 @@ def main():
             height=600
         )
         st.caption(f"전체 {len(df_preview_sorted):,}개 리뷰 (행정구별 정렬)")
+        
+        # 감성 분석 추가 버튼
+        st.markdown("---")
+        if st.button("🔍 감성 분석 추가 (긍정/부정/중립)", type="secondary"):
+            with st.spinner(f"감성 분석 모델을 사용하여 리뷰별 감성 분석 중... (시간이 걸릴 수 있습니다)"):
+                # 리뷰 텍스트 및 평점 추출
+                review_texts = df_preview_sorted['리뷰'].astype(str).tolist()
+                ratings = df_preview_sorted['평점'].astype(float).tolist() if '평점' in df_preview_sorted.columns else [None] * len(review_texts)
+                
+                # 진행 상황 표시
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                batch_size = 32
+                total_batches = (len(review_texts) + batch_size - 1) // batch_size
+                
+                sentiment_labels = []
+                sentiment_scores = []
+                
+                for batch_idx in range(total_batches):
+                    start_idx = batch_idx * batch_size
+                    end_idx = min((batch_idx + 1) * batch_size, len(review_texts))
+                    batch_texts = review_texts[start_idx:end_idx]
+                    batch_ratings = ratings[start_idx:end_idx] if ratings else [None] * len(batch_texts)
+                    
+                    progress = (batch_idx + 1) / total_batches
+                    progress_bar.progress(progress)
+                    status_text.text(f"처리 중: {batch_idx + 1}/{total_batches} 배치 ({len(batch_texts)}개 리뷰)")
+                    
+                    try:
+                        # 숫자-only 리뷰와 일반 텍스트 리뷰 분리
+                        text_batch = []
+                        batch_results_map = {}  # 인덱스 -> 결과 매핑
+                        
+                        for idx, text in enumerate(batch_texts):
+                            rating = batch_ratings[idx] if idx < len(batch_ratings) else None
+                            
+                            # 숫자-only 리뷰는 별점 기반으로 처리
+                            if is_numeric_only(text):
+                                try:
+                                    rating_value = float(text)
+                                    if rating_value >= 4.0:
+                                        batch_results_map[idx] = ("긍정", 0.9)
+                                    elif rating_value >= 3.0:
+                                        batch_results_map[idx] = ("중립", 0.5)
+                                    else:
+                                        batch_results_map[idx] = ("부정", 0.1)
+                                except ValueError:
+                                    # 숫자 변환 실패 시 중립 처리
+                                    batch_results_map[idx] = ("중립", 0.5)
+                            # 메타데이터-only 리뷰도 별점 기반으로 처리
+                            elif is_metadata_only(text) and rating is not None:
+                                try:
+                                    rating_value = float(rating)
+                                    if rating_value >= 4.0:
+                                        batch_results_map[idx] = ("긍정", 0.9)
+                                    elif rating_value >= 3.0:
+                                        batch_results_map[idx] = ("중립", 0.5)
+                                    else:
+                                        batch_results_map[idx] = ("부정", 0.1)
+                                except (ValueError, TypeError):
+                                    # 평점 변환 실패 시 중립 처리
+                                    batch_results_map[idx] = ("중립", 0.5)
+                            else:
+                                # 일반 텍스트 리뷰는 모델 사용을 위해 수집
+                                text_batch.append((idx, text))
+                        
+                        # 일반 텍스트 리뷰는 모델 사용
+                        if text_batch:
+                            text_only = [text for _, text in text_batch]
+                            model_results = sentiment_pipeline(text_only)
+                            
+                            # 모델 결과를 인덱스에 매핑
+                            for (idx, _), res in zip(text_batch, model_results):
+                                label, score = process_sentiment_result(res, sentiment_model_name)
+                                batch_results_map[idx] = (label, score)
+                        
+                        # 원래 순서대로 결과 추가
+                        for idx in range(len(batch_texts)):
+                            label, score = batch_results_map[idx]
+                            sentiment_labels.append(label)
+                            sentiment_scores.append(score)
+                            
+                    except Exception as e:
+                        st.warning(f"배치 {batch_idx+1} 처리 중 오류: {e}")
+                        # 오류 발생 시 중립 처리
+                        sentiment_labels.extend(['중립'] * len(batch_texts))
+                        sentiment_scores.extend([0.5] * len(batch_texts))
+                
+                progress_bar.empty()
+                status_text.empty()
+                
+                # 결과를 데이터프레임에 추가
+                df_preview_with_sentiment = df_preview_sorted.copy()
+                df_preview_with_sentiment['감성분석'] = sentiment_labels
+                df_preview_with_sentiment['감성점수'] = [f"{s:.3f}" for s in sentiment_scores]
+                
+                # 컬럼 순서 재정렬 (감성분석 컬럼을 리뷰 옆에 배치)
+                column_order = ['상호명', '시군구명', '행정동명', '평점', '리뷰', '감성분석', '감성점수']
+                df_preview_with_sentiment = df_preview_with_sentiment[column_order]
+                
+                st.success(f"✅ 감성 분석 완료! {len(sentiment_labels):,}개 리뷰 분석됨")
+                
+                # 결과 표시
+                st.dataframe(
+                    df_preview_with_sentiment,
+                    use_container_width=True,
+                            hide_index=True,
+                    height=600
+                )
+                
+                # 통계 정보
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    positive_count = sentiment_labels.count('긍정')
+                    st.metric("긍정 리뷰", f"{positive_count:,}개 ({positive_count/len(sentiment_labels)*100:.1f}%)")
+                with col2:
+                    negative_count = sentiment_labels.count('부정')
+                    st.metric("부정 리뷰", f"{negative_count:,}개 ({negative_count/len(sentiment_labels)*100:.1f}%)")
+                with col3:
+                    neutral_count = sentiment_labels.count('중립')
+                    if neutral_count > 0:
+                        st.metric("중립 리뷰", f"{neutral_count:,}개 ({neutral_count/len(sentiment_labels)*100:.1f}%)")
+                
+                # 다운로드 버튼
+                csv = df_preview_with_sentiment.to_csv(index=False).encode("utf-8-sig")
+                st.download_button(
+                    "📥 감성 분석 결과 CSV 다운로드",
+                    data=csv,
+                    file_name="google_reviews_with_sentiment.csv",
+                    mime="text/csv"
+                )
     else:
         st.warning(f"필요한 컬럼이 없습니다. 현재 컬럼: {list(df_preview.columns)}")
         # 기본 컬럼으로 표시
@@ -481,7 +874,8 @@ def main():
             try:
                 df_reviews_with_sentiment, df_avg_sentiment = run_sentiment_analysis(
                     df_reviews.copy(), 
-                    sentiment_pipeline
+                    sentiment_pipeline,
+                    sentiment_model_name
                 )
                 
                 # 세션 상태에 저장
@@ -502,7 +896,6 @@ def main():
                     file_name="review_sentiment_analysis.csv",
                     mime="text/csv"
                 )
-                
             except Exception as e:
                 st.error(f"감성 분석 중 오류 발생: {e}")
                 import traceback
@@ -589,7 +982,7 @@ def main():
                     hide_index=True,
                     height=600
                 )
-                
+
                 st.caption(f"총 {len(filtered_df):,}개 리뷰 표시")
                 
                 # 다운로드 버튼
