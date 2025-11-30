@@ -45,6 +45,7 @@ GOOGLE_REVIEW_SAMPLE_CSV = BASE_DIR / "google_reviews_scraped_cleaned.csv"
 # --- 2-1. 알고리즘 하이퍼파라미터 설정 ---
 SIMILARITY_THRESHOLD = 0.4  # 리뷰와 요인 정의 간 최소 코사인 유사도 (0.0~1.0)
 # 권장값: 0.5 (중간 필터링) - 너무 낮으면(0.3~0.4) 관련 없는 리뷰 포함, 너무 높으면(0.7~0.8) 관련 리뷰 누락
+DEVIATION_THRESHOLD = 0.05  # 특이 특징 추출을 위한 평균 대비 최소 편차 (mu +/- 0.05)
 
 # --- 3. 모델 로드 및 캐싱 (Streamlit 성능 최적화) ---
 # 전역 변수로 모델 이름 저장
@@ -308,29 +309,40 @@ def load_data(file_path: Path):
         st.error(f"필수 컬럼이 없습니다. 현재 컬럼: {list(df.columns)}")
         st.stop()
     
-    # 결측치 제거
+    # 결측치 제거 전 상태 확인
     initial_count = len(df)
     initial_cafe_count = df['cafe_name'].nunique() if 'cafe_name' in df.columns else 0
     
+    # 결측치 제거 (카페명과 리뷰 모두 있는 행만 유지)
     df = df[['cafe_name', 'review_text']].dropna()
     after_dropna_count = len(df)
     after_dropna_cafe_count = df['cafe_name'].nunique() if 'cafe_name' in df.columns else 0
     
-    df = df[df['review_text'].astype(str).str.strip() != '']
-    final_count = len(df)
-    final_cafe_count = df['cafe_name'].nunique() if 'cafe_name' in df.columns else 0
+    # 빈 리뷰 제거 (하지만 카페는 유지 - 빈 리뷰만 있는 카페도 포함)
+    # 빈 리뷰 행만 제거하고, 카페별로 최소 1개 리뷰가 있도록 보장
+    df_valid_reviews = df[df['review_text'].astype(str).str.strip() != '']
+    final_count = len(df_valid_reviews)
+    final_cafe_count = df_valid_reviews['cafe_name'].nunique() if 'cafe_name' in df_valid_reviews.columns else 0
+    
+    # 빈 리뷰만 있는 카페 확인
+    cafes_with_valid = set(df_valid_reviews['cafe_name'].unique())
+    cafes_with_empty_only = set(df[df['review_text'].astype(str).str.strip() == '']['cafe_name'].unique()) - cafes_with_valid
+    cafes_with_empty_only_count = len(cafes_with_empty_only)
     
     st.success(f"리뷰 데이터 로드 완료: 총 {final_count}건")
     st.info(f"📊 고유 카페 수: {final_cafe_count}개 (초기: {initial_cafe_count}개, 결측치 제거 후: {after_dropna_cafe_count}개)")
     
     if initial_cafe_count > final_cafe_count:
         excluded = initial_cafe_count - final_cafe_count
-        st.warning(f"⚠️ {excluded}개 카페가 빈 리뷰로 인해 제외되었습니다.")
+        st.warning(f"⚠️ {excluded}개 카페가 빈 리뷰만 있어서 제외되었습니다. (유효 리뷰가 있는 카페만 분석에 포함됩니다)")
     
-    return df
+    if cafes_with_empty_only_count > 0:
+        st.info(f"ℹ️ {cafes_with_empty_only_count}개 카페는 빈 리뷰만 있어서 해당 카페의 리뷰는 분석에서 제외되지만, 카페 자체는 카운트에 포함됩니다.")
+    
+    return df_valid_reviews
 
 # --- 5. 알고리즘 핵심: 감성 분석 및 유사도 기반 요인 점수 계산 ---
-def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_defs, similarity_threshold=0.5):
+def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_defs, similarity_threshold=0.5, sentiment_model_name=""):
     """
     Sentence-BERT와 감성 분석을 사용하여 장소성 요인별 점수를 계산합니다.
     리뷰별 점수도 함께 반환합니다.
@@ -392,7 +404,7 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                     # 해당 리뷰에 대한 감성 분석
                     try:
                         sentiment_result = sentiment_pipeline([review_text])[0]
-                        label, positive_prob = process_sentiment_result(sentiment_result, _sentiment_model_name)
+                        label, positive_prob = process_sentiment_result(sentiment_result, sentiment_model_name)
                         
                         # 유사도와 감성 점수를 결합 (가중 평균)
                         combined_score = 0.6 * similarity_score + 0.4 * positive_prob
@@ -414,29 +426,90 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
             
             if len(relevant_review_indices) > 0:
                 relevant_texts = [review_texts[idx] for idx in relevant_review_indices]
+                relevant_original_indices = [review_indices[idx] for idx in relevant_review_indices]
                 
                 # 4-2. 감성 분석 적용 (0~1 긍정 점수)
+                # ⚠️ 요인마다 유효한 언급 텍스트만 대상으로 감성 분석을 새로 실행 (연구 논리 핵심)
                 try:
-                    sentiment_results = sentiment_pipeline(relevant_texts)
-                    
-                    # 헬퍼 함수를 사용하여 감성 점수 추출
                     sentiment_scores = []
-                    for res in sentiment_results:
-                        label, score = process_sentiment_result(res, _sentiment_model_name)
-                        sentiment_scores.append(score)
+                    
+                    # 숫자/메타데이터 리뷰와 일반 텍스트 리뷰 분리
+                    text_batch = []  # 모델에 전달할 텍스트 배치
+                    text_batch_indices = []  # 배치 내 인덱스 매핑
+                    rating_scores = {}  # 평점 기반 점수 저장
+                    
+                    for batch_idx, text_idx in enumerate(relevant_review_indices):
+                        text = review_texts[text_idx]
+                        original_idx = review_indices[text_idx]
+                        
+                        # 평점 정보 추출
+                        rating = None
+                        if 'rating' in group.columns:
+                            rating = group.loc[group.index == original_idx, 'rating'].values
+                            rating = rating[0] if len(rating) > 0 else None
+                        elif '평점' in df_reviews.columns:
+                            rating = df_reviews.loc[original_idx, '평점'] if original_idx in df_reviews.index else None
+                        
+                        # 숫자-only 또는 메타데이터-only 리뷰는 평점 기반으로 처리
+                        if is_numeric_only(text) or (is_metadata_only(text) and rating is not None and pd.notna(rating)):
+                            try:
+                                rating_val = float(text) if is_numeric_only(text) else float(rating)
+                                if rating_val >= 4.0:
+                                    score = 0.9
+                                elif rating_val >= 3.0:
+                                    score = 0.5
+                                else:
+                                    score = 0.1
+                                rating_scores[batch_idx] = score
+                            except (ValueError, TypeError):
+                                rating_scores[batch_idx] = 0.5
+                        else:
+                            # 일반 텍스트는 배치로 모델에 전달
+                            text_batch.append(text)
+                            text_batch_indices.append(batch_idx)
+                    
+                    # 배치로 감성 분석 수행 (효율성 향상)
+                    if text_batch:
+                        try:
+                            sentiment_results = sentiment_pipeline(text_batch)
+                            for batch_idx, result in zip(text_batch_indices, sentiment_results):
+                                _, score = process_sentiment_result(result, sentiment_model_name)
+                                rating_scores[batch_idx] = score
+                        except Exception as e:
+                            # 배치 처리 실패 시 개별 처리로 폴백
+                            if idx == 0 and i == 0:  # 첫 번째 카페, 첫 번째 요인에서만 로그
+                                st.warning(f"감성 분석 배치 처리 예외, 개별 처리로 전환: {e}")
+                            for batch_idx, text in zip(text_batch_indices, text_batch):
+                                try:
+                                    result = sentiment_pipeline([text])[0]
+                                    _, score = process_sentiment_result(result, sentiment_model_name)
+                                    rating_scores[batch_idx] = score
+                                except:
+                                    rating_scores[batch_idx] = 0.5
+                    
+                    # 원래 순서대로 점수 수집
+                    for batch_idx in range(len(relevant_review_indices)):
+                        sentiment_scores.append(rating_scores.get(batch_idx, 0.5))
                     
                     # 4-3. 세부 항목 최종 점수 산출 (산술 평균)
-                    avg_score = np.mean(sentiment_scores) if sentiment_scores else 0.5
-                    cafe_scores[f'점수_{factor_name}'] = avg_score
-                    cafe_scores[f'리뷰수_{factor_name}'] = len(relevant_texts)
+                    if len(sentiment_scores) > 0:
+                        avg_score = np.mean(sentiment_scores)
+                        cafe_scores[f'점수_{factor_name}'] = avg_score
+                        cafe_scores[f'리뷰수_{factor_name}'] = len(relevant_texts)
+                    else:
+                        # sentiment_scores가 비어있으면 0.5로 설정
+                        cafe_scores[f'점수_{factor_name}'] = 0.5
+                        cafe_scores[f'리뷰수_{factor_name}'] = len(relevant_texts)
                     
                 except Exception as e:
                     st.warning(f"{cafe_name} - {factor_name} 감성 분석 오류: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
                     cafe_scores[f'점수_{factor_name}'] = np.nan
                     cafe_scores[f'리뷰수_{factor_name}'] = 0
             else:
-                # 관련 리뷰가 없으면 NaN 처리
-                cafe_scores[f'점수_{factor_name}'] = np.nan
+                # 언급이 전혀 없는 경우: fsi=0.5, Wi=0 처리
+                cafe_scores[f'점수_{factor_name}'] = 0.5
                 cafe_scores[f'리뷰수_{factor_name}'] = 0
         
         results_list.append(cafe_scores)
@@ -448,6 +521,100 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
     df_review_scores = pd.DataFrame(review_scores_list)
     
     return df_cafe_scores, df_review_scores
+
+# --- 5-1. 핵심 연구 로직: 가중치(Wi), 종합 점수(Mu), 특이 특징(df) 계산 ---
+def calculate_final_research_metrics(df_scores: pd.DataFrame, factor_names: list, total_reviews: int):
+    """
+    연구 알고리즘의 핵심인 Wi, Mu, Sigma, Deviant Features를 계산합니다.
+    
+    Args:
+        df_scores: calculate_place_scores에서 반환된 카페별 점수 데이터프레임
+        factor_names: 장소성 요인 이름 리스트
+        total_reviews: 전체 리뷰 수 (가중치 계산용)
+    
+    Returns:
+        pd.DataFrame: 가중치, 종합 점수, 표준편차, 특이 특징이 포함된 최종 데이터프레임
+    """
+    df = df_scores.copy()
+    
+    # NaN 값을 0.5로 대체 (언급이 없는 요인은 0.5로 처리)
+    for factor in factor_names:
+        df[f'점수_{factor}'] = df[f'점수_{factor}'].fillna(0.5)
+        df[f'리뷰수_{factor}'] = df[f'리뷰수_{factor}'].fillna(0)
+    
+    # --- 1. 가중치 (Wi) 계산 ---
+    
+    # 1-1. 요인별 언급 비율 (Ri) 계산: Ri = 유효 언급 문장 수 / 전체 리뷰 수
+    Ri_cols = []
+    for factor in factor_names:
+        Ri_col = f'Ri_{factor}'
+        df[Ri_col] = df[f'리뷰수_{factor}'].fillna(0) / total_reviews
+        Ri_cols.append(Ri_col)
+    
+    # 1-2. 정규화 상수 (Sum_R) 계산: 모든 Ri의 합
+    df['Sum_R'] = df[Ri_cols].sum(axis=1)
+    
+    # 1-3. 가중치 (Wi) 계산: Wi = Ri / Sum_R
+    for factor in factor_names:
+        # Sum_R이 0인 경우 (리뷰가 아예 없는 경우) 분모를 1로 처리하여 Wi = 0 처리
+        df[f'Wi_{factor}'] = df[f'Ri_{factor}'] / df['Sum_R'].replace(0, 1)
+    
+    # --- 2. 종합 장소성 점수 (Mu) 계산 ---
+    
+    mu_scores = []
+    for index, row in df.iterrows():
+        weighted_sum = 0
+        for factor in factor_names:
+            fsi = row.get(f'점수_{factor}', 0.5)  # fsi (0.5로 대체됨)
+            wi = row.get(f'Wi_{factor}', 0)
+            weighted_sum += fsi * wi
+        
+        mu_scores.append(weighted_sum)
+    
+    df['종합_장소성_점수_Mu'] = mu_scores
+    
+    # --- 3. 특이 특징 (df+, df-) 추출 ---
+    
+    score_cols = [f'점수_{factor}' for factor in factor_names]
+    
+    # 3-1. 요인 점수의 표준편차 (Sigma) 계산
+    # NaN이 0.5로 대체되었기 때문에 표준편차 계산 가능
+    df['요인_점수_표준편차_Sigma'] = df[score_cols].std(axis=1, skipna=False)
+    
+    # 3-2. 강점/약점 추출
+    deviant_results = []
+    for index, row in df.iterrows():
+        mu = row['종합_장소성_점수_Mu']
+        sigma = row['요인_점수_표준편차_Sigma']
+        
+        strong_factors = []
+        weak_factors = []
+        
+        for factor in factor_names:
+            score = row.get(f'점수_{factor}')
+            
+            # 언급이 0인 요인은 특이 특징 추출에서 제외
+            if row[f'리뷰수_{factor}'] > 0:
+                # 기준: 평균(mu) 대비 DEVIATION_THRESHOLD (0.05) 이상 차이
+                if score >= mu + DEVIATION_THRESHOLD:
+                    strong_factors.append(factor)
+                elif score <= mu - DEVIATION_THRESHOLD:
+                    weak_factors.append(factor)
+        
+        deviant_results.append({
+            'cafe_name': row['cafe_name'],
+            '강점_요인(+df+)': ', '.join(strong_factors) if strong_factors else 'N/A',
+            '약점_요인(-df-)': ', '.join(weak_factors) if weak_factors else 'N/A',
+            # 최종 연구 수식 형태: [mu ± sigma, +count, -count]
+            'Final_PlaceScore_Summary': f"[{mu:.3f} ± {sigma:.3f}, +{len(strong_factors)}, -{len(weak_factors)}]"
+        })
+    
+    df_deviant = pd.DataFrame(deviant_results)
+    
+    # 최종 결과 병합
+    df_final = pd.merge(df, df_deviant, on='cafe_name', how='left')
+    
+    return df_final
 
 # --- 6. 알고리즘 핵심: 개별 리뷰 감성 분석 (한국어 감성 분석 모델 활용) ---
 def run_sentiment_analysis(df_reviews, sentiment_pipeline, model_name="", ratings=None):
@@ -542,7 +709,7 @@ def run_sentiment_analysis(df_reviews, sentiment_pipeline, model_name="", rating
                 label, score = batch_results_map[idx]
                 sentiment_labels.append(label)
                 sentiment_scores.append(score)
-                
+            
         except Exception as e:
             st.warning(f"배치 {batch_idx+1} 처리 중 오류: {e}")
             # 오류 발생 시 중립 점수 할당
@@ -828,45 +995,102 @@ def main():
         st.session_state.df_review_scores = None
     if 'df_reviews_with_sentiment' not in st.session_state:
         st.session_state.df_reviews_with_sentiment = None
+    if 'df_final_metrics' not in st.session_state:
+        st.session_state.df_final_metrics = None
+    if 'df_avg_sentiment' not in st.session_state:
+        st.session_state.df_avg_sentiment = None
+    if 'df_place_scores' not in st.session_state:
+        st.session_state.df_place_scores = None
     
     # --- 3. 실행 파트: 장소성 요인 점수 계산 ---
     st.header("📊 1. 장소성 요인별 정량 점수 계산")
     st.caption(f"유사도 임계값: {SIMILARITY_THRESHOLD} (코드 내 고정값)")
+    st.caption(f"⚠️ 언급 0인 요인은 fsi=0.5, Wi=0 처리되어 Mu에 영향 없음")
+    
+    # 총 리뷰 수 정의 (가중치 계산용)
+    total_reviews_count = len(df_reviews)
     
     # Sentence-BERT를 사용한 요인 점수 계산 실행
     if st.button("장소성 요인 점수 계산 시작", type="primary"):
-        with st.spinner("12개 장소성 요인별 점수 계산 중 (Sentence-BERT & Sentiment Analysis)..."):
+        with st.spinner("12개 장소성 요인별 점수 계산 및 연구 지표 산출 중..."):
             try:
+                # 1단계: 요인별 fsi 및 언급수 계산
                 df_place_scores, df_review_scores = calculate_place_scores(
                     df_reviews.copy(), 
                     sbert_model, 
                     sentiment_pipeline, 
                     ALL_FACTORS, 
-                    similarity_threshold=SIMILARITY_THRESHOLD
+                    similarity_threshold=SIMILARITY_THRESHOLD,
+                    sentiment_model_name=sentiment_model_name
                 )
                 
-                # 세션 상태에 저장
+                # 2단계: Wi, Mu, Sigma, Deviant Feature 계산 (연구 핵심 로직)
+                df_final_metrics = calculate_final_research_metrics(
+                    df_place_scores, 
+                    list(ALL_FACTORS.keys()), 
+                    total_reviews_count
+                )
+                
+                # 세션 상태에 저장 (Wi, Mu 포함)
                 st.session_state.df_review_scores = df_review_scores
-                
-                st.subheader("✅ 카페별 장소성 요인 점수 (0~1)")
-                st.dataframe(df_place_scores.set_index('cafe_name'), use_container_width=True)
-                
-                # 결과 다운로드
-                csv = df_place_scores.to_csv(index=False).encode("utf-8-sig")
-                st.download_button(
-                    "장소성 요인 점수 CSV 다운로드",
-                    data=csv,
-                    file_name="placeness_factor_scores.csv",
-                    mime="text/csv"
-                )
+                st.session_state.df_final_metrics = df_final_metrics
+                st.session_state.df_place_scores = df_place_scores
                 
             except Exception as e:
                 st.error(f"점수 계산 중 오류 발생: {e}")
                 import traceback
                 st.code(traceback.format_exc())
     
+    # 세션 상태에 저장된 결과가 있으면 항상 표시
+    if st.session_state.df_final_metrics is not None:
+        # --- 결과 표시 ---
+        st.header("⭐ 최종 장소성 정량 평가 (연구 결과)")
+        
+        df_final_metrics = st.session_state.df_final_metrics
+        
+        # Final_PlaceScore_Summary와 강점/약점만 표시
+        display_summary_cols = ['cafe_name', 'Final_PlaceScore_Summary', '강점_요인(+df+)', '약점_요인(-df-)']
+        if all(col in df_final_metrics.columns for col in display_summary_cols):
+            st.dataframe(
+                df_final_metrics[display_summary_cols].set_index('cafe_name'), 
+                use_container_width=True
+            )
+        
+        st.subheader("세부 지표 점수 (fsi)")
+        # fsi 점수만 표시
+        fsi_cols = ['cafe_name', '종합_장소성_점수_Mu', '요인_점수_표준편차_Sigma'] + [f'점수_{factor}' for factor in ALL_FACTORS.keys()]
+        if all(col in df_final_metrics.columns for col in fsi_cols):
+            st.dataframe(
+                df_final_metrics[fsi_cols].set_index('cafe_name'), 
+                use_container_width=True
+            )
+        
+        # 가중치 정보 표시 (선택적)
+        with st.expander("📊 가중치 (Wi) 및 언급 비율 (Ri) 상세 정보"):
+            wi_cols = ['cafe_name'] + [f'Wi_{factor}' for factor in ALL_FACTORS.keys()] + [f'Ri_{factor}' for factor in ALL_FACTORS.keys()]
+            if all(col in df_final_metrics.columns for col in wi_cols):
+                st.dataframe(
+                    df_final_metrics[wi_cols].set_index('cafe_name'), 
+                    use_container_width=True
+                )
+        
+        # 결과 다운로드
+        csv = df_final_metrics.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "장소성 최종 연구 지표 CSV 다운로드 (Wi, Mu, Sigma 포함)",
+            data=csv,
+            file_name="placeness_final_research_metrics.csv",
+            mime="text/csv"
+        )
+    
     # --- 4. 실행 파트: 개별 리뷰 감성 분석 (KoBERT) ---
     st.header("2. 개별 리뷰 감성 분석 및 카페별 평균")
+    
+    # 세션 상태 초기화 확인
+    if 'df_reviews_with_sentiment' not in st.session_state:
+        st.session_state.df_reviews_with_sentiment = None
+    if 'df_avg_sentiment' not in st.session_state:
+        st.session_state.df_avg_sentiment = None
     
     # KoBERT를 사용한 개별 리뷰 감성 분석 실행
     if st.button("KoBERT 개별 리뷰 감성 분석 시작", type="primary"):
@@ -880,26 +1104,30 @@ def main():
                 
                 # 세션 상태에 저장
                 st.session_state.df_reviews_with_sentiment = df_reviews_with_sentiment
+                st.session_state.df_avg_sentiment = df_avg_sentiment
                 
-                st.subheader("✅ 카페별 평균 감성 점수")
-                st.dataframe(df_avg_sentiment.set_index('cafe_name'), use_container_width=True)
-                
-                st.subheader("✅ 개별 리뷰 감성 분석 결과 (샘플)")
-                sample_df = df_reviews_with_sentiment[['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']].head(20)
-                st.dataframe(sample_df, use_container_width=True)
-                
-                # 결과 다운로드
-                csv = df_reviews_with_sentiment.to_csv(index=False).encode("utf-8-sig")
-                st.download_button(
-                    "📥 개별 리뷰 감성 분석 결과 CSV 다운로드",
-                    data=csv,
-                    file_name="review_sentiment_analysis.csv",
-                    mime="text/csv"
-                )
             except Exception as e:
                 st.error(f"감성 분석 중 오류 발생: {e}")
                 import traceback
                 st.code(traceback.format_exc())
+    
+    # 세션 상태에 저장된 결과가 있으면 항상 표시
+    if st.session_state.df_reviews_with_sentiment is not None and st.session_state.df_avg_sentiment is not None:
+        st.subheader("✅ 카페별 평균 감성 점수")
+        st.dataframe(st.session_state.df_avg_sentiment.set_index('cafe_name'), use_container_width=True)
+        
+        st.subheader("✅ 개별 리뷰 감성 분석 결과 (샘플)")
+        sample_df = st.session_state.df_reviews_with_sentiment[['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']].head(20)
+        st.dataframe(sample_df, use_container_width=True)
+        
+        # 결과 다운로드
+        csv = st.session_state.df_reviews_with_sentiment.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "📥 개별 리뷰 감성 분석 결과 CSV 다운로드",
+            data=csv,
+            file_name="review_sentiment_analysis.csv",
+            mime="text/csv"
+        )
     
     # --- 5. 리뷰별 상세 결과 표시 ---
     st.header("📊 리뷰별 상세 분석 결과")
