@@ -102,7 +102,9 @@ def load_models():
                     sentiment_pipeline = pipeline(
                         "sentiment-analysis",
                         model=sentiment_model_name,
-                        device=0 if torch.cuda.is_available() else -1
+                        device=0 if torch.cuda.is_available() else -1,
+                        truncation=True,
+                        max_length=512
                     )
                 else:
                     tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
@@ -121,7 +123,9 @@ def load_models():
                         "sentiment-analysis",
                         model=model,
                         tokenizer=tokenizer,
-                        device=device
+                        device=device,
+                        truncation=True,
+                        max_length=512
                     )
                 
                 st.success(f"✅ 모델 로드 성공: {model_info['description']}")
@@ -138,6 +142,35 @@ def load_models():
             st.stop()
 
     return sbert_model, sentiment_pipeline, _sentiment_model_name
+
+# --- 3-0. 텍스트 길이 제한 함수 (BERT 모델의 512 토큰 제한 대응) ---
+def truncate_text_for_bert(text: str, max_chars: int = 2000) -> str:
+    """
+    BERT 모델의 토큰 제한(512)을 고려하여 텍스트를 자릅니다.
+    대략적으로 2000자 = 512 토큰 정도로 가정합니다.
+    
+    Args:
+        text: 원본 텍스트
+        max_chars: 최대 문자 수 (기본값 2000)
+    
+    Returns:
+        str: 잘린 텍스트
+    """
+    if text is None:
+        return ""
+    text = str(text).strip()
+    if len(text) <= max_chars:
+        return text
+    # 공백이나 문장 경계에서 자르기
+    truncated = text[:max_chars]
+    # 마지막 공백이나 문장 부호에서 자르기
+    last_space = truncated.rfind(' ')
+    last_period = truncated.rfind('.')
+    last_newline = truncated.rfind('\n')
+    cut_point = max(last_space, last_period, last_newline)
+    if cut_point > max_chars * 0.8:  # 너무 앞에서 자르지 않도록
+        return truncated[:cut_point + 1]
+    return truncated
 
 # --- 3-1. 숫자-only 텍스트 확인 함수 ---
 def is_numeric_only(text: str) -> bool:
@@ -403,7 +436,9 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                 if similarity_score >= similarity_threshold:
                     # 해당 리뷰에 대한 감성 분석
                     try:
-                        sentiment_result = sentiment_pipeline([review_text])[0]
+                        # 텍스트 길이 제한 (BERT 512 토큰 제한 대응)
+                        truncated_text = truncate_text_for_bert(review_text)
+                        sentiment_result = sentiment_pipeline([truncated_text], truncation=True, max_length=512)[0]
                         label, positive_prob = process_sentiment_result(sentiment_result, sentiment_model_name)
                         
                         # 유사도와 감성 점수를 결합 (가중 평균)
@@ -471,7 +506,9 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                     # 배치로 감성 분석 수행 (효율성 향상)
                     if text_batch:
                         try:
-                            sentiment_results = sentiment_pipeline(text_batch)
+                            # 텍스트 길이 제한 (BERT 512 토큰 제한 대응)
+                            truncated_batch = [truncate_text_for_bert(text) for text in text_batch]
+                            sentiment_results = sentiment_pipeline(truncated_batch, truncation=True, max_length=512)
                             for batch_idx, result in zip(text_batch_indices, sentiment_results):
                                 _, score = process_sentiment_result(result, sentiment_model_name)
                                 rating_scores[batch_idx] = score
@@ -481,7 +518,8 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                                 st.warning(f"감성 분석 배치 처리 예외, 개별 처리로 전환: {e}")
                             for batch_idx, text in zip(text_batch_indices, text_batch):
                                 try:
-                                    result = sentiment_pipeline([text])[0]
+                                    truncated_text = truncate_text_for_bert(text)
+                                    result = sentiment_pipeline([truncated_text], truncation=True, max_length=512)[0]
                                     _, score = process_sentiment_result(result, sentiment_model_name)
                                     rating_scores[batch_idx] = score
                                 except:
@@ -697,7 +735,9 @@ def run_sentiment_analysis(df_reviews, sentiment_pipeline, model_name="", rating
             # 일반 텍스트 리뷰는 모델 사용
             if text_batch:
                 text_only = [text for _, text in text_batch]
-                model_results = sentiment_pipeline(text_only)
+                # 텍스트 길이 제한 (BERT 512 토큰 제한 대응)
+                truncated_texts = [truncate_text_for_bert(text) for text in text_only]
+                model_results = sentiment_pipeline(truncated_texts, truncation=True, max_length=512)
                 
                 # 모델 결과를 인덱스에 매핑
                 for (idx, _), res in zip(text_batch, model_results):
@@ -909,7 +949,9 @@ def main():
                         # 일반 텍스트 리뷰는 모델 사용
                         if text_batch:
                             text_only = [text for _, text in text_batch]
-                            model_results = sentiment_pipeline(text_only)
+                            # 텍스트 길이 제한 (BERT 512 토큰 제한 대응)
+                            truncated_texts = [truncate_text_for_bert(text) for text in text_only]
+                            model_results = sentiment_pipeline(truncated_texts, truncation=True, max_length=512)
                             
                             # 모델 결과를 인덱스에 매핑
                             for (idx, _), res in zip(text_batch, model_results):
