@@ -30,17 +30,17 @@ def load_models():
     model_loaded = False
     last_error = None
     
-    # 우선순위: 더 가벼운 모델부터 시도 (Streamlit Cloud 메모리 제한 고려)
+    # 우선순위: 한국어 감성 분석 전용 모델을 우선 시도
     model_candidates = [
-        {
-            "name": "nlptown/bert-base-multilingual-uncased-sentiment",
-            "description": "다국어 감성 분석 모델 (한국어 포함, 5단계 감성)",
-            "is_nlptown": True
-        },
         {
             "name": "matthewburke/korean_sentiment",
             "description": "한국어 감성 분석 전용 모델",
             "is_nlptown": False
+        },
+        {
+            "name": "nlptown/bert-base-multilingual-uncased-sentiment",
+            "description": "다국어 감성 분석 모델 (한국어 포함, 5단계 감성)",
+            "is_nlptown": True
         },
         {
             "name": "beomi/KcELECTRA-base",

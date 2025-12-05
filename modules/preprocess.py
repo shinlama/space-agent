@@ -175,7 +175,6 @@ def load_data(file_path: Path):
     cafes_with_empty_only_count = len(cafes_with_empty_only)
     
     st.success(f"리뷰 데이터 로드 완료: 총 {final_count}건")
-    st.info(f"📊 고유 카페 수: {final_cafe_count}개 (초기: {initial_cafe_count}개, 결측치 제거 후: {after_dropna_cafe_count}개)")
     
     if initial_cafe_count > final_cafe_count:
         excluded = initial_cafe_count - final_cafe_count

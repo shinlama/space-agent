@@ -1,5 +1,5 @@
 """
-설정 및 상수 정의
+상수(config), factor definitions, 기본 설정 관리
 """
 from pathlib import Path
 

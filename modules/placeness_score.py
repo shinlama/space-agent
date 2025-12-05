@@ -172,17 +172,17 @@ def calculate_place_scores(df_reviews, sbert_model, sentiment_pipeline, factor_d
                 similarity_score = similarity_matrix[review_idx, i]
                 review_factor_scores[f'{factor_name}_유사도'] = similarity_score
                 
-                # 유사도 임계값 이상인 경우에만 점수 계산
+                # 유사도 임계값 이상인 경우에만 감성 점수 계산
+                # 유사도는 요인 선택 여부에만 사용하고, fsi는 감성 점수만 사용
                 if similarity_score >= similarity_threshold:
                     # 해당 리뷰에 대한 감성 분석
                     try:
                         truncated_text = truncate_text_for_bert(review_text)
                         sentiment_result = sentiment_pipeline([truncated_text], truncation=True, max_length=512)[0]
-                        label, positive_prob = process_sentiment_result(sentiment_result, sentiment_model_name)
+                        label, sentiment_score = process_sentiment_result(sentiment_result, sentiment_model_name)
                         
-                        # 유사도와 감성 점수를 결합 (가중 평균)
-                        combined_score = 0.6 * similarity_score + 0.4 * positive_prob
-                        review_factor_scores[f'{factor_name}_점수'] = combined_score
+                        # fsi는 감성 점수만 사용 (유사도는 요인 선택에만 사용)
+                        review_factor_scores[f'{factor_name}_점수'] = sentiment_score
                     except Exception as e:
                         review_factor_scores[f'{factor_name}_점수'] = np.nan
                 else:
