@@ -336,12 +336,37 @@ def render_detailed_results():
             _render_merged_results()
         elif has_sentiment:
             st.info("장소성 요인 점수 계산을 실행하면 리뷰별 상세 결과를 확인할 수 있습니다.")
-            sample_df = st.session_state.df_reviews_with_sentiment[['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']].head(50)
-            st.dataframe(sample_df, use_container_width=True, hide_index=True, height=400)
+            # 전체 리뷰 표시
+            display_cols = ['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']
+            available_cols = [col for col in display_cols if col in st.session_state.df_reviews_with_sentiment.columns]
+            st.dataframe(
+                st.session_state.df_reviews_with_sentiment[available_cols], 
+                use_container_width=True, 
+                hide_index=True, 
+                height=600
+            )
+            st.caption(f"총 {len(st.session_state.df_reviews_with_sentiment):,}개 리뷰")
         elif has_placeness:
             st.info("감성 분석을 실행하면 리뷰별 상세 결과를 확인할 수 있습니다.")
-            sample_df = st.session_state.df_review_scores[['cafe_name', 'review_text'] + [f'{factor}_점수' for factor in list(ALL_FACTORS.keys())[:5]]].head(50)
-            st.dataframe(sample_df, use_container_width=True, hide_index=True, height=400)
+            # 전체 12개 요인 점수 표시
+            factor_names = list(ALL_FACTORS.keys())
+            factor_score_cols = [f'{factor}_점수' for factor in factor_names]
+            display_cols = ['cafe_name', 'review_text'] + factor_score_cols
+            available_cols = [col for col in display_cols if col in st.session_state.df_review_scores.columns]
+            
+            # 점수 포맷팅
+            display_df = st.session_state.df_review_scores[available_cols].copy()
+            for col in factor_score_cols:
+                if col in display_df.columns:
+                    display_df[col] = display_df[col].apply(lambda x: f"{x:.3f}" if pd.notna(x) else "N/A")
+            
+            st.dataframe(
+                display_df, 
+                use_container_width=True, 
+                hide_index=True, 
+                height=600
+            )
+            st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
 
 
 def _render_merged_results():
@@ -362,9 +387,16 @@ def _render_merged_results():
     factor_names = list(ALL_FACTORS.keys())
     factor_score_cols = [f'{factor}_점수' for factor in factor_names]
     display_cols = ['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score'] + factor_score_cols
+    # 실제 존재하는 컬럼만 필터링
     available_cols = [col for col in display_cols if col in df_merged.columns]
     
-    st.subheader("✅ 리뷰별 감성 분석 + 장소성 요인 점수")
+    # 누락된 요인 컬럼 확인
+    missing_factors = [f for f in factor_names if f'{f}_점수' not in df_merged.columns]
+    if missing_factors:
+        st.warning(f"⚠️ 다음 요인 컬럼이 데이터에 없습니다: {', '.join(missing_factors)}")
+    
+    st.subheader("✅ 리뷰별 감성 분석 + 장소성 요인 점수 (전체 12개 요인)")
+    st.caption(f"총 {len(df_merged):,}개 리뷰 중 필터링된 결과 표시")
     
     # 필터 옵션
     col1, col2 = st.columns(2)
@@ -400,14 +432,15 @@ def _render_merged_results():
         if 'sentiment_score' in display_df.columns:
             display_df['sentiment_score'] = display_df['sentiment_score'].apply(lambda x: f"{x:.3f}" if pd.notna(x) else "N/A")
         
+        # 전체 리뷰 표시 (높이를 크게 설정하여 스크롤 가능)
         st.dataframe(
             display_df,
             use_container_width=True,
             hide_index=True,
-            height=600
+            height=800
         )
 
-        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시")
+        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 (12개 요인 전체)")
         
         # 다운로드 버튼
         csv = filtered_df[available_cols].to_csv(index=False).encode("utf-8-sig")
