@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD
 from modules.sentiment import run_sentiment_analysis
-from modules.placeness_score import calculate_place_scores, calculate_final_research_metrics
+from modules.score import calculate_place_scores, calculate_final_research_metrics
 from modules.preprocess import load_csv_raw, is_numeric_only, is_metadata_only, truncate_text_for_bert
 from modules.sentiment import process_sentiment_result
 
@@ -264,8 +264,8 @@ def _render_placeness_results():
         )
     
     # 가중치 정보 표시
-    with st.expander("📊 가중치 (Wi) 및 언급 비율 (Ri) 상세 정보"):
-        wi_cols = ['cafe_name'] + [f'Wi_{factor}' for factor in ALL_FACTORS.keys()] + [f'Ri_{factor}' for factor in ALL_FACTORS.keys()]
+    with st.expander("📊 가중치 (Wi) 상세 정보"):
+        wi_cols = ['cafe_name'] + [f'Wi_{factor}' for factor in ALL_FACTORS.keys()]
         if all(col in df_final_metrics.columns for col in wi_cols):
             st.dataframe(
                 df_final_metrics[wi_cols].set_index('cafe_name'), 
