@@ -2,9 +2,16 @@
 장소성 기반 공간 정량 평가 시스템 (LLM & BERT)
 엔트리 포인트
 """
+import sys
 import streamlit as st
 import warnings
 from pathlib import Path
+
+# Streamlit Cloud에서 모듈 경로 문제 해결
+# 프로젝트 루트를 Python 경로에 추가
+project_root = Path(__file__).resolve().parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 from modules.config import GOOGLE_REVIEW_SAMPLE_CSV, ALL_FACTORS
 from modules.model_loader import load_models

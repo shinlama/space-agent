@@ -72,8 +72,7 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
         st.dataframe(
             df_preview_sorted,
             use_container_width=True,
-            hide_index=True,
-            height=600
+            hide_index=True
         )
         st.caption(f"전체 {len(df_preview_sorted):,}개 리뷰 (행정구별 정렬)")
         
@@ -90,7 +89,6 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
                 df_preview_with_sentiment,
                 use_container_width=True,
                 hide_index=True,
-                height=600
             )
             
             # 통계 정보
@@ -336,11 +334,11 @@ def render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_na
     # 결과 표시
     if st.session_state.df_reviews_with_sentiment is not None and st.session_state.df_avg_sentiment is not None:
         st.subheader("✅ 카페별 평균 감성 점수")
-        st.dataframe(st.session_state.df_avg_sentiment.set_index('cafe_name'), use_container_width=True)
+        st.dataframe(st.session_state.df_avg_sentiment.set_index('cafe_name'), width='stretch')
         
         st.subheader("✅ 개별 리뷰 감성 분석 결과 (샘플)")
         sample_df = st.session_state.df_reviews_with_sentiment[['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']].head(20)
-        st.dataframe(sample_df, use_container_width=True)
+        st.dataframe(sample_df, width='stretch')
         
         # 결과 다운로드
         csv = st.session_state.df_reviews_with_sentiment.to_csv(index=False).encode("utf-8-sig")
@@ -373,7 +371,6 @@ def render_detailed_results():
                 st.session_state.df_reviews_with_sentiment[available_cols], 
                 use_container_width=True, 
                 hide_index=True, 
-                height=600
             )
             st.caption(f"총 {len(st.session_state.df_reviews_with_sentiment):,}개 리뷰")
         elif has_placeness:
@@ -394,7 +391,6 @@ def render_detailed_results():
                 display_df, 
                 use_container_width=True, 
                 hide_index=True, 
-                height=600
             )
             st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
             
@@ -471,7 +467,6 @@ def _render_merged_results():
             display_df,
             use_container_width=True,
             hide_index=True,
-            height=800
         )
 
         st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 (12개 요인 전체)")
@@ -692,7 +687,6 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
                     high_score_df[display_cols].sort_values(by=score_col, ascending=False),
                     use_container_width=True,
                     hide_index=True,
-                    height=300
                 )
                 st.caption(f"총 {len(high_score_df)}개 리뷰 (점수 0.9 이상)")
             else:
