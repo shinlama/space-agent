@@ -202,7 +202,7 @@ def _analyze_sentiment_for_reviews(
     if not review_texts:
         return sentiment_scores
 
-    batch_size = 32
+    batch_size = 8
     total = len(review_texts)
     progress_bar = st.progress(0.0)
     status_text = st.empty()
