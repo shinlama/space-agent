@@ -359,8 +359,14 @@ def calculate_place_scores(
     status_text = st.empty()
 
     for cafe_idx, (cafe_name, group) in enumerate(cafe_groups):
+        # 진행 상황 업데이트 (Streamlit Cloud 타임아웃 방지)
         status_text.text(f"카페 처리 중: {cafe_name} ({cafe_idx + 1}/{total_cafes})")
         progress_bar.progress((cafe_idx + 1) / total_cafes)
+        
+        # 주기적으로 Streamlit이 응답할 수 있도록 (매 10개 카페마다)
+        if cafe_idx % 10 == 0 and cafe_idx > 0:
+            import time
+            time.sleep(0.1)  # 짧은 대기로 Streamlit이 응답 처리할 시간 제공
 
         # 해당 카페의 리뷰 텍스트 및 인덱스
         review_texts: List[str] = group["review_text"].astype(str).tolist()
