@@ -183,7 +183,16 @@ def load_data(file_path: Path, cache_version: str = "v2.0"):
     initial_cafe_count = df['cafe_name'].nunique() if 'cafe_name' in df.columns else 0
     
     # 결측치 제거 (카페명과 리뷰 모두 있는 행만 유지)
-    df = df[['cafe_name', 'review_text']].dropna()
+    # 시군구명과 행정동명도 함께 유지 (지도 시각화용)
+    keep_cols = ['cafe_name', 'review_text']
+    if '시군구명' in df.columns:
+        keep_cols.append('시군구명')
+    if '행정동명' in df.columns:
+        keep_cols.append('행정동명')
+    if 'original_cafe_name' in df.columns:
+        keep_cols.append('original_cafe_name')
+    
+    df = df[keep_cols].dropna(subset=['cafe_name', 'review_text'])
     after_dropna_count = len(df)
     after_dropna_cafe_count = df['cafe_name'].nunique() if 'cafe_name' in df.columns else 0
     

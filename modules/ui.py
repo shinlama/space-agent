@@ -6,7 +6,14 @@ import pandas as pd
 import re
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
-from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD
+from pathlib import Path
+try:
+    import folium
+    from streamlit_folium import st_folium
+    HAS_FOLIUM = True
+except ImportError:
+    HAS_FOLIUM = False
+from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD, CAFE_INFO_CSV
 from modules.sentiment import run_sentiment_analysis
 from modules.score import calculate_place_scores, calculate_final_research_metrics
 from modules.preprocess import load_csv_raw, is_numeric_only, is_metadata_only, truncate_text_for_bert
@@ -710,4 +717,251 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
             with col4:
                 high_count = len(relevant_df[pd.to_numeric(relevant_df[score_col], errors='coerce') >= 0.9])
                 st.metric("긍정 리뷰 (≥0.9)", f"{high_count}개")
+            
+            # -------------------------------------------------------
+            # [검증 방법 5] 행정구별 상위 10% 카페 분포 시각화
+            # -------------------------------------------------------
+            st.markdown(f"#### 5. '{factor}' 점수 상위 10% 카페 행정구별 분포")
+            
+            # df_place_scores에서 해당 요인 점수 상위 10% 카페 추출
+            if 'df_place_scores' in st.session_state and st.session_state.df_place_scores is not None:
+                df_place_scores = st.session_state.df_place_scores
+                factor_score_col = f'점수_{factor}'
+                
+                if factor_score_col in df_place_scores.columns:
+                    # 점수가 있는 카페만 필터링
+                    valid_scores = df_place_scores[
+                        pd.to_numeric(df_place_scores[factor_score_col], errors='coerce').notna()
+                    ].copy()
+                    
+                    if not valid_scores.empty:
+                        # 상위 10% 임계값 계산
+                        threshold = valid_scores[factor_score_col].quantile(0.9)
+                        top_10_percent = valid_scores[valid_scores[factor_score_col] >= threshold].copy()
+                        
+                        # 원본 데이터에서 시군구명 가져오기
+                        df_reviews_for_district = None
+                        if 'df_reviews' in st.session_state and st.session_state.df_reviews is not None:
+                            df_reviews_for_district = st.session_state.df_reviews.copy()
+                        
+                        # 시군구명 컬럼이 없으면 원본 CSV에서 로드
+                        if df_reviews_for_district is None or '시군구명' not in df_reviews_for_district.columns:
+                            try:
+                                from pathlib import Path
+                                from modules.config import GOOGLE_REVIEW_SAMPLE_CSV
+                                df_reviews_for_district = load_csv_raw(Path(GOOGLE_REVIEW_SAMPLE_CSV))
+                                
+                                # 컬럼명 정규화 (상호명 -> cafe_name)
+                                if '상호명' in df_reviews_for_district.columns and 'cafe_name' not in df_reviews_for_district.columns:
+                                    df_reviews_for_district['cafe_name'] = df_reviews_for_district['상호명']
+                            except Exception as e:
+                                st.warning(f"시군구명 데이터 로드 실패: {e}")
+                                df_reviews_for_district = None
+                        
+                        if df_reviews_for_district is not None and '시군구명' in df_reviews_for_district.columns:
+                            # cafe_name 컬럼 확인 및 생성
+                            if 'cafe_name' not in df_reviews_for_district.columns:
+                                if '상호명' in df_reviews_for_district.columns:
+                                    df_reviews_for_district['cafe_name'] = df_reviews_for_district['상호명']
+                                else:
+                                    st.warning("cafe_name 또는 상호명 컬럼을 찾을 수 없습니다.")
+                                    df_reviews_for_district = None
+                            
+                            if df_reviews_for_district is not None:
+                                # original_cafe_name이 있으면 사용, 없으면 cafe_name 사용
+                                if 'original_cafe_name' in df_reviews_for_district.columns:
+                                    cafe_to_district = df_reviews_for_district.groupby('original_cafe_name')['시군구명'].first().to_dict()
+                                    # top_10_percent의 cafe_name에서 위치 정보 제거하여 original_cafe_name 추출
+                                    top_10_percent['original_cafe_name'] = top_10_percent['cafe_name'].str.split().str[0]
+                                    top_10_percent['시군구명'] = top_10_percent['original_cafe_name'].map(cafe_to_district)
+                                else:
+                                    # cafe_name에서 위치 정보 제거 시도 (공백으로 분리된 첫 번째 부분)
+                                    # 먼저 원본 cafe_name으로 매핑 시도
+                                    cafe_to_district = df_reviews_for_district.groupby('cafe_name')['시군구명'].first().to_dict()
+                                    
+                                    # 카페명에서 위치 정보 제거 (시군구명과 행정동명이 추가된 경우)
+                                    # 예: "투썸플레이스 강남구 역삼동" -> "투썸플레이스"
+                                    top_10_percent['base_cafe_name'] = top_10_percent['cafe_name'].str.split().str[0]
+                                    
+                                    # 먼저 전체 cafe_name으로 매핑 시도, 없으면 base_cafe_name으로 시도
+                                    top_10_percent['시군구명'] = top_10_percent['cafe_name'].map(cafe_to_district)
+                                    # 매핑되지 않은 경우 base_cafe_name으로 재시도
+                                    missing_mask = top_10_percent['시군구명'].isna()
+                                    if missing_mask.any():
+                                        base_cafe_to_district = df_reviews_for_district.groupby('cafe_name')['시군구명'].first().to_dict()
+                                        # base_cafe_name으로 매핑 시도
+                                        for idx in top_10_percent[missing_mask].index:
+                                            base_name = top_10_percent.loc[idx, 'base_cafe_name']
+                                            # base_name과 일치하는 cafe_name 찾기 (부분 매칭)
+                                            matched_district = None
+                                            for cafe_name, district in base_cafe_to_district.items():
+                                                if cafe_name.startswith(base_name) or base_name in cafe_name:
+                                                    matched_district = district
+                                                    break
+                                            if matched_district:
+                                                top_10_percent.loc[idx, '시군구명'] = matched_district
+                            
+                            # 시군구명이 있는 카페만 사용
+                            top_10_percent_with_district = top_10_percent[
+                                top_10_percent['시군구명'].notna()
+                            ]
+                            
+                            if not top_10_percent_with_district.empty:
+                                # 행정구별 카페 수 집계
+                                district_counts = top_10_percent_with_district['시군구명'].value_counts().sort_values(ascending=True)
+                                
+                                # 막대 그래프
+                                df_district = pd.DataFrame({
+                                    '행정구': district_counts.index,
+                                    '상위 10% 카페 수': district_counts.values
+                                })
+                                
+                                st.bar_chart(df_district.set_index('행정구'), height=400)
+                                
+                                # 상세 테이블
+                                with st.expander("행정구별 상세 정보"):
+                                    st.dataframe(
+                                        df_district.sort_values('상위 10% 카페 수', ascending=False),
+                                        use_container_width=True,
+                                        hide_index=True
+                                    )
+                                
+                                st.caption(f"총 {len(top_10_percent_with_district)}개 카페 (점수 임계값: {threshold:.3f} 이상)")
+                                
+                                # 위도/경도 가져오기 및 지도 시각화
+                                if CAFE_INFO_CSV.exists() and HAS_FOLIUM:
+                                    try:
+                                        # 카페 정보 CSV에서 위도/경도 가져오기
+                                        df_cafe_info = pd.read_csv(CAFE_INFO_CSV, encoding='utf-8-sig')
+                                        
+                                        # 상호명, 시군구명, 행정동명으로 매칭
+                                        # top_10_percent_with_district에 위도/경도 추가
+                                        top_10_percent_with_district['위도'] = None
+                                        top_10_percent_with_district['경도'] = None
+                                        
+                                        # 카페명에서 위치 정보 제거 (base_cafe_name 사용)
+                                        if 'base_cafe_name' not in top_10_percent_with_district.columns:
+                                            top_10_percent_with_district['base_cafe_name'] = top_10_percent_with_district['cafe_name'].str.split().str[0]
+                                        
+                                        # 행정동명도 가져오기
+                                        if 'df_reviews' in st.session_state and st.session_state.df_reviews is not None:
+                                            df_reviews = st.session_state.df_reviews
+                                            if '행정동명' in df_reviews.columns:
+                                                if 'original_cafe_name' in df_reviews.columns:
+                                                    cafe_to_dong = df_reviews.groupby('original_cafe_name')['행정동명'].first().to_dict()
+                                                    top_10_percent_with_district['행정동명'] = top_10_percent_with_district.get('original_cafe_name', top_10_percent_with_district['base_cafe_name']).map(cafe_to_dong)
+                                                else:
+                                                    cafe_to_dong = df_reviews.groupby('cafe_name')['행정동명'].first().to_dict()
+                                                    top_10_percent_with_district['행정동명'] = top_10_percent_with_district['cafe_name'].map(cafe_to_dong)
+                                        
+                                        # 카페 정보와 매칭
+                                        for idx, row in top_10_percent_with_district.iterrows():
+                                            cafe_name = row.get('base_cafe_name', row['cafe_name'].split()[0])
+                                            district = row['시군구명']
+                                            dong = row.get('행정동명', None)
+                                            
+                                            matched = None
+                                            
+                                            # 매칭 우선순위:
+                                            # 1. 정확한 상호명 일치 + 시군구명 + 행정동명
+                                            # 2. 정확한 상호명 일치 + 시군구명
+                                            # 3. 상호명이 cafe_name으로 시작 + 시군구명 + 행정동명
+                                            # 4. 상호명이 cafe_name으로 시작 + 시군구명
+                                            
+                                            if dong and pd.notna(dong):
+                                                # 1순위: 정확한 일치 + 시군구명 + 행정동명
+                                                matched = df_cafe_info[
+                                                    (df_cafe_info['상호명'] == cafe_name) &
+                                                    (df_cafe_info['시군구명'] == district) &
+                                                    (df_cafe_info['행정동명'] == dong)
+                                                ]
+                                                
+                                                if matched.empty:
+                                                    # 2순위: 상호명이 cafe_name으로 시작 + 시군구명 + 행정동명
+                                                    matched = df_cafe_info[
+                                                        (df_cafe_info['상호명'].str.startswith(cafe_name, na=False)) &
+                                                        (df_cafe_info['시군구명'] == district) &
+                                                        (df_cafe_info['행정동명'] == dong)
+                                                    ]
+                                            else:
+                                                # 행정동명이 없으면 시군구명만으로 매칭
+                                                # 1순위: 정확한 일치 + 시군구명
+                                                matched = df_cafe_info[
+                                                    (df_cafe_info['상호명'] == cafe_name) &
+                                                    (df_cafe_info['시군구명'] == district)
+                                                ]
+                                                
+                                                if matched.empty:
+                                                    # 2순위: 상호명이 cafe_name으로 시작 + 시군구명
+                                                    matched = df_cafe_info[
+                                                        (df_cafe_info['상호명'].str.startswith(cafe_name, na=False)) &
+                                                        (df_cafe_info['시군구명'] == district)
+                                                    ]
+                                            
+                                            if not matched.empty:
+                                                # 첫 번째 매칭 사용
+                                                top_10_percent_with_district.loc[idx, '위도'] = matched.iloc[0]['위도']
+                                                top_10_percent_with_district.loc[idx, '경도'] = matched.iloc[0]['경도']
+                                        
+                                        # 위도/경도가 있는 카페만 필터링
+                                        cafes_with_location = top_10_percent_with_district[
+                                            top_10_percent_with_district['위도'].notna() & 
+                                            top_10_percent_with_district['경도'].notna()
+                                        ]
+                                        
+                                        if not cafes_with_location.empty:
+                                            st.markdown("##### 지도 시각화")
+                                            
+                                            # 서울 중심 좌표
+                                            seoul_center = [37.5665, 126.9780]
+                                            
+                                            # Folium 지도 생성
+                                            m = folium.Map(
+                                                location=seoul_center,
+                                                zoom_start=11,
+                                                tiles='OpenStreetMap'
+                                            )
+                                            
+                                            # 마커 추가
+                                            for idx, row in cafes_with_location.iterrows():
+                                                lat = float(row['위도'])
+                                                lng = float(row['경도'])
+                                                cafe_name = row['cafe_name']
+                                                score = row[factor_score_col]
+                                                
+                                                # 팝업 정보
+                                                popup_html = f"""
+                                                <div style="font-family: Arial; min-width: 150px;">
+                                                    <b>{cafe_name}</b><br>
+                                                    {factor} 점수: {score:.3f}<br>
+                                                    {row.get('시군구명', 'N/A')} {row.get('행정동명', '')}
+                                                </div>
+                                                """
+                                                
+                                                folium.Marker(
+                                                    location=[lat, lng],
+                                                    popup=folium.Popup(popup_html, max_width=300),
+                                                    tooltip=f"{cafe_name} ({score:.3f})",
+                                                    icon=folium.Icon(color='red', icon='info-sign')
+                                                ).add_to(m)
+                                            
+                                            # 지도 표시
+                                            st_folium(m, width=700, height=500)
+                                            st.caption(f"지도에 표시된 카페: {len(cafes_with_location)}개 / 총 {len(top_10_percent_with_district)}개")
+                                        else:
+                                            st.info("위도/경도 정보를 찾을 수 있는 카페가 없습니다.")
+                                    except Exception as e:
+                                        st.warning(f"지도 시각화 중 오류 발생: {e}")
+                                elif not HAS_FOLIUM:
+                                    st.info("지도 시각화를 위해 folium과 streamlit-folium 패키지가 필요합니다.")
+                            else:
+                                st.info("시군구명 정보가 있는 카페가 없습니다.")
+                        else:
+                            st.info("리뷰 데이터를 찾을 수 없습니다.")
+                    else:
+                        st.info("유효한 점수 데이터가 없습니다.")
+                else:
+                    st.info(f"'{factor_score_col}' 컬럼을 찾을 수 없습니다.")
+            else:
+                st.info("장소성 점수 데이터를 찾을 수 없습니다. 먼저 장소성 점수를 계산해주세요.")
 

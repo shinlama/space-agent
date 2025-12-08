@@ -30,6 +30,7 @@ ALL_FACTORS = {k: v for outer_dict in FACTOR_DEFINITIONS.values() for k, v in ou
 # 데이터 파일 경로 설정
 BASE_DIR = Path(__file__).resolve().parent.parent
 GOOGLE_REVIEW_SAMPLE_CSV = BASE_DIR / "google_reviews_scraped_cleaned.csv"
+CAFE_INFO_CSV = BASE_DIR / "서울시_상권_카페빵_표본.csv"  # 카페 정보 (위도/경도 포함)
 
 # 알고리즘 하이퍼파라미터 설정
 SIMILARITY_THRESHOLD = 0.4  # 리뷰와 요인 정의 간 최소 코사인 유사도 (0.0~1.0)
