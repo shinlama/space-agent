@@ -39,7 +39,7 @@ def init_session_state():
 
 def main():
     """메인 함수"""
-    st.title("장소성 기반 공간 정량 평가 시스템 (LLM & BERT)")
+    st.title("장소성 기반 공간 정량 평가 시스템")
     st.markdown("---")
     
     # 세션 상태 초기화

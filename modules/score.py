@@ -44,6 +44,8 @@ from modules.config import DEVIATION_THRESHOLD
 from modules.factor_extraction import extract_factor_mentions
 from modules.sentiment import process_sentiment_result
 from modules.preprocess import truncate_text_for_bert, is_numeric_only, is_metadata_only
+from sklearn.metrics.pairwise import cosine_similarity
+import re
 
 
 # -----------------------------------------------------------------------------
@@ -264,6 +266,41 @@ def _analyze_sentiment_for_reviews(
 
 
 # -----------------------------------------------------------------------------
+# 2-1. 문장 단위 분리 헬퍼
+# -----------------------------------------------------------------------------
+
+
+def split_into_sentences(text: str) -> List[str]:
+    """
+    텍스트를 문장 단위로 분리합니다.
+    
+    Args:
+        text: 분리할 텍스트
+    
+    Returns:
+        문장 리스트
+    """
+    if not text or not isinstance(text, str):
+        return []
+    
+    text = text.strip()
+    if not text:
+        return []
+    
+    # 한국어 문장 종결 부호로 분리 (. ! ?)
+    # 연속된 공백 정리
+    sentences = re.split(r'[.!?]\s+', text)
+    
+    # 빈 문장 제거 및 정리
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    # 문장이 너무 짧으면 제거 (1글자 이하)
+    sentences = [s for s in sentences if len(s) > 1]
+    
+    return sentences if sentences else [text]  # 분리 실패 시 원본 반환
+
+
+# -----------------------------------------------------------------------------
 # 3. 메인: 장소성 요인 점수 계산 (카페별 fsi, 리뷰수 등)
 # -----------------------------------------------------------------------------
 
@@ -282,6 +319,10 @@ def calculate_place_scores(
     - 카페별 요인 언급 수 (n_i)
     - 리뷰별 요인 점수/유사도
     를 계산합니다.
+    
+    **새로운 방식**: 각 요인별로 유사도 임계값 이상인 리뷰만 선별하여
+    해당 요인에 대한 감성 분석을 독립적으로 실행합니다.
+    이를 통해 요인별로 다른 감성 점수를 얻을 수 있습니다.
 
     Args:
         df_reviews: 컬럼에 ['cafe_name', 'review_text'] 포함된 DataFrame
@@ -295,7 +336,7 @@ def calculate_place_scores(
         df_cafe_scores: 카페별 요인 점수/언급수 테이블
         df_review_scores: 리뷰별 요인 점수/유사도 테이블
     """
-    st.subheader("1. SBERT 기반 요인 매핑 및 감성 분석")
+    st.subheader("1. SBERT 기반 요인 매핑 및 정밀 감성 분석")
 
     # 1) SBERT용 요인 정의 문장 임베딩 미리 계산
     factor_names: List[str] = list(factor_defs.keys())
@@ -335,66 +376,185 @@ def calculate_place_scores(
             results_list.append(cafe_scores)
             continue
 
-        # 2) SBERT 기반 요인 언급 추출
-        with st.spinner(f"{cafe_name} - SBERT를 이용한 요인 매핑 중..."):
-            # factor_mentions: {local_review_idx: [(factor_name, similarity), ...]}
-            # similarity_matrix: shape = (n_reviews_cafe, n_factors)
-            factor_mentions, similarity_matrix = extract_factor_mentions(
-                review_texts,
-                sbert_model,
-                factor_embeddings,
-                factor_names,
-                similarity_threshold,
+        # 2) 리뷰를 문장 단위로 분리 및 요인 매핑
+        with st.spinner(f"{cafe_name} - 문장 단위 분리 및 요인 매핑 중..."):
+            # 2-1. 각 리뷰를 문장 단위로 분리
+            all_sentences: List[str] = []
+            sentence_to_review: List[int] = []  # 각 문장이 어느 리뷰에서 왔는지
+            
+            for local_idx, review_text in enumerate(review_texts):
+                sentences = split_into_sentences(review_text)
+                all_sentences.extend(sentences)
+                sentence_to_review.extend([local_idx] * len(sentences))
+            
+            if len(all_sentences) == 0:
+                # 문장이 없는 경우 처리
+                cafe_scores = {"cafe_name": cafe_name}
+                for factor in factor_names:
+                    cafe_scores[f"점수_{factor}"] = 0.5
+                    cafe_scores[f"리뷰수_{factor}"] = 0
+                results_list.append(cafe_scores)
+                continue
+            
+            # 2-2. 각 문장에 대해 요인 매핑 (SBERT)
+            sentence_embeddings = sbert_model.encode(
+                all_sentences,
+                convert_to_tensor=True,
+                show_progress_bar=False,
             )
+            
+            # 문장-요인 유사도 행렬 계산
+            from sklearn.metrics.pairwise import cosine_similarity
+            sentence_factor_similarity = cosine_similarity(
+                sentence_embeddings.cpu().numpy(),
+                factor_embeddings.cpu().numpy()
+            )
+            # shape: (n_sentences, n_factors)
+        
+        # 3) 리뷰별 요인 점수 저장을 위한 딕셔너리 초기화
+        # {local_review_idx: {factor_name: [sentiment_scores]}}
+        review_factor_sentiment_scores: Dict[int, Dict[str, List[float]]] = {
+            idx: {factor: [] for factor in factor_names} for idx in range(n_reviews_cafe)
+        }
+        
+        # 리뷰별 요인 점수 (최종 평균용)
+        review_factor_avg_scores: Dict[int, Dict[str, float]] = {
+            idx: {} for idx in range(n_reviews_cafe)
+        }
 
-        # 3) 리뷰별 감성 점수 계산 (전 리뷰 대상)
-        sentiment_scores = _analyze_sentiment_for_reviews(
+        # 4) 각 요인별로 유효 문장 수집 및 감성 분석 재실행
+        cafe_scores = {"cafe_name": cafe_name}
+        
+        for f_idx, factor_name in enumerate(factor_names):
+            # 4-1. 유사도 임계값 이상인 문장(유효 언급) 선별
+            relevant_sentence_indices = np.where(
+                sentence_factor_similarity[:, f_idx] >= similarity_threshold
+            )[0]
+            
+            if len(relevant_sentence_indices) > 0:
+                # 유효 문장 추출
+                relevant_sentences = [all_sentences[idx] for idx in relevant_sentence_indices]
+                
+                # 4-2. 유효 문장에 대해서만 감성 분석 재실행
+                try:
+                    # 숫자-only / 메타데이터-only와 일반 텍스트 분리
+                    model_inputs: List[Tuple[int, str]] = []
+                    rule_based_scores: Dict[int, float] = {}
+                    
+                    for sent_idx in relevant_sentence_indices:
+                        sentence = all_sentences[sent_idx]
+                        t = (sentence or "").strip()
+                        
+                        # 숫자-only 처리
+                        if is_numeric_only(t):
+                            try:
+                                rating_val = float(t)
+                                if rating_val >= 4.0:
+                                    rule_based_scores[sent_idx] = 0.9
+                                elif rating_val >= 3.0:
+                                    rule_based_scores[sent_idx] = 0.5
+                                else:
+                                    rule_based_scores[sent_idx] = 0.1
+                            except ValueError:
+                                rule_based_scores[sent_idx] = 0.5
+                            continue
+                        
+                        # 메타데이터-only 처리
+                        if is_metadata_only(t):
+                            rule_based_scores[sent_idx] = 0.5
+                            continue
+                        
+                        # 일반 텍스트: 모델에 전달
+                        truncated_text = truncate_text_for_bert(t)
+                        model_inputs.append((sent_idx, truncated_text))
+                    
+                    # 배치로 감성 분석 수행
+                    if model_inputs:
+                        texts_for_model = [t for _, t in model_inputs]
+                        try:
+                            results = sentiment_pipeline(
+                                texts_for_model,
+                                truncation=True,
+                                max_length=512,
+                            )
+                            for (sent_idx, _), res in zip(model_inputs, results):
+                                _label, score = process_sentiment_result(res, sentiment_model_name)
+                                # 해당 문장이 속한 리뷰 찾기
+                                review_idx = sentence_to_review[sent_idx]
+                                review_factor_sentiment_scores[review_idx][factor_name].append(float(score))
+                        except Exception as e:
+                            st.warning(f"{cafe_name} - {factor_name} 감성 분석 배치 처리 중 오류: {e}")
+                            for sent_idx, _ in model_inputs:
+                                review_idx = sentence_to_review[sent_idx]
+                                review_factor_sentiment_scores[review_idx][factor_name].append(0.5)
+                    
+                    # 규칙 기반 점수 추가
+                    for sent_idx, score in rule_based_scores.items():
+                        review_idx = sentence_to_review[sent_idx]
+                        review_factor_sentiment_scores[review_idx][factor_name].append(score)
+                    
+                    # 4-3. 리뷰별 요인 점수 계산 (각 리뷰의 해당 요인 문장들의 평균)
+                    factor_sentiment_scores_for_fsi = []
+                    for review_idx in range(n_reviews_cafe):
+                        scores = review_factor_sentiment_scores[review_idx][factor_name]
+                        if scores:
+                            avg_score = float(np.mean(scores))
+                            review_factor_avg_scores[review_idx][factor_name] = avg_score
+                            factor_sentiment_scores_for_fsi.append(avg_score)
+                    
+                    # 4-4. FSI 산출: 유효 언급된 리뷰들의 감성 점수 평균
+                    if len(factor_sentiment_scores_for_fsi) > 0:
+                        avg_score = float(np.mean(factor_sentiment_scores_for_fsi))
+                        cafe_scores[f"점수_{factor_name}"] = avg_score
+                        # 해당 요인을 언급한 리뷰 수 (최소 1개 문장이라도 해당 요인 언급)
+                        cafe_scores[f"리뷰수_{factor_name}"] = len(factor_sentiment_scores_for_fsi)
+                    else:
+                        cafe_scores[f"점수_{factor_name}"] = 0.5
+                        cafe_scores[f"리뷰수_{factor_name}"] = 0
+                    
+                except Exception as e:
+                    st.warning(f"{cafe_name} - {factor_name} 감성 분석 오류: {e}")
+                    cafe_scores[f"점수_{factor_name}"] = 0.5
+                    cafe_scores[f"리뷰수_{factor_name}"] = 0
+            else:
+                # 언급이 없는 경우
+                cafe_scores[f"점수_{factor_name}"] = 0.5
+                cafe_scores[f"리뷰수_{factor_name}"] = 0
+        
+        # 5) 리뷰별 요인 점수/유사도 기록 (df_review_scores용)
+        # UI 호환을 위해 기존 구조 유지 (wide format)
+        # 리뷰 전체에 대한 유사도는 원래 방식대로 계산 (리뷰 전체 기준)
+        review_embeddings = sbert_model.encode(
             review_texts,
-            sentiment_pipeline,
-            sentiment_model_name,
+            convert_to_tensor=True,
+            show_progress_bar=False,
         )
-
-        # 4) 리뷰별 요인 점수/유사도 기록 (df_review_scores용)
+        from sklearn.metrics.pairwise import cosine_similarity
+        review_similarity_matrix = cosine_similarity(
+            review_embeddings.cpu().numpy(),
+            factor_embeddings.cpu().numpy()
+        )
+        
         for local_idx, (text, global_idx) in enumerate(zip(review_texts, review_indices)):
             row_dict = {
                 "review_index": global_idx,
                 "cafe_name": cafe_name,
                 "review_text": text,
             }
-
+            
             for f_idx, factor_name in enumerate(factor_names):
-                sim = float(similarity_matrix[local_idx, f_idx])
+                # 리뷰 전체에 대한 유사도
+                sim = float(review_similarity_matrix[local_idx, f_idx])
                 row_dict[f"{factor_name}_유사도"] = sim
-
-                if sim >= similarity_threshold and local_idx in sentiment_scores:
-                    # 요인 언급으로 인정되는 경우: 요인 점수 = 리뷰 감성 점수
-                    row_dict[f"{factor_name}_점수"] = float(sentiment_scores[local_idx])
+                
+                # 해당 요인에 대한 감성 점수가 있으면 사용 (문장 단위 분석 결과)
+                if factor_name in review_factor_avg_scores[local_idx]:
+                    row_dict[f"{factor_name}_점수"] = float(review_factor_avg_scores[local_idx][factor_name])
                 else:
                     row_dict[f"{factor_name}_점수"] = np.nan
-
+            
             review_scores_list.append(row_dict)
-
-        # 5) 카페별 fsi, n_i 계산
-        # local review index 기준의 factor_mentions & sentiment_scores 사용
-        fsi = calculate_fsi(
-            factor_mentions=factor_mentions,
-            sentiment_scores=sentiment_scores,
-            factor_names=factor_names,
-        )
-
-        # 요인별 언급 수 n_i
-        n_i: Dict[str, int] = {factor: 0 for factor in factor_names}
-        for _r_idx, factor_list in factor_mentions.items():
-            for factor_name, _sim in factor_list:
-                if factor_name in n_i:
-                    n_i[factor_name] += 1
-
-        # cafe_scores row 구성
-        cafe_scores = {"cafe_name": cafe_name}
-        for factor_name in factor_names:
-            cafe_scores[f"점수_{factor_name}"] = float(fsi.get(factor_name, 0.5))
-            cafe_scores[f"리뷰수_{factor_name}"] = int(n_i.get(factor_name, 0))
-
+        
         results_list.append(cafe_scores)
 
     progress_bar.empty()

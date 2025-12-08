@@ -149,6 +149,22 @@ def load_data(file_path: Path):
         if old_col in df.columns and new_col not in df.columns:
             df[new_col] = df[old_col]
     
+    # 카페명에 위치 정보 추가 (같은 이름의 다른 지점 구분)
+    # 시군구명과 행정동명이 있으면 카페명에 추가
+    if "시군구명" in df.columns and "행정동명" in df.columns:
+        # 원본 카페명 보존
+        if "original_cafe_name" not in df.columns:
+            df["original_cafe_name"] = df["cafe_name"].copy()
+        
+        # 위치 정보가 있는 경우에만 카페명에 추가
+        has_location = df["시군구명"].notna() & df["행정동명"].notna()
+        df.loc[has_location, "cafe_name"] = (
+            df.loc[has_location, "cafe_name"].astype(str) + " " + 
+            df.loc[has_location, "시군구명"].astype(str) + " " + 
+            df.loc[has_location, "행정동명"].astype(str)
+        )
+        # 위치 정보가 없는 경우는 원본 카페명 유지
+    
     # 필요한 컬럼 확인
     if "cafe_name" not in df.columns or "review_text" not in df.columns:
         st.error(f"필수 컬럼이 없습니다. 현재 컬럼: {list(df.columns)}")
