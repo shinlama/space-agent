@@ -128,9 +128,17 @@ def load_csv_raw(file_path: Path):
     return df
 
 
-@st.cache_data
-def load_data(file_path: Path):
-    """리뷰 데이터를 로드하고 전처리합니다."""
+@st.cache_data(ttl=3600, show_spinner="데이터 로드 중...")
+def load_data(file_path: Path, cache_version: str = "v2.0"):
+    """
+    리뷰 데이터를 로드하고 전처리합니다.
+    
+    주의: 카페명에 위치 정보를 추가하여 같은 이름의 다른 지점을 구분합니다.
+    
+    Args:
+        file_path: CSV 파일 경로
+        cache_version: 캐시 버전 (코드 변경 시 이 값을 변경하면 캐시가 무효화됨)
+    """
     if not file_path.exists():
         raise FileNotFoundError(f"파일을 찾을 수 없습니다: {file_path}")
     

@@ -39,7 +39,7 @@ def init_session_state():
 
 def main():
     """메인 함수"""
-    st.title("장소성 기반 공간 정량 평가 시스템")
+    st.title("리뷰 데이터 기반 공간 정량 평가 시스템")
     st.markdown("---")
     
     # 세션 상태 초기화
@@ -68,7 +68,8 @@ def main():
         return
     
     try:
-        df_reviews = load_data(file_path)
+        # cache_version을 변경하면 캐시가 무효화됩니다 (카페명 위치 정보 추가 로직 적용)
+        df_reviews = load_data(file_path, cache_version="v2.1")
     except Exception as e:
         st.error(f"데이터 로드 중 오류 발생: {e}")
         return

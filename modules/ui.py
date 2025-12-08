@@ -694,10 +694,10 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
             # -------------------------------------------------------
             # [검증 방법 4] 통계 정보
             # -------------------------------------------------------
-            st.markdown(f"#### 4. '{factor}' 매칭 통계")
+            st.markdown(f"#### 4. '{factor}' 관련 통계")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("매칭된 리뷰 수", f"{len(relevant_df):,}개")
+                st.metric("관련 리뷰 수", f"{len(relevant_df):,}개")
             with col2:
                 avg_score = pd.to_numeric(relevant_df[score_col], errors='coerce').mean()
                 st.metric("평균 점수", f"{avg_score:.3f}" if pd.notna(avg_score) else "N/A")
