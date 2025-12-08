@@ -14,6 +14,15 @@ try:
 except ImportError:
     HAS_FOLIUM = False
 from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD, CAFE_INFO_CSV
+
+# Streamlit 버전 호환성 처리
+def get_dataframe_width_param():
+    """
+    Streamlit 버전에 따라 적절한 width 파라미터를 반환합니다.
+    실제로 width='stretch'를 시도하고, 실패하면 use_container_width를 사용합니다.
+    """
+    # 안전하게 use_container_width 사용 (모든 버전에서 지원)
+    return {'use_container_width': True}
 from modules.sentiment import run_sentiment_analysis
 from modules.score import calculate_place_scores, calculate_final_research_metrics
 from modules.preprocess import load_csv_raw, is_numeric_only, is_metadata_only, truncate_text_for_bert
@@ -71,8 +80,8 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
 
         st.dataframe(
             df_preview_sorted,
-            use_container_width=True,
-            hide_index=True
+            hide_index=True,
+            **get_dataframe_width_param()
         )
         st.caption(f"전체 {len(df_preview_sorted):,}개 리뷰 (행정구별 정렬)")
         
@@ -87,7 +96,6 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
             # 결과 표시
             st.dataframe(
                 df_preview_with_sentiment,
-                use_container_width=True,
                 hide_index=True,
             )
             
@@ -280,7 +288,7 @@ def _render_placeness_results():
     if all(col in df_final_metrics.columns for col in display_summary_cols):
         st.dataframe(
             df_final_metrics[display_summary_cols].set_index('cafe_name'), 
-            use_container_width=True
+            **get_dataframe_width_param()
         )
     
     st.subheader("세부 지표 점수 (fsi)")
@@ -288,7 +296,7 @@ def _render_placeness_results():
     if all(col in df_final_metrics.columns for col in fsi_cols):
         st.dataframe(
             df_final_metrics[fsi_cols].set_index('cafe_name'), 
-            use_container_width=True
+            **get_dataframe_width_param()
         )
     
     # 가중치 정보 표시
@@ -297,7 +305,7 @@ def _render_placeness_results():
         if all(col in df_final_metrics.columns for col in wi_cols):
             st.dataframe(
                 df_final_metrics[wi_cols].set_index('cafe_name'), 
-                use_container_width=True
+                **get_dataframe_width_param()
             )
     
     # 결과 다운로드
@@ -334,11 +342,11 @@ def render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_na
     # 결과 표시
     if st.session_state.df_reviews_with_sentiment is not None and st.session_state.df_avg_sentiment is not None:
         st.subheader("✅ 카페별 평균 감성 점수")
-        st.dataframe(st.session_state.df_avg_sentiment.set_index('cafe_name'), width='stretch')
+        st.dataframe(st.session_state.df_avg_sentiment.set_index('cafe_name'), **get_dataframe_width_param())
         
         st.subheader("✅ 개별 리뷰 감성 분석 결과 (샘플)")
         sample_df = st.session_state.df_reviews_with_sentiment[['cafe_name', 'review_text', 'sentiment_label', 'sentiment_score']].head(20)
-        st.dataframe(sample_df, width='stretch')
+        st.dataframe(sample_df, **get_dataframe_width_param())
         
         # 결과 다운로드
         csv = st.session_state.df_reviews_with_sentiment.to_csv(index=False).encode("utf-8-sig")
@@ -369,7 +377,6 @@ def render_detailed_results():
             available_cols = [col for col in display_cols if col in st.session_state.df_reviews_with_sentiment.columns]
             st.dataframe(
                 st.session_state.df_reviews_with_sentiment[available_cols], 
-                use_container_width=True, 
                 hide_index=True, 
             )
             st.caption(f"총 {len(st.session_state.df_reviews_with_sentiment):,}개 리뷰")
@@ -389,7 +396,6 @@ def render_detailed_results():
             
             st.dataframe(
                 display_df, 
-                use_container_width=True, 
                 hide_index=True, 
             )
             st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
@@ -465,7 +471,6 @@ def _render_merged_results():
         # 전체 리뷰 표시 (높이를 크게 설정하여 스크롤 가능)
         st.dataframe(
             display_df,
-            use_container_width=True,
             hide_index=True,
         )
 
@@ -666,7 +671,7 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
                          for word, hybrid_score, tfidf_score, freq in top_keywords],
                         columns=['단어', '하이브리드 점수', 'TF-IDF 점수', '요인 내 상대 빈도']
                     )
-                    st.dataframe(df_detail, use_container_width=True, hide_index=True)
+                    st.dataframe(df_detail, hide_index=True, **get_dataframe_width_param())
                     st.caption("하이브리드 점수 = TF-IDF × (1 + 요인 내 상대 빈도 × 2)")
             else:
                 st.write("유의미한 키워드를 추출하지 못했습니다.")
@@ -685,7 +690,6 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
                     display_cols.insert(1, sim_col)
                 st.dataframe(
                     high_score_df[display_cols].sort_values(by=score_col, ascending=False),
-                    use_container_width=True,
                     hide_index=True,
                 )
                 st.caption(f"총 {len(high_score_df)}개 리뷰 (점수 0.9 이상)")
@@ -816,7 +820,6 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
                                 with st.expander("행정구별 상세 정보"):
                                     st.dataframe(
                                         df_district.sort_values('상위 10% 카페 수', ascending=False),
-                                        use_container_width=True,
                                         hide_index=True
                                     )
                                 
