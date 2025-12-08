@@ -3,11 +3,34 @@ Streamlit UI 구성 모듈
 """
 import streamlit as st
 import pandas as pd
+import re
+from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
 from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD
 from modules.sentiment import run_sentiment_analysis
 from modules.score import calculate_place_scores, calculate_final_research_metrics
 from modules.preprocess import load_csv_raw, is_numeric_only, is_metadata_only, truncate_text_for_bert
 from modules.sentiment import process_sentiment_result
+
+# 한글 형태소 분석 (선택적, 지연 초기화)
+HAS_KONLPY = False
+okt = None
+
+def _init_konlpy():
+    """konlpy를 지연 초기화합니다. Java가 없으면 None을 반환합니다."""
+    global HAS_KONLPY, okt
+    if HAS_KONLPY and okt is not None:
+        return okt
+    
+    try:
+        from konlpy.tag import Okt
+        okt = Okt()
+        HAS_KONLPY = True
+        return okt
+    except (ImportError, Exception) as e:
+        HAS_KONLPY = False
+        okt = None
+        return None
 
 
 def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
@@ -243,7 +266,7 @@ def render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, se
 
 def _render_placeness_results():
     """장소성 계산 결과 표시"""
-    st.header("⭐ 최종 장소성 정량 평가 (연구 결과)")
+    st.header("장소성 종합 점수")
     
     df_final_metrics = st.session_state.df_final_metrics
     
@@ -367,6 +390,10 @@ def render_detailed_results():
                 height=600
             )
             st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
+            
+            # 요인별 키워드 분석 추가
+            st.markdown("---")
+            visualize_factor_keywords(st.session_state.df_review_scores, factor_names, top_n=15)
 
 
 def _render_merged_results():
@@ -450,6 +477,237 @@ def _render_merged_results():
             file_name="review_detailed_analysis.csv",
             mime="text/csv"
         )
+        
+        # 요인별 키워드 분석 추가
+        st.markdown("---")
+        factor_names = list(ALL_FACTORS.keys())
+        visualize_factor_keywords(filtered_df, factor_names, top_n=15)
     else:
         st.warning("선택한 조건에 해당하는 리뷰가 없습니다.")
+
+
+def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_reviews_per_factor=200):
+    """
+    각 요인별로 TF-IDF를 이용하여 '특색 있는' 주요 키워드를 추출하고 시각화합니다.
+    유사도가 가장 높은 상위 리뷰에서만 키워드를 추출합니다.
+    
+    Args:
+        df_review_scores: 리뷰별 요인 점수/유사도 DataFrame
+        factor_names: 요인 이름 리스트
+        top_n: 상위 N개 키워드 표시
+        top_reviews_per_factor: 각 요인별로 유사도 상위 몇 개 리뷰를 사용할지 (기본값: 200)
+    """
+    st.subheader("🔎 요인별 핵심 키워드 분석 (TF-IDF 기반)")
+    st.info(f"유사도가 가장 높은 상위 {top_reviews_per_factor}개 리뷰에서만 키워드를 추출합니다. TF-IDF를 사용하여 각 장소성 요인을 가장 잘 대표하는 차별화된 단어들을 추출합니다.")
+    
+    # 1. 요인별 텍스트 문서 생성
+    # 각 요인에 매칭된 리뷰 중 유사도 상위 리뷰만 사용
+    factor_documents = []
+    valid_factors = []  # 리뷰가 하나라도 있는 요인만 추적
+    
+    for factor in factor_names:
+        score_col = f'{factor}_점수'
+        sim_col = f'{factor}_유사도'
+        
+        if score_col not in df_review_scores.columns:
+            factor_documents.append("")
+            continue
+            
+        # 해당 요인에 매칭된 리뷰만 필터링
+        relevant_df = df_review_scores[
+            pd.to_numeric(df_review_scores[score_col], errors='coerce').notnull()
+        ].copy()
+        
+        if not relevant_df.empty:
+            # 유사도 컬럼이 있으면 유사도 기준으로, 없으면 점수 기준으로 정렬
+            if sim_col in relevant_df.columns:
+                # 유사도 상위 리뷰만 선택
+                top_relevant_df = relevant_df.sort_values(by=sim_col, ascending=False).head(top_reviews_per_factor)
+            else:
+                # 점수 기준으로 정렬
+                top_relevant_df = relevant_df.sort_values(by=score_col, ascending=False).head(top_reviews_per_factor)
+            
+            # 텍스트 전처리 (한글만 남기기)
+            text = " ".join(top_relevant_df['review_text'].astype(str).tolist())
+            text = re.sub(r'[^가-힣\s]', '', text)  # 한글과 공백만 남김
+            factor_documents.append(text)
+            valid_factors.append(factor)
+        else:
+            # 매칭된 리뷰가 없으면 빈 문자열 추가 (인덱스 유지를 위해)
+            factor_documents.append("")
+    
+    if not any(factor_documents):
+        st.warning("분석할 텍스트 데이터가 없습니다.")
+        return
+    
+    # 2. TF-IDF 벡터화
+    # 불용어 설정 (모든 요인에서 공통적으로 너무 많이 나오는 단어들 제거)
+    stop_words = [
+        '카페', '너무', '진짜', '정말', '많이', '가서', '먹고', '있는', '하는', '그리고', '그래서', 
+        '좋아요', '있어요', '같아요', '맛있어요', '분위기', '생각', '느낌', '방문', '곳', '것', '수',
+        '있습니다', '있었', '있고', '있는데', '있어서', '있어', '있음',
+        '좋습니다', '좋았', '좋고', '좋은', '좋아', '좋다', '좋음',
+        '맛있습니다', '맛있었', '맛있고', '맛있는', '맛있어',
+        '이거', '그거', '저거', '이것', '그것', '저것',
+        '그런데', '하지만', '그러나',
+        '이런', '그런', '저런', '이렇게', '그렇게', '저렇게',
+        '때문', '위해', '통해', '대해', '관련', '따라',
+        '자리', '자리가', '자리도', '자리를', '자리에',
+        '매장', '매장이', '매장도', '매장을', '매장에',
+        '사람', '사람이', '사람들', '사람도',
+        # 음료/음식 관련 일반 단어
+        '커피', '커피도', '커피를', '커피가', '커피는',
+        '음료', '음료도', '음료를',
+        '디저트', '디저트도',
+        # 일반 형용사/부사
+        '다양한', '다양', '다른', '매우', '아주', '정말로',
+        '있다', '있어', '있고', '있는데', '있어서', '있음'
+    ]
+    
+    try:
+        tfidf_vectorizer = TfidfVectorizer(
+            max_features=1000, 
+            stop_words=stop_words,
+            token_pattern=r"(?u)\b\w\w+\b"  # 2글자 이상 단어만
+        )
+        tfidf_matrix = tfidf_vectorizer.fit_transform(factor_documents)
+        feature_names = tfidf_vectorizer.get_feature_names_out()
+    except ValueError as e:
+        st.warning(f"TF-IDF 분석을 위한 충분한 텍스트가 없거나, 모든 단어가 불용어로 처리되었습니다: {e}")
+        return
+    
+    # 3. 시각화
+    tabs = st.tabs(factor_names)
+    
+    for i, factor in enumerate(factor_names):
+        with tabs[i]:
+            score_col = f'{factor}_점수'
+            sim_col = f'{factor}_유사도'
+            
+            if score_col not in df_review_scores.columns:
+                st.warning(f"데이터에 {score_col} 컬럼이 없습니다.")
+                continue
+            
+            # 해당 요인 점수가 있는(매칭된) 리뷰들만 추출
+            relevant_df = df_review_scores[
+                pd.to_numeric(df_review_scores[score_col], errors='coerce').notnull()
+            ].copy()
+            
+            if relevant_df.empty or not factor_documents[i].strip():
+                st.write("매칭된 리뷰가 없습니다.")
+                continue
+            
+            # -------------------------------------------------------
+            # [검증 방법 1] 유사도 상위 리뷰 리스트
+            # -------------------------------------------------------
+            st.markdown(f"#### 1. '{factor}'와 유사도가 가장 높은 리뷰 Top 10")
+            
+            # 유사도 컬럼이 있다면 사용, 없다면 점수 기준
+            if sim_col in relevant_df.columns:
+                top_reviews = relevant_df.sort_values(by=sim_col, ascending=False).head(10)
+                for idx, row in top_reviews.iterrows():
+                    score_val = row[score_col] if pd.notna(row[score_col]) else "N/A"
+                    sim_val = row[sim_col] if pd.notna(row[sim_col]) else "N/A"
+                    st.success(f"**유사도 {sim_val:.3f} | 점수 {score_val:.3f}**: {row['review_text']}")
+            else:
+                st.warning("유사도 컬럼을 찾을 수 없어 점수 기준으로 정렬합니다.")
+                top_reviews = relevant_df.sort_values(by=score_col, ascending=False).head(10)
+                for idx, row in top_reviews.iterrows():
+                    score_val = row[score_col] if pd.notna(row[score_col]) else "N/A"
+                    st.success(f"**점수 {score_val:.3f}**: {row['review_text']}")
+            
+            # -------------------------------------------------------
+            # [검증 방법 2] TF-IDF 기반 키워드 분석 (Bar Chart)
+            # -------------------------------------------------------
+            st.markdown(f"#### 2. '{factor}' 관련 리뷰 내 주요 키워드")
+            
+            # 해당 요인(문서)의 TF-IDF 점수 가져오기
+            tfidf_scores = tfidf_matrix[i].toarray().flatten()
+            
+            # 해당 요인 내에서의 단어 빈도도 계산 (하이브리드 방식)
+            # TF-IDF 점수와 요인 내 빈도를 결합하여 더 정확한 키워드 추출
+            factor_text = factor_documents[i]
+            factor_word_counts = Counter(factor_text.split())
+            total_words_in_factor = sum(factor_word_counts.values())
+            
+            # TF-IDF 점수와 요인 내 상대 빈도를 결합한 점수 계산
+            hybrid_scores = []
+            for idx, word in enumerate(feature_names):
+                tfidf_score = tfidf_scores[idx]
+                # 해당 요인 내에서의 상대 빈도 (0~1)
+                word_freq_in_factor = factor_word_counts.get(word, 0) / max(total_words_in_factor, 1)
+                # 하이브리드 점수: TF-IDF * (1 + 요인 내 상대 빈도)
+                # 이렇게 하면 TF-IDF가 높고 해당 요인에서도 자주 나오는 단어가 우선순위가 높아짐
+                hybrid_score = tfidf_score * (1 + word_freq_in_factor * 2)
+                if hybrid_score > 0:
+                    hybrid_scores.append((word, hybrid_score, tfidf_score, word_freq_in_factor))
+            
+            # 하이브리드 점수 기준으로 정렬
+            hybrid_scores.sort(key=lambda x: x[1], reverse=True)
+            top_keywords = hybrid_scores[:top_n]
+            
+            if top_keywords:
+                # 데이터프레임 변환 (하이브리드 점수 사용)
+                df_keywords = pd.DataFrame(
+                    [(word, hybrid_score) for word, hybrid_score, _, _ in top_keywords],
+                    columns=['단어', '하이브리드 점수']
+                )
+                df_keywords = df_keywords.sort_values('하이브리드 점수', ascending=True)
+                
+                # Streamlit Bar Chart
+                st.bar_chart(df_keywords.set_index('단어'), height=400)
+                
+                # 상세 테이블 (TF-IDF 점수와 빈도 정보 포함)
+                with st.expander("상세 키워드 점수 보기"):
+                    df_detail = pd.DataFrame(
+                        [(word, f"{hybrid_score:.4f}", f"{tfidf_score:.4f}", f"{freq:.4f}") 
+                         for word, hybrid_score, tfidf_score, freq in top_keywords],
+                        columns=['단어', '하이브리드 점수', 'TF-IDF 점수', '요인 내 상대 빈도']
+                    )
+                    st.dataframe(df_detail, use_container_width=True, hide_index=True)
+                    st.caption("하이브리드 점수 = TF-IDF × (1 + 요인 내 상대 빈도 × 2)")
+            else:
+                st.write("유의미한 키워드를 추출하지 못했습니다.")
+            
+            # -------------------------------------------------------
+            # [검증 방법 3] 긍정 리뷰만 필터링하여 보기
+            # -------------------------------------------------------
+            st.markdown(f"#### 3. '{factor}' 점수가 높은(0.9 이상) 긍정 리뷰 패턴")
+            high_score_df = relevant_df[
+                pd.to_numeric(relevant_df[score_col], errors='coerce') >= 0.9
+            ]
+            
+            if not high_score_df.empty:
+                display_cols = ['review_text', score_col]
+                if sim_col in high_score_df.columns:
+                    display_cols.insert(1, sim_col)
+                st.dataframe(
+                    high_score_df[display_cols].sort_values(by=score_col, ascending=False),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=300
+                )
+                st.caption(f"총 {len(high_score_df)}개 리뷰 (점수 0.9 이상)")
+            else:
+                st.info("0.9점 이상의 매우 긍정적인 리뷰가 없습니다.")
+            
+            # -------------------------------------------------------
+            # [검증 방법 4] 통계 정보
+            # -------------------------------------------------------
+            st.markdown(f"#### 4. '{factor}' 매칭 통계")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("매칭된 리뷰 수", f"{len(relevant_df):,}개")
+            with col2:
+                avg_score = pd.to_numeric(relevant_df[score_col], errors='coerce').mean()
+                st.metric("평균 점수", f"{avg_score:.3f}" if pd.notna(avg_score) else "N/A")
+            with col3:
+                if sim_col in relevant_df.columns:
+                    avg_sim = pd.to_numeric(relevant_df[sim_col], errors='coerce').mean()
+                    st.metric("평균 유사도", f"{avg_sim:.3f}" if pd.notna(avg_sim) else "N/A")
+                else:
+                    st.metric("평균 유사도", "N/A")
+            with col4:
+                high_count = len(relevant_df[pd.to_numeric(relevant_df[score_col], errors='coerce') >= 0.9])
+                st.metric("긍정 리뷰 (≥0.9)", f"{high_count}개")
 
