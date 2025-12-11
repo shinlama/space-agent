@@ -380,6 +380,15 @@ def render_detailed_results():
                 hide_index=True, 
             )
             st.caption(f"총 {len(st.session_state.df_reviews_with_sentiment):,}개 리뷰")
+            
+            # CSV 다운로드 버튼
+            csv = st.session_state.df_reviews_with_sentiment[available_cols].to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                "📥 리뷰별 상세 결과 CSV 다운로드",
+                data=csv,
+                file_name="review_sentiment_analysis.csv",
+                mime="text/csv"
+            )
         elif has_placeness:
             st.info("감성 분석을 실행하면 리뷰별 상세 결과를 확인할 수 있습니다.")
             # 전체 12개 요인 점수 표시
@@ -388,7 +397,7 @@ def render_detailed_results():
             display_cols = ['cafe_name', 'review_text'] + factor_score_cols
             available_cols = [col for col in display_cols if col in st.session_state.df_review_scores.columns]
             
-            # 점수 포맷팅
+            # 점수 포맷팅 (표시용)
             display_df = st.session_state.df_review_scores[available_cols].copy()
             for col in factor_score_cols:
                 if col in display_df.columns:
@@ -399,6 +408,15 @@ def render_detailed_results():
                 hide_index=True, 
             )
             st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
+            
+            # CSV 다운로드 버튼 (원본 데이터, 포맷팅 없이)
+            csv = st.session_state.df_review_scores[available_cols].to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                "📥 리뷰별 상세 결과 CSV 다운로드",
+                data=csv,
+                file_name="review_placeness_scores.csv",
+                mime="text/csv"
+            )
             
             # 요인별 키워드 분석 추가
             st.markdown("---")

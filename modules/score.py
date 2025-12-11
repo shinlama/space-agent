@@ -336,6 +336,8 @@ def calculate_place_scores(
         df_cafe_scores: 카페별 요인 점수/언급수 테이블
         df_review_scores: 리뷰별 요인 점수/유사도 테이블
     """
+    # numpy를 명시적으로 import (파일 상단의 import를 사용)
+    # 함수 내부에서 import하면 로컬 변수로 인식되므로, 파일 상단의 import를 사용
     st.subheader("1. SBERT 기반 요인 매핑 및 정밀 감성 분석")
 
     # 1) SBERT용 요인 정의 문장 임베딩 미리 계산
@@ -364,10 +366,13 @@ def calculate_place_scores(
             status_text.text(f"카페 처리 중: {cafe_name} ({cafe_idx + 1}/{total_cafes})")
             progress_bar.progress((cafe_idx + 1) / total_cafes)
             
-            # 주기적으로 Streamlit이 응답할 수 있도록 (매 5개 카페마다)
-            if cafe_idx % 5 == 0 and cafe_idx > 0:
+            # 주기적으로 Streamlit이 응답할 수 있도록 (매 3개 카페마다, 더 자주 업데이트)
+            if cafe_idx % 3 == 0 and cafe_idx > 0:
                 import time
-                time.sleep(0.2)  # 짧은 대기로 Streamlit이 응답 처리할 시간 제공
+                time.sleep(0.3)  # 짧은 대기로 Streamlit이 응답 처리할 시간 제공
+                # 진행 상황 강제 업데이트
+                status_text.text(f"카페 처리 중: {cafe_name} ({cafe_idx + 1}/{total_cafes})")
+                progress_bar.progress((cafe_idx + 1) / total_cafes)
 
             # 해당 카페의 리뷰 텍스트 및 인덱스
             review_texts: List[str] = group["review_text"].astype(str).tolist()
@@ -404,16 +409,38 @@ def calculate_place_scores(
                     continue
                 
                 # 2-2. 각 문장에 대해 요인 매핑 (SBERT)
-                sentence_embeddings = sbert_model.encode(
-                    all_sentences,
-                    convert_to_tensor=True,
-                    show_progress_bar=False,
-                )
+                # 메모리 절약을 위해 배치로 처리 (문장이 많을 경우)
+                max_sentences_per_batch = 200  # 한 번에 처리할 최대 문장 수
+                
+                if len(all_sentences) > max_sentences_per_batch:
+                    # 문장이 많으면 배치로 나누어 처리
+                    sentence_embeddings_list = []
+                    for batch_start in range(0, len(all_sentences), max_sentences_per_batch):
+                        batch_end = min(batch_start + max_sentences_per_batch, len(all_sentences))
+                        batch_sentences = all_sentences[batch_start:batch_end]
+                        
+                        batch_embeddings = sbert_model.encode(
+                            batch_sentences,
+                            convert_to_tensor=True,
+                            show_progress_bar=False,
+                        )
+                        sentence_embeddings_list.append(batch_embeddings.cpu().numpy())
+                    
+                    # 배치 결과 합치기
+                    sentence_embeddings_np = np.vstack(sentence_embeddings_list)
+                else:
+                    # 문장이 적으면 한 번에 처리
+                    sentence_embeddings = sbert_model.encode(
+                        all_sentences,
+                        convert_to_tensor=True,
+                        show_progress_bar=False,
+                    )
+                    sentence_embeddings_np = sentence_embeddings.cpu().numpy()
                 
                 # 문장-요인 유사도 행렬 계산
                 from sklearn.metrics.pairwise import cosine_similarity
                 sentence_factor_similarity = cosine_similarity(
-                    sentence_embeddings.cpu().numpy(),
+                    sentence_embeddings_np,
                     factor_embeddings.cpu().numpy()
                 )
                 # shape: (n_sentences, n_factors)
@@ -475,20 +502,37 @@ def calculate_place_scores(
                             truncated_text = truncate_text_for_bert(t)
                             model_inputs.append((sent_idx, truncated_text))
                     
-                        # 배치로 감성 분석 수행
+                        # 배치로 감성 분석 수행 (Streamlit Cloud 타임아웃 방지를 위해 작은 배치 사용)
                         if model_inputs:
                             texts_for_model = [t for _, t in model_inputs]
+                            # 배치 사이즈를 작게 설정 (메모리 및 타임아웃 방지)
+                            # Streamlit Cloud에서 안정적으로 작동하도록 2로 설정
+                            sentiment_batch_size = 2
+                            
                             try:
-                                results = sentiment_pipeline(
-                                    texts_for_model,
-                                    truncation=True,
-                                    max_length=512,
-                                )
-                                for (sent_idx, _), res in zip(model_inputs, results):
-                                    _label, score = process_sentiment_result(res, sentiment_model_name)
-                                    # 해당 문장이 속한 리뷰 찾기
-                                    review_idx = sentence_to_review[sent_idx]
-                                    review_factor_sentiment_scores[review_idx][factor_name].append(float(score))
+                                # 작은 배치로 나누어 처리
+                                for batch_start in range(0, len(texts_for_model), sentiment_batch_size):
+                                    batch_end = min(batch_start + sentiment_batch_size, len(texts_for_model))
+                                    batch_texts = texts_for_model[batch_start:batch_end]
+                                    batch_model_inputs = model_inputs[batch_start:batch_end]
+                                    
+                                    results = sentiment_pipeline(
+                                        batch_texts,
+                                        truncation=True,
+                                        max_length=512,
+                                    )
+                                    
+                                    for (sent_idx, _), res in zip(batch_model_inputs, results):
+                                        _label, score = process_sentiment_result(res, sentiment_model_name)
+                                        # 해당 문장이 속한 리뷰 찾기
+                                        review_idx = sentence_to_review[sent_idx]
+                                        review_factor_sentiment_scores[review_idx][factor_name].append(float(score))
+                                    
+                                    # 배치 처리 후 짧은 대기 (Streamlit 응답 시간 확보)
+                                    if batch_end < len(texts_for_model):
+                                        import time
+                                        time.sleep(0.1)
+                                        
                             except Exception as e:
                                 st.warning(f"{cafe_name} - {factor_name} 감성 분석 배치 처리 중 오류: {e}")
                                 for sent_idx, _ in model_inputs:
@@ -531,14 +575,37 @@ def calculate_place_scores(
             # 5) 리뷰별 요인 점수/유사도 기록 (df_review_scores용)
             # UI 호환을 위해 기존 구조 유지 (wide format)
             # 리뷰 전체에 대한 유사도는 원래 방식대로 계산 (리뷰 전체 기준)
-            review_embeddings = sbert_model.encode(
-                review_texts,
-                convert_to_tensor=True,
-                show_progress_bar=False,
-            )
+            # 메모리 절약을 위해 배치로 처리
+            max_reviews_per_batch = 50  # 한 번에 처리할 최대 리뷰 수
+            
+            if len(review_texts) > max_reviews_per_batch:
+                # 리뷰가 많으면 배치로 나누어 처리
+                review_embeddings_list = []
+                for batch_start in range(0, len(review_texts), max_reviews_per_batch):
+                    batch_end = min(batch_start + max_reviews_per_batch, len(review_texts))
+                    batch_reviews = review_texts[batch_start:batch_end]
+                    
+                    batch_embeddings = sbert_model.encode(
+                        batch_reviews,
+                        convert_to_tensor=True,
+                        show_progress_bar=False,
+                    )
+                    review_embeddings_list.append(batch_embeddings.cpu().numpy())
+                
+                # 배치 결과 합치기
+                review_embeddings_np = np.vstack(review_embeddings_list)
+            else:
+                # 리뷰가 적으면 한 번에 처리
+                review_embeddings = sbert_model.encode(
+                    review_texts,
+                    convert_to_tensor=True,
+                    show_progress_bar=False,
+                )
+                review_embeddings_np = review_embeddings.cpu().numpy()
+            
             from sklearn.metrics.pairwise import cosine_similarity
             review_similarity_matrix = cosine_similarity(
-                review_embeddings.cpu().numpy(),
+                review_embeddings_np,
                 factor_embeddings.cpu().numpy()
             )
             
@@ -563,6 +630,22 @@ def calculate_place_scores(
                 review_scores_list.append(row_dict)
             
             results_list.append(cafe_scores)
+            
+            # 메모리 정리 (큰 텐서/배열 제거)
+            if 'sentence_embeddings' in locals():
+                del sentence_embeddings
+            if 'sentence_embeddings_np' in locals():
+                del sentence_embeddings_np
+            if 'review_embeddings' in locals():
+                del review_embeddings
+            if 'review_embeddings_np' in locals():
+                del review_embeddings_np
+            if 'sentence_factor_similarity' in locals():
+                del sentence_factor_similarity
+            if 'review_similarity_matrix' in locals():
+                del review_similarity_matrix
+            import gc
+            gc.collect()  # 가비지 컬렉션으로 메모리 정리
             
         except Exception as e:
             # 개별 카페 처리 중 오류 발생 시 로그 남기고 계속 진행
