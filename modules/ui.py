@@ -1000,18 +1000,24 @@ def _display_cafe_reviews(selected_cafe):
     st.subheader("📝 해당 카페 리뷰")
     
     # 리뷰 데이터 로드
-    # google_reviews_scraped_cleaned.csv 파일 사용
-    review_file_path = Path(__file__).resolve().parent.parent / "google_reviews_scraped_cleaned.csv"
+    # config에서 경로 가져오기 (배포 환경 호환성)
+    from modules.config import GOOGLE_REVIEW_SAMPLE_CSV
+    review_file_path = GOOGLE_REVIEW_SAMPLE_CSV
     
-    if review_file_path.exists():
-        try:
-            # 리뷰 데이터 로드 (캐시 사용)
-            @st.cache_data
-            def load_reviews_for_cafe():
-                df_reviews = pd.read_csv(review_file_path, encoding='utf-8-sig')
-                return df_reviews
-            
-            df_all_reviews = load_reviews_for_cafe()
+    # 파일 존재 여부 확인
+    if not review_file_path.exists():
+        st.warning(f"⚠️ 리뷰 데이터 파일을 찾을 수 없습니다: {review_file_path}")
+        st.info("💡 배포 환경에서는 파일이 프로젝트 루트에 있어야 합니다.")
+        return
+    
+    try:
+        # 리뷰 데이터 로드 (캐시 사용)
+        @st.cache_data
+        def load_reviews_for_cafe():
+            df_reviews = pd.read_csv(review_file_path, encoding='utf-8-sig')
+            return df_reviews
+        
+        df_all_reviews = load_reviews_for_cafe()
             
             # 카페명으로 필터링 (부분 매칭도 시도)
             # selected_cafe에서 위치 정보 제거 시도 (예: "스타벅스 강남구 역삼동" -> "스타벅스")
@@ -1087,12 +1093,10 @@ def _display_cafe_reviews(selected_cafe):
                 st.warning(f"'{selected_cafe}'에 해당하는 리뷰를 찾을 수 없습니다.")
                 st.info("💡 팁: 카페명이 정확히 일치하지 않을 수 있습니다. 원본 리뷰 데이터의 카페명 형식을 확인해주세요.")
                 
-        except Exception as e:
-            st.error(f"리뷰 데이터 로드 중 오류 발생: {e}")
-            import traceback
-            st.code(traceback.format_exc())
-    else:
-        st.warning(f"리뷰 데이터 파일을 찾을 수 없습니다: {review_file_path}")
+    except Exception as e:
+        st.error(f"리뷰 데이터 로드 중 오류 발생: {e}")
+        import traceback
+        st.code(traceback.format_exc())
 
 
 def render_cafe_factor_analysis():
