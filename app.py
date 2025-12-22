@@ -20,9 +20,17 @@ from modules.ui import (
     render_data_preview,
     render_placeness_calculation,
     render_sentiment_analysis,
-    render_detailed_results,
-    render_cafe_factor_analysis
+    render_detailed_results
 )
+
+# render_cafe_factor_analysis는 선택적 import (배포 환경 호환성)
+try:
+    from modules.ui import render_cafe_factor_analysis
+except ImportError:
+    # 함수가 없는 경우 대체 함수 정의
+    def render_cafe_factor_analysis():
+        st.error("⚠️ 카페별 요인 분석 기능을 사용할 수 없습니다. modules/ui.py 파일을 확인해주세요.")
+        st.info("이 기능은 placeness_final_research_metrics (2).csv 파일이 필요합니다.")
 
 # Streamlit 페이지 설정 (wide 모드로 전체 너비 사용)
 st.set_page_config(layout="wide")
