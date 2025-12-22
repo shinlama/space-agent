@@ -1,0 +1,44 @@
+// Placeness Quantification System
+digraph research_structure {
+	compound=true rankdir=TB
+	subgraph cluster_0 {
+		color="#f9f9f9" label="STEP 1: Input (Unstructured Data)" style=filled
+		A [label="Google Maps Review Data
+(Raw Text)" fillcolor=white shape=box style=filled]
+		A1 [label="Target: 2,500 Cafes in Seoul" fillcolor=white shape=box style=filled]
+		A2 [label="Preprocessing: Sentence Splitting" fillcolor=white shape=box style=filled]
+		A -> A1
+		A -> A2
+	}
+	subgraph cluster_1 {
+		color="#e1f5fe" label="STEP 2: Placeness Quantification System" style=filled
+		B [label="Hybrid NLP Model" fillcolor=white fontname=bold shape=box style=filled]
+		B1 [label="1. Semantic Filtering
+(Sentence-BERT)
+Cosine Similarity ≥ 0.4" fillcolor=white shape=box style=filled]
+		B2 [label="2. Sentiment Scoring
+(KoBERT)
+Sentiment Score 0~1" fillcolor=white shape=box style=filled]
+		B3 [label="3. Weighted Aggregation
+(Factor Score x Weight)
+Result: Comprehensive Score μ" fillcolor=white shape=box style=filled]
+		B -> B1
+		B1 -> B2
+		B2 -> B3
+	}
+	subgraph cluster_2 {
+		color="#fff3e0" label="STEP 3: Output (Structured Metrics)" style=filled
+		C [label="Quantitative Place Metrics" fillcolor=white fontname=bold shape=box style=filled]
+		C1 [label="Comprehensive Score (μ)
+(Total Placeness Value)" fillcolor=white shape=box style=filled]
+		C2 [label="Deviant Features (df+, df-)
+(Strong/Weak Characteristics)" fillcolor=white shape=box style=filled]
+		C3 [label="Visualization
+(Radar Chart & Heatmap)" fillcolor=white shape=box style=filled]
+		C -> C1
+		C -> C2
+		C -> C3
+	}
+	A2 -> B [lhead=cluster_1 ltail=cluster_0 minlen=2]
+	B3 -> C [lhead=cluster_2 ltail=cluster_1 minlen=2]
+}
