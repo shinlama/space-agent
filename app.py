@@ -20,7 +20,8 @@ from modules.ui import (
     render_data_preview,
     render_placeness_calculation,
     render_sentiment_analysis,
-    render_detailed_results
+    render_detailed_results,
+    render_cafe_factor_analysis
 )
 
 # Streamlit 페이지 설정 (wide 모드로 전체 너비 사용)
@@ -46,7 +47,7 @@ def init_session_state():
 
 def main():
     """메인 함수"""
-    st.title("리뷰 데이터 기반 공간 정량 평가 시스템")
+    st.title("텍스트 리뷰 데이터 기반 공간 정량화 도구")
     st.markdown("---")
     
     # 세션 상태 초기화
@@ -85,30 +86,30 @@ def main():
         st.warning("로드된 리뷰 데이터가 없습니다.")
         return
     
-    # 데이터 통계 표시
-    unique_cafes = df_reviews['cafe_name'].nunique()
-    reviews_per_cafe = df_reviews.groupby('cafe_name').size()
+    # 탭 구조 생성
+    tab1, tab2, tab3 = st.tabs([
+        "📈 카페별 요인 분석",
+        "📊 데이터 분석",
+        "📋 데이터 미리보기"
+    ])
     
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("카페 수", f"{unique_cafes:,}개")
-    with col2:
-        st.metric("평균 리뷰 수/카페", f"{reviews_per_cafe.mean():.1f}개")
-    with col3:
-        st.metric("최대 리뷰 수/카페", f"{reviews_per_cafe.max()}개")
+    with tab1:
+        # 카페별 요인 점수 분석
+        render_cafe_factor_analysis()
     
-    # 3. 데이터 미리보기
-    render_data_preview(file_path, sentiment_pipeline, sentiment_model_name)
+    with tab2:
+        # 3. 데이터 미리보기
+        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab2")
+        
+        # 4. 장소성 요인 점수 계산
+        render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, sentiment_model_name)
+        
+        # 5. 개별 리뷰 감성 분석
+        render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_name)
     
-    # 4. 장소성 요인 점수 계산
-    render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, sentiment_model_name)
-    
-    # 5. 개별 리뷰 감성 분석
-    render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_name)
-    
-    # 6. 리뷰별 상세 결과
-    render_detailed_results()
+    with tab3:
+        # 데이터 미리보기만 표시
+        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab3")
 
 
 if __name__ == "__main__":

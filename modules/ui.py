@@ -13,6 +13,12 @@ try:
     HAS_FOLIUM = True
 except ImportError:
     HAS_FOLIUM = False
+
+try:
+    import plotly.graph_objects as go
+    HAS_PLOTLY = True
+except ImportError:
+    HAS_PLOTLY = False
 from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD, CAFE_INFO_CSV
 
 # Streamlit 버전 호환성 처리
@@ -49,8 +55,15 @@ def _init_konlpy():
         return None
 
 
-def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
-    """데이터 미리보기 섹션 렌더링"""
+def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix=""):
+    """데이터 미리보기 섹션 렌더링
+    
+    Args:
+        file_path: CSV 파일 경로
+        sentiment_pipeline: 감성 분석 파이프라인
+        sentiment_model_name: 감성 분석 모델 이름
+        tab_suffix: 탭별 구분을 위한 접미사 (버튼 key 중복 방지용)
+    """
     st.markdown("---")
     st.header("📋 데이터 미리보기")
     
@@ -119,16 +132,17 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name):
                 "📥 감성 분석 결과 CSV 다운로드",
                 data=csv,
                 file_name="google_reviews_with_sentiment.csv",
-                mime="text/csv"
+                mime="text/csv",
+                key=f"download_preview_sentiment{tab_suffix}"
             )
             
             # 재실행 버튼
-            if st.button("🔄 감성 분석 다시 실행", type="secondary"):
+            if st.button("🔄 감성 분석 다시 실행", type="secondary", key=f"preview_sentiment_rerun{tab_suffix}"):
                 st.session_state.preview_sentiment_result = None
                 st.rerun()
         else:
             # 감성 분석 실행 버튼
-            if st.button("🔍 감성 분석 추가 (긍정/부정/중립)", type="secondary"):
+            if st.button("🔍 감성 분석 추가 (긍정/부정/중립)", type="secondary", key=f"preview_sentiment_analyze{tab_suffix}"):
                 _run_preview_sentiment_analysis(df_preview_sorted, sentiment_pipeline, sentiment_model_name)
     else:
         st.warning(f"필요한 컬럼이 없습니다. 현재 컬럼: {list(df_preview.columns)}")
@@ -245,7 +259,7 @@ def render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, se
     
     total_reviews_count = len(df_reviews)
     
-    if st.button("장소성 요인 점수 계산 시작", type="primary"):
+    if st.button("장소성 요인 점수 계산 시작", type="primary", key="placeness_calculation_start"):
         with st.spinner("12개 장소성 요인별 점수 계산 및 연구 지표 산출 중..."):
             try:
                 df_place_scores, df_review_scores = calculate_place_scores(
@@ -322,7 +336,7 @@ def render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_na
     """개별 리뷰 감성 분석 섹션 렌더링"""
     st.header("2. 개별 리뷰 감성 분석 및 카페별 평균")
     
-    if st.button("KoBERT 개별 리뷰 감성 분석 시작", type="primary"):
+    if st.button("KoBERT 개별 리뷰 감성 분석 시작", type="primary", key="sentiment_analysis_start"):
         with st.spinner("개별 리뷰 긍정/부정 감성 점수 계산 중 (KoBERT/KoELECTRA)..."):
             try:
                 df_reviews_with_sentiment, df_avg_sentiment = run_sentiment_analysis(
@@ -980,3 +994,298 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
             else:
                 st.info("장소성 점수 데이터를 찾을 수 없습니다. 먼저 장소성 점수를 계산해주세요.")
 
+
+def render_cafe_factor_analysis():
+    """카페별 요인 점수 분석 탭 렌더링"""
+    st.header("📊 카페별 요인 점수 분석")
+    
+    # CSV 파일 경로
+    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (2).csv"
+    
+    if not csv_path.exists():
+        st.error(f"⚠️ 결과 CSV 파일을 찾을 수 없습니다: {csv_path}")
+        st.info("placeness_final_research_metrics (2).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
+        return
+    
+    # CSV 파일 로드
+    try:
+        df_metrics = pd.read_csv(csv_path, encoding='utf-8-sig')
+    except Exception as e:
+        st.error(f"CSV 파일 로드 중 오류 발생: {e}")
+        return
+    
+    if df_metrics.empty:
+        st.warning("로드된 데이터가 없습니다.")
+        return
+    
+    # 카페 목록 가져오기
+    cafe_list = sorted(df_metrics['cafe_name'].unique().tolist())
+    
+    if not cafe_list:
+        st.warning("카페 데이터가 없습니다.")
+        return
+    
+    # 카페 선택
+    selected_cafe = st.selectbox(
+        "카페 선택",
+        options=cafe_list,
+        key="cafe_factor_analysis_select",
+        help="분석할 카페를 선택하세요"
+    )
+    
+    if not selected_cafe:
+        return
+    
+    # 선택한 카페의 데이터 추출
+    cafe_data = df_metrics[df_metrics['cafe_name'] == selected_cafe].iloc[0]
+    
+    st.markdown("---")
+    
+    # 종합 점수 표시
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        mu_score = cafe_data.get('종합_장소성_점수_Mu', 0)
+        st.metric("종합 장소성 점수 (μ)", f"{mu_score:.3f}" if pd.notna(mu_score) else "N/A")
+    with col2:
+        sigma_score = cafe_data.get('요인_점수_표준편차_Sigma', 0)
+        st.metric("표준편차 (σ)", f"{sigma_score:.3f}" if pd.notna(sigma_score) else "N/A")
+    with col3:
+        summary = cafe_data.get('Final_PlaceScore_Summary', 'N/A')
+        st.metric("요약", summary if pd.notna(summary) else "N/A")
+    
+    st.markdown("---")
+    
+    # 요인별 점수 추출 (calc 컬럼 사용)
+    factor_names = list(ALL_FACTORS.keys())
+    factor_scores = {}
+    
+    # 사용 가능한 컬럼 목록 확인
+    available_cols = cafe_data.index.tolist()
+    
+    for factor in factor_names:
+        score = None
+        
+        # calc 컬럼 우선 사용
+        calc_col = f'점수_{factor}_calc'
+        if calc_col in available_cols:
+            score = cafe_data[calc_col]
+        else:
+            # 일반 컬럼 사용
+            normal_col = f'점수_{factor}'
+            if normal_col in available_cols:
+                score = cafe_data[normal_col]
+        
+        # 점수 처리 (0.5는 기본값이지만 유효한 데이터로 간주)
+        if pd.notna(score):
+            try:
+                score_val = float(score)
+                factor_scores[factor] = score_val
+            except (ValueError, TypeError):
+                factor_scores[factor] = None
+        else:
+            factor_scores[factor] = None
+    
+    # 요인별 점수 그래프 (방사형 차트)
+    st.subheader("📈 요인별 점수 그래프")
+    
+    # 데이터 준비 (None이 아닌 모든 점수 포함, 0.5도 포함)
+    valid_factors = {k: v for k, v in factor_scores.items() if v is not None}
+    
+    if valid_factors:
+        # 요인을 카테고리별로 그룹화
+        factor_categories = {
+            "물리적 특성": ["심미성", "형태성", "감각적 경험", "접근성", "쾌적성"],
+            "활동적 특성": ["활동성", "사회성", "참여성"],
+            "의미적 특성": ["고유성", "기억/경험", "지역 정체성", "문화적 맥락"]
+        }
+        
+        if HAS_PLOTLY:
+            # 카테고리별로 탭 생성
+            tabs = st.tabs(["전체 요인", "물리적 특성", "활동적 특성", "의미적 특성"])
+            
+            def create_radar_chart(factors_dict, title, max_value=1.0):
+                """방사형 차트 생성 함수"""
+                theta = list(factors_dict.keys())
+                r = list(factors_dict.values())
+                
+                # 차트를 닫기 위해 첫 번째 값을 마지막에 추가
+                theta_closed = theta + [theta[0]]
+                r_closed = r + [r[0]]
+                
+                fig = go.Figure()
+                
+                fig.add_trace(go.Scatterpolar(
+                    r=r_closed,
+                    theta=theta_closed,
+                    fill='toself',
+                    name='요인 점수',
+                    line=dict(color='rgb(32, 201, 151)', width=2),
+                    fillcolor='rgba(32, 201, 151, 0.25)',
+                    hovertemplate='<b>%{theta}</b><br>점수: %{r:.3f}<extra></extra>'
+                ))
+                
+                fig.update_layout(
+                    polar=dict(
+                        radialaxis=dict(
+                            visible=True,
+                            range=[0, max_value],
+                            tickmode='linear',
+                            tick0=0,
+                            dtick=0.2,
+                            tickfont=dict(size=10),
+                            gridcolor='rgba(200, 200, 200, 0.3)'
+                        ),
+                        angularaxis=dict(
+                            rotation=90,
+                            direction='counterclockwise',
+                            tickfont=dict(size=11)
+                        )
+                    ),
+                    title=dict(
+                        text=title,
+                        x=0.5,
+                        font=dict(size=16, color='#1f77b4')
+                    ),
+                    height=500,
+                    showlegend=False,
+                    paper_bgcolor='white',
+                    plot_bgcolor='white'
+                )
+                
+                return fig
+            
+            with tabs[0]:
+                # 전체 요인 방사형 차트
+                fig_all = create_radar_chart(valid_factors, f"{selected_cafe}")
+                st.plotly_chart(fig_all, use_container_width=True)
+                
+                # 상세 테이블
+                with st.expander("상세 점수 보기"):
+                    df_detail = pd.DataFrame({
+                        '요인': list(valid_factors.keys()),
+                        '점수': [f"{v:.3f}" for v in valid_factors.values()]
+                    })
+                    st.dataframe(df_detail, hide_index=True, **get_dataframe_width_param())
+            
+            # 카테고리별 탭
+            for tab_idx, (category, factors) in enumerate(factor_categories.items(), 1):
+                with tabs[tab_idx]:
+                    category_scores = {k: v for k, v in valid_factors.items() if k in factors}
+                    
+                    if category_scores:
+                        # 카테고리별 방사형 차트
+                        fig_category = create_radar_chart(
+                            category_scores, 
+                            f"{selected_cafe} - {category}",
+                            max_value=1.0
+                        )
+                        st.plotly_chart(fig_category, use_container_width=True)
+                        
+                        # 평균 점수
+                        avg_score = sum(category_scores.values()) / len(category_scores)
+                        st.metric(f"{category} 평균 점수", f"{avg_score:.3f}")
+                    else:
+                        st.info(f"{category} 관련 데이터가 없습니다.")
+        else:
+            # plotly가 없으면 막대 그래프로 대체
+            st.warning("⚠️ plotly가 설치되지 않아 막대 그래프로 표시됩니다. 방사형 차트를 보려면 `pip install plotly`를 실행하세요.")
+            
+            # 카테고리별로 탭 생성
+            tabs = st.tabs(["전체 요인", "물리적 특성", "활동적 특성", "의미적 특성"])
+            
+            with tabs[0]:
+                # 전체 요인 막대 그래프
+                df_chart = pd.DataFrame({
+                    '요인': list(valid_factors.keys()),
+                    '점수': list(valid_factors.values())
+                })
+                df_chart = df_chart.sort_values('점수', ascending=True)
+                
+                st.bar_chart(df_chart.set_index('요인'), height=400)
+                
+                # 상세 테이블
+                with st.expander("상세 점수 보기"):
+                    df_detail = pd.DataFrame({
+                        '요인': list(valid_factors.keys()),
+                        '점수': [f"{v:.3f}" for v in valid_factors.values()]
+                    })
+                    st.dataframe(df_detail, hide_index=True, **get_dataframe_width_param())
+            
+            # 카테고리별 탭
+            for tab_idx, (category, factors) in enumerate(factor_categories.items(), 1):
+                with tabs[tab_idx]:
+                    category_scores = {k: v for k, v in valid_factors.items() if k in factors}
+                    
+                    if category_scores:
+                        df_category = pd.DataFrame({
+                            '요인': list(category_scores.keys()),
+                            '점수': list(category_scores.values())
+                        })
+                        df_category = df_category.sort_values('점수', ascending=True)
+                        
+                        st.bar_chart(df_category.set_index('요인'), height=300)
+                        
+                        # 평균 점수
+                        avg_score = sum(category_scores.values()) / len(category_scores)
+                        st.metric(f"{category} 평균 점수", f"{avg_score:.3f}")
+                    else:
+                        st.info(f"{category} 관련 데이터가 없습니다.")
+    else:
+        st.warning("표시할 요인 점수 데이터가 없습니다.")
+    
+    st.markdown("---")
+    
+    # 강점/약점 요인 표시
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("(+)강점 요인")
+        strength_factors = cafe_data.get('강점_요인(+df+)', 'N/A')
+        if pd.notna(strength_factors) and strength_factors != 'N/A':
+            # 쉼표로 구분된 요인들을 리스트로 변환
+            if isinstance(strength_factors, str):
+                strength_list = [f.strip() for f in strength_factors.split(',') if f.strip()]
+            else:
+                strength_list = []
+            
+            if strength_list:
+                for factor in strength_list:
+                    score = valid_factors.get(factor, None)
+                    if score is not None:
+                        st.success(f"**{factor}**: {score:.3f}")
+                    else:
+                        st.success(f"**{factor}**")
+            else:
+                st.info("강점 요인이 없습니다.")
+        else:
+            st.info("강점 요인이 없습니다.")
+    
+    with col2:
+        st.subheader("(-)약점 요인")
+        weakness_factors = cafe_data.get('약점_요인(-df-)', 'N/A')
+        if pd.notna(weakness_factors) and weakness_factors != 'N/A':
+            # 쉼표로 구분된 요인들을 리스트로 변환
+            if isinstance(weakness_factors, str):
+                weakness_list = [f.strip() for f in weakness_factors.split(',') if f.strip()]
+            else:
+                weakness_list = []
+            
+            if weakness_list:
+                for factor in weakness_list:
+                    score = valid_factors.get(factor, None)
+                    if score is not None:
+                        st.error(f"**{factor}**: {score:.3f}")
+                    else:
+                        st.error(f"**{factor}**")
+            else:
+                st.info("약점 요인이 없습니다.")
+        else:
+            st.info("약점 요인이 없습니다.")
+    
+    st.markdown("---")
+    
+    # 전체 데이터 표시 (확장 가능)
+    with st.expander("📋 전체 데이터 보기"):
+        # _calc로 끝나는 컬럼 제외
+        filtered_data = cafe_data[~cafe_data.index.str.endswith('_calc', na=False)]
+        st.dataframe(filtered_data.to_frame().T, **get_dataframe_width_param())
