@@ -995,6 +995,106 @@ def visualize_factor_keywords(df_review_scores, factor_names, top_n=15, top_revi
                 st.info("장소성 점수 데이터를 찾을 수 없습니다. 먼저 장소성 점수를 계산해주세요.")
 
 
+def _display_cafe_reviews(selected_cafe):
+    """카페 리뷰 표시 헬퍼 함수"""
+    st.subheader("📝 해당 카페 리뷰")
+    
+    # 리뷰 데이터 로드
+    # google_reviews_scraped_cleaned.csv 파일 사용
+    review_file_path = Path(__file__).resolve().parent.parent / "google_reviews_scraped_cleaned.csv"
+    
+    if review_file_path.exists():
+        try:
+            # 리뷰 데이터 로드 (캐시 사용)
+            @st.cache_data
+            def load_reviews_for_cafe():
+                df_reviews = pd.read_csv(review_file_path, encoding='utf-8-sig')
+                return df_reviews
+            
+            df_all_reviews = load_reviews_for_cafe()
+            
+            # 카페명으로 필터링 (부분 매칭도 시도)
+            # selected_cafe에서 위치 정보 제거 시도 (예: "스타벅스 강남구 역삼동" -> "스타벅스")
+            base_cafe_name = selected_cafe.split()[0] if selected_cafe else ""
+            
+            # 사용 가능한 카페명 컬럼 확인
+            cafe_name_col = None
+            if 'cafe_name' in df_all_reviews.columns:
+                cafe_name_col = 'cafe_name'
+            elif '상호명' in df_all_reviews.columns:
+                cafe_name_col = '상호명'
+            
+            cafe_reviews = pd.DataFrame()  # 빈 DataFrame으로 초기화
+            
+            if cafe_name_col:
+                # 정확한 매칭 시도 (전체 카페명)
+                cafe_reviews = df_all_reviews[df_all_reviews[cafe_name_col] == selected_cafe].copy()
+                
+                # 정확한 매칭이 없으면 부분 매칭 시도
+                if cafe_reviews.empty and base_cafe_name:
+                    # cafe_name이 base_cafe_name으로 시작하는 경우
+                    cafe_reviews = df_all_reviews[
+                        df_all_reviews[cafe_name_col].str.startswith(base_cafe_name, na=False)
+                    ].copy()
+                
+                # 여전히 없으면 상호명으로 부분 매칭 시도
+                if cafe_reviews.empty and base_cafe_name:
+                    if '상호명' in df_all_reviews.columns:
+                        cafe_reviews = df_all_reviews[
+                            df_all_reviews['상호명'].str.contains(base_cafe_name, na=False, case=False)
+                        ].copy()
+            else:
+                st.warning("카페명 컬럼(cafe_name 또는 상호명)을 찾을 수 없습니다.")
+            
+            if not cafe_reviews.empty:
+                # 리뷰 수 표시
+                st.info(f"총 {len(cafe_reviews)}개의 리뷰가 있습니다.")
+                
+                # 표시할 컬럼 선택
+                display_cols = []
+                if '리뷰' in cafe_reviews.columns:
+                    display_cols.append('리뷰')
+                elif 'review_text' in cafe_reviews.columns:
+                    display_cols.append('review_text')
+                
+                if '평점' in cafe_reviews.columns:
+                    display_cols.insert(0, '평점')
+                elif 'rating' in cafe_reviews.columns:
+                    display_cols.insert(0, 'rating')
+                
+                if '시군구명' in cafe_reviews.columns:
+                    display_cols.insert(0, '시군구명')
+                if '행정동명' in cafe_reviews.columns:
+                    display_cols.insert(0, '행정동명')
+                
+                # 사용 가능한 컬럼만 필터링
+                available_cols = [col for col in display_cols if col in cafe_reviews.columns]
+                
+                if available_cols:
+                    # 리뷰 표시 (최대 100개)
+                    max_reviews = min(100, len(cafe_reviews))
+                    st.dataframe(
+                        cafe_reviews[available_cols].head(max_reviews),
+                        hide_index=True,
+                        **get_dataframe_width_param()
+                    )
+                    
+                    if len(cafe_reviews) > max_reviews:
+                        st.caption(f"상위 {max_reviews}개 리뷰만 표시됩니다. (전체 {len(cafe_reviews)}개)")
+                else:
+                    st.warning("표시할 수 있는 리뷰 컬럼이 없습니다.")
+            else:
+                st.warning(f"'{selected_cafe}'에 해당하는 리뷰를 찾을 수 없습니다.")
+                st.info("💡 팁: 카페명이 정확히 일치하지 않을 수 있습니다. 원본 리뷰 데이터의 카페명 형식을 확인해주세요.")
+                
+        except Exception as e:
+            st.error(f"리뷰 데이터 로드 중 오류 발생: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+    else:
+        st.warning(f"리뷰 데이터 파일을 찾을 수 없습니다: {review_file_path}")
+
+
 def render_cafe_factor_analysis():
     """카페별 요인 점수 분석 탭 렌더링"""
     st.header("📊 카페별 요인 점수 분석")
@@ -1281,6 +1381,10 @@ def render_cafe_factor_analysis():
                 st.info("약점 요인이 없습니다.")
         else:
             st.info("약점 요인이 없습니다.")
+    
+    # 강점/약점 요인 아래에 리뷰 표시
+    st.markdown("---")
+    _display_cafe_reviews(selected_cafe)
     
     st.markdown("---")
     
