@@ -1092,7 +1092,7 @@ def _display_cafe_reviews(selected_cafe):
         else:
             st.warning(f"'{selected_cafe}'에 해당하는 리뷰를 찾을 수 없습니다.")
             st.info("💡 팁: 카페명이 정확히 일치하지 않을 수 있습니다. 원본 리뷰 데이터의 카페명 형식을 확인해주세요.")
-    
+                
     except Exception as e:
         st.error(f"리뷰 데이터 로드 중 오류 발생: {e}")
         import traceback
@@ -1101,7 +1101,7 @@ def _display_cafe_reviews(selected_cafe):
 
 def render_cafe_factor_analysis():
     """카페별 요인 점수 분석 탭 렌더링"""
-    st.header("📊 카페별 요인 점수 분석")
+    st.header("카페별 요인 점수 분석")
     
     # CSV 파일 경로
     csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (2).csv"
@@ -1259,12 +1259,17 @@ def render_cafe_factor_analysis():
                 return fig
             
             with tabs[0]:
-                # 전체 요인 방사형 차트
-                fig_all = create_radar_chart(valid_factors, f"{selected_cafe}")
-                st.plotly_chart(fig_all, use_container_width=True)
+                # 방사형 차트와 상세 점수를 나란히 배치
+                col_left, col_right = st.columns([1, 1])
                 
-                # 상세 테이블
-                with st.expander("상세 점수 보기"):
+                with col_left:
+                    # 전체 요인 방사형 차트
+                    fig_all = create_radar_chart(valid_factors, f"{selected_cafe}")
+                    st.plotly_chart(fig_all, use_container_width=True)
+                
+                with col_right:
+                    # 상세 점수 보기
+                    st.subheader("상세 점수 보기")
                     df_detail = pd.DataFrame({
                         '요인': list(valid_factors.keys()),
                         '점수': [f"{v:.3f}" for v in valid_factors.values()]
@@ -1298,17 +1303,22 @@ def render_cafe_factor_analysis():
             tabs = st.tabs(["전체 요인", "물리적 특성", "활동적 특성", "의미적 특성"])
             
             with tabs[0]:
-                # 전체 요인 막대 그래프
-                df_chart = pd.DataFrame({
-                    '요인': list(valid_factors.keys()),
-                    '점수': list(valid_factors.values())
-                })
-                df_chart = df_chart.sort_values('점수', ascending=True)
+                # 막대 그래프와 상세 점수를 나란히 배치
+                col_left, col_right = st.columns([1, 1])
                 
-                st.bar_chart(df_chart.set_index('요인'), height=400)
+                with col_left:
+                    # 전체 요인 막대 그래프
+                    df_chart = pd.DataFrame({
+                        '요인': list(valid_factors.keys()),
+                        '점수': list(valid_factors.values())
+                    })
+                    df_chart = df_chart.sort_values('점수', ascending=True)
+                    
+                    st.bar_chart(df_chart.set_index('요인'), height=400)
                 
-                # 상세 테이블
-                with st.expander("상세 점수 보기"):
+                with col_right:
+                    # 상세 점수 보기
+                    st.subheader("상세 점수 보기")
                     df_detail = pd.DataFrame({
                         '요인': list(valid_factors.keys()),
                         '점수': [f"{v:.3f}" for v in valid_factors.values()]
