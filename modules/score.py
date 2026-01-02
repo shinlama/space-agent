@@ -4,7 +4,7 @@
 [알고리즘 개요]
 
 1) SBERT 기반 요인 매핑
-   - 각 리뷰가 12개 장소성 요인 중 어떤 것들을 '언급'하는지 판정
+   - 각 리뷰가 11개 장소성 요인 중 어떤 것들을 '언급'하는지 판정
    - similarity >= threshold 인 경우에만 해당 요인에 대한 언급으로 간주
 
 2) 리뷰 감성 분석
@@ -68,7 +68,7 @@ def calculate_fsi(
         sentiment_scores:
             리뷰 인덱스 -> sentiment_score (0~1, 긍정 확률)
         factor_names:
-            전체 요인 이름 리스트 (e.g. 12개)
+            전체 요인 이름 리스트 (11개)
 
     Returns:
         fsi: {factor_name: fsi_score}

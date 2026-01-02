@@ -102,7 +102,7 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab
         st.markdown("---")
         
         # 세션 상태에 저장된 결과가 있으면 표시
-        if st.session_state.preview_sentiment_result is not None:
+        if 'preview_sentiment_result' in st.session_state and st.session_state.preview_sentiment_result is not None:
             df_preview_with_sentiment = st.session_state.preview_sentiment_result
             st.success(f"✅ 감성 분석 결과 (총 {len(df_preview_with_sentiment):,}개 리뷰)")
             
@@ -260,7 +260,7 @@ def render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, se
     total_reviews_count = len(df_reviews)
     
     if st.button("장소성 요인 점수 계산 시작", type="primary", key="placeness_calculation_start"):
-        with st.spinner("12개 장소성 요인별 점수 계산 및 연구 지표 산출 중..."):
+        with st.spinner("장소성 요인별 점수 계산 및 연구 지표 산출 중..."):
             try:
                 df_place_scores, df_review_scores = calculate_place_scores(
                     df_reviews.copy(), 
@@ -421,7 +421,7 @@ def render_detailed_results():
                 display_df, 
                 hide_index=True, 
             )
-            st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (12개 요인 전체 표시)")
+            st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 (11개 요인 전체 표시)")
             
             # CSV 다운로드 버튼 (원본 데이터, 포맷팅 없이)
             csv = st.session_state.df_review_scores[available_cols].to_csv(index=False).encode("utf-8-sig")
@@ -463,7 +463,7 @@ def _render_merged_results():
     if missing_factors:
         st.warning(f"⚠️ 다음 요인 컬럼이 데이터에 없습니다: {', '.join(missing_factors)}")
     
-    st.subheader("✅ 리뷰별 감성 분석 + 장소성 요인 점수 (전체 12개 요인)")
+    st.subheader("✅ 리뷰별 감성 분석 + 장소성 요인 점수 (전체 11개 요인)")
     st.caption(f"총 {len(df_merged):,}개 리뷰 중 필터링된 결과 표시")
     
     # 필터 옵션
@@ -506,7 +506,7 @@ def _render_merged_results():
             hide_index=True,
         )
 
-        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 (12개 요인 전체)")
+        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 (11개 요인 전체)")
         
         # 다운로드 버튼
         csv = filtered_df[available_cols].to_csv(index=False).encode("utf-8-sig")
@@ -1200,7 +1200,7 @@ def render_cafe_factor_analysis():
         factor_categories = {
             "물리적 특성": ["심미성", "형태성", "감각적 경험", "접근성", "쾌적성"],
             "활동적 특성": ["활동성", "사회성", "참여성"],
-            "의미적 특성": ["고유성", "기억/경험", "지역 정체성", "문화적 맥락"]
+            "의미적 특성": ["고유성", "기억/경험", "지역 정체성"]
         }
         
         if HAS_PLOTLY:
