@@ -207,8 +207,6 @@ def load_data(file_path: Path, cache_version: str = "v2.0"):
     cafes_with_empty_only = set(df[df['review_text'].astype(str).str.strip() == '']['cafe_name'].unique()) - cafes_with_valid
     cafes_with_empty_only_count = len(cafes_with_empty_only)
     
-    st.success(f"리뷰 데이터 로드 완료: 총 {final_count}건")
-    
     if initial_cafe_count > final_cafe_count:
         excluded = initial_cafe_count - final_cafe_count
         st.warning(f"⚠️ {excluded}개 카페가 빈 리뷰만 있어서 제외되었습니다. (유효 리뷰가 있는 카페만 분석에 포함됩니다)")

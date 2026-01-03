@@ -20,7 +20,8 @@ from modules.ui import (
     render_data_preview,
     render_placeness_calculation,
     render_sentiment_analysis,
-    render_detailed_results
+    render_detailed_results,
+    render_cafe_recommendation
 )
 
 # render_cafe_factor_analysis는 선택적 import (배포 환경 호환성)
@@ -30,7 +31,7 @@ except ImportError:
     # 함수가 없는 경우 대체 함수 정의
     def render_cafe_factor_analysis():
         st.error("⚠️ 카페별 요인 분석 기능을 사용할 수 없습니다. modules/ui.py 파일을 확인해주세요.")
-        st.info("이 기능은 placeness_final_research_metrics (2).csv 파일이 필요합니다.")
+        st.info("이 기능은 placeness_final_research_metrics (3).csv 파일이 필요합니다.")
 
 # Streamlit 페이지 설정 (wide 모드로 전체 너비 사용)
 st.set_page_config(layout="wide")
@@ -56,7 +57,6 @@ def init_session_state():
 def main():
     """메인 함수"""
     st.title("텍스트 리뷰 데이터 기반 공간 정량화 도구")
-    st.markdown("---")
     
     # 세션 상태 초기화
     init_session_state()
@@ -68,7 +68,6 @@ def main():
     with st.spinner("🤖 AI 모델 로드 중... (처음 실행 시 다운로드로 인해 시간이 걸릴 수 있습니다)"):
         try:
             sbert_model, sentiment_pipeline, sentiment_model_name = load_models()
-            st.success("✅ 모델 로드 완료!")
         except Exception as e:
             st.error(f"❌ 모델 로드 실패: {e}")
             st.info("💡 해결 방법:\n"
@@ -95,19 +94,24 @@ def main():
         return
     
     # 탭 구조 생성
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "☕ 카페 추천",
         "📈 카페별 요인 분석",
         "📊 데이터 분석",
-        "📋 데이터 미리보기"
+        "📋 리뷰 데이터"
     ])
     
     with tab1:
+        # 카페 추천
+        render_cafe_recommendation()
+    
+    with tab2:
         # 카페별 요인 점수 분석
         render_cafe_factor_analysis()
     
-    with tab2:
+    with tab3:
         # 3. 데이터 미리보기
-        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab2")
+        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab3")
         
         # 4. 장소성 요인 점수 계산
         render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, sentiment_model_name)
@@ -115,9 +119,9 @@ def main():
         # 5. 개별 리뷰 감성 분석
         render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_name)
     
-    with tab3:
+    with tab4:
         # 데이터 미리보기만 표시
-        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab3")
+        render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab4")
 
 
 if __name__ == "__main__":

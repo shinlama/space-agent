@@ -64,8 +64,7 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab
         sentiment_model_name: 감성 분석 모델 이름
         tab_suffix: 탭별 구분을 위한 접미사 (버튼 key 중복 방지용)
     """
-    st.markdown("---")
-    st.header("📋 데이터 미리보기")
+    st.header("📋 리뷰 데이터 미리보기")
     
     # 전체 데이터 로드 (미리보기용, 원본 컬럼명 유지)
     df_preview = load_csv_raw(file_path)
@@ -1104,11 +1103,11 @@ def render_cafe_factor_analysis():
     st.header("카페별 요인 점수 분석")
     
     # CSV 파일 경로
-    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (2).csv"
+    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
     
     if not csv_path.exists():
         st.error(f"⚠️ 결과 CSV 파일을 찾을 수 없습니다: {csv_path}")
-        st.info("placeness_final_research_metrics (2).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
+        st.info("placeness_final_research_metrics (3).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
         return
     
     # CSV 파일 로드
@@ -1407,3 +1406,205 @@ def render_cafe_factor_analysis():
         # _calc로 끝나는 컬럼 제외
         filtered_data = cafe_data[~cafe_data.index.str.endswith('_calc', na=False)]
         st.dataframe(filtered_data.to_frame().T, **get_dataframe_width_param())
+
+
+def render_cafe_recommendation():
+    """카페 추천 탭 렌더링"""
+    st.caption("선호하는 특성에 맞는 카페를 추천해드립니다.")
+    
+    # CSV 파일 경로
+    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
+    
+    if not csv_path.exists():
+        st.error(f"⚠️ 결과 CSV 파일을 찾을 수 없습니다: {csv_path}")
+        st.info("placeness_final_research_metrics (3).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
+        return
+    
+    # CSV 파일 로드
+    try:
+        df_metrics = pd.read_csv(csv_path, encoding='utf-8-sig')
+    except Exception as e:
+        st.error(f"CSV 파일 로드 중 오류 발생: {e}")
+        return
+    
+    if df_metrics.empty:
+        st.warning("로드된 데이터가 없습니다.")
+        return
+    
+    # 행정구 파싱 (cafe_name에서 추출)
+    # 서울시 실제 행정구 목록
+    SEOUL_DISTRICTS = [
+        "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구",
+        "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구", "마포구",
+        "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구",
+        "서초구", "강남구", "송파구", "강동구"
+    ]
+    
+    def parse_district(cafe_name):
+        """카페명에서 실제 행정구만 추출"""
+        if pd.isna(cafe_name):
+            return None
+        parts = str(cafe_name).split()
+        for part in parts:
+            # 실제 서울시 행정구 목록에 있는 것만 반환
+            if part in SEOUL_DISTRICTS:
+                return part
+        return None
+    
+    df_metrics['행정구'] = df_metrics['cafe_name'].apply(parse_district)
+    available_districts = sorted([d for d in df_metrics['행정구'].dropna().unique() if d])
+    
+    # 1. 행정구 선택
+    st.subheader("📍 지역 선택")
+    selected_districts = st.multiselect(
+        "원하는 행정구를 선택하세요 (복수 선택 가능, 선택하지 않으면 전체 지역)",
+        options=available_districts,
+        default=[],
+        key="recommendation_districts"
+    )
+    
+    # 필터링
+    if selected_districts:
+        df_filtered = df_metrics[df_metrics['행정구'].isin(selected_districts)].copy()
+    else:
+        df_filtered = df_metrics.copy()
+    
+    if df_filtered.empty:
+        st.warning("선택한 지역에 해당하는 카페가 없습니다.")
+        return
+    
+    st.markdown("---")
+    
+    # 2. 선호 특성 선택
+    st.subheader("🎯 선호 특성 선택")
+    preference_type = st.radio(
+        "어떤 특성을 선호하시나요?",
+        options=["물리적 특성", "활동적 특성", "의미적 특성"],
+        key="recommendation_preference_type"
+    )
+    
+    st.markdown("---")
+    
+    # 3. 세부 항목 선택
+    st.subheader("✨ 세부 항목 선택")
+    
+    detail_options = []
+    
+    if preference_type == "물리적 특성":
+        detail_options = [
+            ("심미성", "인테리어가 예쁜 곳"),
+            ("쾌적성", "작업하기 좋은 곳"),
+            ("접근성", "접근이 편리한 곳"),
+            ("형태성", "공간 구조가 좋은 곳"),
+            ("감각적 경험", "감각적 분위기가 좋은 곳")
+        ]
+    elif preference_type == "활동적 특성":
+        detail_options = [
+            ("사회성", "친절한 서비스"),
+            ("활동성", "작업하기 좋은 곳"),
+            ("참여성", "체험/이벤트가 있는 곳")
+        ]
+    elif preference_type == "의미적 특성":
+        detail_options = [
+            ("고유성", "독특한 콘셉트의 곳"),
+            ("기억/경험", "기억에 남는 경험을 제공하는 곳"),
+            ("지역 정체성", "지역 문화를 반영한 곳")
+        ]
+    
+    selected_details = st.multiselect(
+        "세부 항목을 선택하세요 (복수 선택 가능)",
+        options=[opt[0] for opt in detail_options],
+        format_func=lambda x: next(opt[1] for opt in detail_options if opt[0] == x),
+        key="recommendation_details"
+    )
+    
+    st.markdown("---")
+    
+    # 4. 추천 실행
+    if st.button("🔍 추천 받기", type="primary", key="recommendation_search"):
+        if not selected_details:
+            st.warning("⚠️ 최소 하나의 세부 항목을 선택해주세요.")
+        else:
+            # 추천 로직
+            recommendations = _calculate_recommendations(df_filtered, selected_details)
+            
+            if recommendations.empty:
+                st.warning("선택한 조건에 맞는 카페를 찾을 수 없습니다.")
+            else:
+                st.success(f"✅ {len(recommendations)}개의 카페를 찾았습니다!")
+                st.markdown("---")
+                
+                # 상위 3개 추천
+                top_3 = recommendations.head(3)
+                
+                for idx, (_, row) in enumerate(top_3.iterrows(), 1):
+                    with st.container():
+                        col1, col2 = st.columns([3, 1])
+                        
+                        with col1:
+                            st.markdown(f"### {idx}. {row['cafe_name']}")
+                            if pd.notna(row.get('행정구')):
+                                st.caption(f"📍 {row['행정구']}")
+                        
+                        with col2:
+                            mu_score = row.get('종합_장소성_점수_Mu', 0)
+                            if pd.notna(mu_score) and mu_score > 0:
+                                st.metric("종합 점수", f"{mu_score:.3f}")
+                            else:
+                                st.metric("종합 점수", "N/A")
+                        
+                        # 선택한 세부 항목별 점수 표시
+                        score_cols = st.columns(len(selected_details))
+                        for i, detail in enumerate(selected_details):
+                            with score_cols[i]:
+                                score_col = f"점수_{detail}"
+                                if score_col in row.index:
+                                    score = row[score_col]
+                                    if pd.notna(score) and score != 0.5:
+                                        st.metric(detail, f"{score:.3f}")
+                                    else:
+                                        st.metric(detail, "N/A")
+                                else:
+                                    st.metric(detail, "N/A")
+                        
+                        st.markdown("---")
+
+
+def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.DataFrame:
+    """선택한 요인에 따라 카페를 추천합니다."""
+    # 각 요인별 점수 컬럼명
+    factor_score_cols = [f"점수_{factor}" for factor in selected_factors]
+    
+    # 유효한 점수 컬럼만 사용
+    valid_cols = [col for col in factor_score_cols if col in df.columns]
+    
+    if not valid_cols:
+        return pd.DataFrame()
+    
+    # 각 요인별 점수 계산 (0.5는 기본값이므로 제외)
+    df_scored = df.copy()
+    
+    # 추천 점수 계산: 선택한 요인들의 평균 점수
+    scores = []
+    for _, row in df_scored.iterrows():
+        factor_scores = []
+        for col in valid_cols:
+            score = row[col]
+            if pd.notna(score) and score != 0.5:  # 기본값 제외
+                factor_scores.append(score)
+        
+        if factor_scores:
+            avg_score = sum(factor_scores) / len(factor_scores)
+            scores.append(avg_score)
+        else:
+            scores.append(0)
+    
+    df_scored['추천_점수'] = scores
+    
+    # 추천 점수가 0보다 큰 카페만 필터링
+    df_scored = df_scored[df_scored['추천_점수'] > 0].copy()
+    
+    # 추천 점수 기준으로 정렬 (내림차순)
+    df_scored = df_scored.sort_values('추천_점수', ascending=False)
+    
+    return df_scored
