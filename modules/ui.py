@@ -1671,7 +1671,8 @@ def render_cafe_recommendation():
                     
                     for idx, (_, row) in enumerate(top_3.iterrows(), 1):
                         with st.container():
-                            col1, col2 = st.columns([3, 1])
+                            # 카페 이름과 기본 정보
+                            col1, col2, col3 = st.columns([2, 1, 1])
                             
                             with col1:
                                 st.markdown(f"### {idx}. {row['cafe_name']}")
@@ -1681,23 +1682,117 @@ def render_cafe_recommendation():
                             with col2:
                                 mu_score = row.get('종합_장소성_점수_Mu', 0)
                                 if pd.notna(mu_score) and mu_score > 0:
-                                    st.metric("종합 점수", f"{mu_score:.3f}")
+                                    st.metric("종합 점수 (μ)", f"{mu_score:.3f}")
                                 else:
-                                    st.metric("종합 점수", "N/A")
+                                    st.metric("종합 점수 (μ)", "N/A")
                             
-                            # 선택한 세부 항목별 점수 표시
-                            score_cols = st.columns(len(selected_details))
-                            for i, detail in enumerate(selected_details):
-                                with score_cols[i]:
-                                    score_col = f"점수_{detail}"
-                                    if score_col in row.index:
-                                        score = row[score_col]
-                                        if pd.notna(score) and score != 0.5:
-                                            st.metric(detail, f"{score:.3f}")
-                                        else:
-                                            st.metric(detail, "N/A")
-                                    else:
-                                        st.metric(detail, "N/A")
+                            with col3:
+                                sigma_score = row.get('요인_점수_표준편차_Sigma', 0)
+                                if pd.notna(sigma_score) and sigma_score > 0:
+                                    st.metric("표준편차 (σ)", f"{sigma_score:.3f}")
+                                else:
+                                    st.metric("표준편차 (σ)", "N/A")
+                        
+                            
+                            # 요인별 점수 추출 (calc 컬럼 우선 사용)
+                            factor_names = list(ALL_FACTORS.keys())
+                            factor_scores = {}
+                            
+                            for factor in factor_names:
+                                score = None
+                                
+                                # calc 컬럼 우선 사용
+                                calc_col = f'점수_{factor}_calc'
+                                if calc_col in row.index:
+                                    score = row[calc_col]
+                                else:
+                                    # 일반 컬럼 사용
+                                    normal_col = f'점수_{factor}'
+                                    if normal_col in row.index:
+                                        score = row[normal_col]
+                                
+                                # 점수 처리
+                                if pd.notna(score):
+                                    try:
+                                        score_val = float(score)
+                                        factor_scores[factor] = score_val
+                                    except (ValueError, TypeError):
+                                        factor_scores[factor] = None
+                                else:
+                                    factor_scores[factor] = None
+                            
+                            # 유효한 요인만 필터링
+                            valid_factors = {k: v for k, v in factor_scores.items() if v is not None}
+                            
+                            if valid_factors and HAS_PLOTLY:
+                                # Radial Chart 표시
+                                st.subheader("📈 요인별 점수 그래프")
+                                
+                                def create_radar_chart(factors_dict, title, max_value=1.0):
+                                    """방사형 차트 생성 함수"""
+                                    theta = list(factors_dict.keys())
+                                    r = list(factors_dict.values())
+                                    
+                                    # 차트를 닫기 위해 첫 번째 값을 마지막에 추가
+                                    theta_closed = theta + [theta[0]]
+                                    r_closed = r + [r[0]]
+                                    
+                                    fig = go.Figure()
+                                    
+                                    fig.add_trace(go.Scatterpolar(
+                                        r=r_closed,
+                                        theta=theta_closed,
+                                        fill='toself',
+                                        name='요인 점수',
+                                        line=dict(color='rgb(32, 201, 151)', width=2),
+                                        fillcolor='rgba(32, 201, 151, 0.25)',
+                                        hovertemplate='<b>%{theta}</b><br>점수: %{r:.3f}<extra></extra>'
+                                    ))
+                                    
+                                    fig.update_layout(
+                                        polar=dict(
+                                            radialaxis=dict(
+                                                visible=True,
+                                                range=[0, max_value],
+                                                tickmode='linear',
+                                                tick0=0,
+                                                dtick=0.2,
+                                                tickfont=dict(size=10),
+                                                gridcolor='rgba(200, 200, 200, 0.3)'
+                                            ),
+                                            angularaxis=dict(
+                                                rotation=90,
+                                                direction='counterclockwise',
+                                                tickfont=dict(size=11)
+                                            )
+                                        ),
+                                        title=dict(
+                                            text=title,
+                                            x=0.5,
+                                            font=dict(size=16, color='#1f77b4')
+                                        ),
+                                        height=500,
+                                        showlegend=False,
+                                        paper_bgcolor='white',
+                                        plot_bgcolor='white'
+                                    )
+                                    
+                                    return fig
+                                
+                                # 전체 요인 방사형 차트
+                                cafe_name = row['cafe_name']
+                                fig_all = create_radar_chart(valid_factors, f"{cafe_name}")
+                                st.plotly_chart(fig_all, use_container_width=True)
+                            elif valid_factors:
+                                # plotly가 없으면 막대 그래프로 대체
+                                st.subheader("📈 요인별 점수 그래프")
+                                st.warning("⚠️ plotly가 설치되지 않아 막대 그래프로 표시됩니다.")
+                                df_chart = pd.DataFrame({
+                                    '요인': list(valid_factors.keys()),
+                                    '점수': list(valid_factors.values())
+                                })
+                                df_chart = df_chart.sort_values('점수', ascending=True)
+                                st.bar_chart(df_chart.set_index('요인'), height=400)
                             
                             st.markdown("---")
 
