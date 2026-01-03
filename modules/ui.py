@@ -1000,8 +1000,8 @@ def _display_cafe_reviews(selected_cafe):
     
     # 리뷰 데이터 로드
     # config에서 경로 가져오기 (배포 환경 호환성)
-    from modules.config import GOOGLE_REVIEW_SAMPLE_CSV
-    review_file_path = GOOGLE_REVIEW_SAMPLE_CSV
+    from modules.config import BASE_DIR
+    review_file_path = BASE_DIR / "google_reviews_scraped_cleaned.csv"
     
     # 파일 존재 여부 확인
     if not review_file_path.exists():
@@ -1018,38 +1018,52 @@ def _display_cafe_reviews(selected_cafe):
         
         df_all_reviews = load_reviews_for_cafe()
         
-        # 카페명으로 필터링 (부분 매칭도 시도)
-        # selected_cafe에서 위치 정보 제거 시도 (예: "스타벅스 강남구 역삼동" -> "스타벅스")
-        base_cafe_name = selected_cafe.split()[0] if selected_cafe else ""
+        # 카페명에서 상호명, 시군구명, 행정동명 추출
+        # selected_cafe 형식: "카페명 구 동" (예: "스타벅스 강남구 역삼동")
+        parts = selected_cafe.split() if selected_cafe else []
         
-        # 사용 가능한 카페명 컬럼 확인
-        cafe_name_col = None
-        if 'cafe_name' in df_all_reviews.columns:
-            cafe_name_col = 'cafe_name'
-        elif '상호명' in df_all_reviews.columns:
-            cafe_name_col = '상호명'
+        # 상호명 추출 (구가 나오기 전까지)
+        base_cafe_name = ""
+        district = None
+        dong = None
         
-        cafe_reviews = pd.DataFrame()  # 빈 DataFrame으로 초기화
+        SEOUL_DISTRICTS = [
+            "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구",
+            "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구", "마포구",
+            "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구",
+            "서초구", "강남구", "송파구", "강동구"
+        ]
         
-        if cafe_name_col:
-            # 정확한 매칭 시도 (전체 카페명)
-            cafe_reviews = df_all_reviews[df_all_reviews[cafe_name_col] == selected_cafe].copy()
+        for i, part in enumerate(parts):
+            if part in SEOUL_DISTRICTS:
+                district = part
+                base_cafe_name = " ".join(parts[:i])  # 구 이전까지가 상호명
+                if i + 1 < len(parts):
+                    dong = parts[i + 1]  # 구 다음이 행정동명
+                break
+        
+        # 구를 찾지 못한 경우 첫 번째 단어를 상호명으로
+        if not base_cafe_name:
+            base_cafe_name = parts[0] if parts else ""
+        
+        # 필터링: 상호명, 시군구명, 행정동명이 모두 일치하는 리뷰만
+        cafe_reviews = pd.DataFrame()
+        
+        if '상호명' in df_all_reviews.columns:
+            # 상호명으로 필터링
+            mask = df_all_reviews['상호명'] == base_cafe_name
             
-            # 정확한 매칭이 없으면 부분 매칭 시도
-            if cafe_reviews.empty and base_cafe_name:
-                # cafe_name이 base_cafe_name으로 시작하는 경우
-                cafe_reviews = df_all_reviews[
-                    df_all_reviews[cafe_name_col].str.startswith(base_cafe_name, na=False)
-                ].copy()
+            # 시군구명으로 추가 필터링
+            if district and '시군구명' in df_all_reviews.columns:
+                mask = mask & (df_all_reviews['시군구명'] == district)
             
-            # 여전히 없으면 상호명으로 부분 매칭 시도
-            if cafe_reviews.empty and base_cafe_name:
-                if '상호명' in df_all_reviews.columns:
-                    cafe_reviews = df_all_reviews[
-                        df_all_reviews['상호명'].str.contains(base_cafe_name, na=False, case=False)
-                    ].copy()
+            # 행정동명으로 추가 필터링
+            if dong and '행정동명' in df_all_reviews.columns:
+                mask = mask & (df_all_reviews['행정동명'] == dong)
+            
+            cafe_reviews = df_all_reviews[mask].copy()
         else:
-            st.warning("카페명 컬럼(cafe_name 또는 상호명)을 찾을 수 없습니다.")
+            st.warning("상호명 컬럼을 찾을 수 없습니다.")
         
         if not cafe_reviews.empty:
             # 리뷰 수 표시
@@ -1096,6 +1110,112 @@ def _display_cafe_reviews(selected_cafe):
         st.error(f"리뷰 데이터 로드 중 오류 발생: {e}")
         import traceback
         st.code(traceback.format_exc())
+
+
+def _display_cafe_reviews_for_recommendation(cafe_name):
+    """추천 결과용 카페 리뷰 표시 헬퍼 함수 (간단 버전)"""
+    st.subheader("📝 리뷰")
+    
+    # 리뷰 데이터 로드
+    from modules.config import BASE_DIR
+    review_file_path = BASE_DIR / "google_reviews_scraped_cleaned.csv"
+    
+    # 파일 존재 여부 확인
+    if not review_file_path.exists():
+        st.warning(f"⚠️ 리뷰 데이터 파일을 찾을 수 없습니다: {review_file_path}")
+        return
+    
+    try:
+        # 리뷰 데이터 로드 (캐시 사용)
+        @st.cache_data
+        def load_reviews_for_cafe():
+            df_reviews = pd.read_csv(review_file_path, encoding='utf-8-sig')
+            return df_reviews
+        
+        df_all_reviews = load_reviews_for_cafe()
+        
+        # 카페명에서 상호명, 시군구명, 행정동명 추출
+        # cafe_name 형식: "카페명 구 동" (예: "스타벅스 강남구 역삼동")
+        parts = cafe_name.split() if cafe_name else []
+        
+        # 상호명 추출 (구가 나오기 전까지)
+        base_cafe_name = ""
+        district = None
+        dong = None
+        
+        SEOUL_DISTRICTS = [
+            "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구",
+            "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구", "마포구",
+            "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구",
+            "서초구", "강남구", "송파구", "강동구"
+        ]
+        
+        for i, part in enumerate(parts):
+            if part in SEOUL_DISTRICTS:
+                district = part
+                base_cafe_name = " ".join(parts[:i])  # 구 이전까지가 상호명
+                if i + 1 < len(parts):
+                    dong = parts[i + 1]  # 구 다음이 행정동명
+                break
+        
+        # 구를 찾지 못한 경우 첫 번째 단어를 상호명으로
+        if not base_cafe_name:
+            base_cafe_name = parts[0] if parts else ""
+        
+        # 필터링: 상호명, 시군구명, 행정동명이 모두 일치하는 리뷰만
+        cafe_reviews = pd.DataFrame()
+        
+        if '상호명' in df_all_reviews.columns:
+            # 상호명으로 필터링
+            mask = df_all_reviews['상호명'] == base_cafe_name
+            
+            # 시군구명으로 추가 필터링
+            if district and '시군구명' in df_all_reviews.columns:
+                mask = mask & (df_all_reviews['시군구명'] == district)
+            
+            # 행정동명으로 추가 필터링
+            if dong and '행정동명' in df_all_reviews.columns:
+                mask = mask & (df_all_reviews['행정동명'] == dong)
+            
+            cafe_reviews = df_all_reviews[mask].copy()
+        
+        if not cafe_reviews.empty:
+            # 리뷰 수 표시
+            st.caption(f"총 {len(cafe_reviews)}개의 리뷰")
+            
+            # 표시할 컬럼 선택
+            display_cols = []
+            if '평점' in cafe_reviews.columns:
+                display_cols.append('평점')
+            elif 'rating' in cafe_reviews.columns:
+                display_cols.append('rating')
+            
+            if '리뷰' in cafe_reviews.columns:
+                display_cols.append('리뷰')
+            elif 'review_text' in cafe_reviews.columns:
+                display_cols.append('review_text')
+            
+            # 사용 가능한 컬럼만 필터링
+            available_cols = [col for col in display_cols if col in cafe_reviews.columns]
+            
+            if available_cols:
+                # 리뷰 표시 (최대 20개, 추천 결과에서는 간단하게)
+                max_reviews = min(20, len(cafe_reviews))
+                st.dataframe(
+                    cafe_reviews[available_cols].head(max_reviews),
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                if len(cafe_reviews) > max_reviews:
+                    st.caption(f"상위 {max_reviews}개 리뷰만 표시됩니다. (전체 {len(cafe_reviews)}개)")
+            else:
+                st.info("표시할 수 있는 리뷰 컬럼이 없습니다.")
+        else:
+            st.info(f"'{cafe_name}'에 해당하는 리뷰를 찾을 수 없습니다.")
+                
+    except Exception as e:
+        st.warning(f"리뷰 데이터 로드 중 오류 발생: {e}")
 
 
 def render_cafe_factor_analysis():
@@ -1264,7 +1384,7 @@ def render_cafe_factor_analysis():
                 with col_left:
                     # 전체 요인 방사형 차트
                     fig_all = create_radar_chart(valid_factors, f"{selected_cafe}")
-                    st.plotly_chart(fig_all, use_container_width=True)
+                    st.plotly_chart(fig_all, use_container_width=True, key=f"cafe_factor_radar_all_{selected_cafe}")
                 
                 with col_right:
                     # 상세 점수 보기
@@ -1287,7 +1407,7 @@ def render_cafe_factor_analysis():
                             f"{selected_cafe} - {category}",
                             max_value=1.0
                         )
-                        st.plotly_chart(fig_category, use_container_width=True)
+                        st.plotly_chart(fig_category, use_container_width=True, key=f"cafe_factor_radar_{category}_{selected_cafe}")
                         
                         # 평균 점수
                         avg_score = sum(category_scores.values()) / len(category_scores)
@@ -1782,7 +1902,7 @@ def render_cafe_recommendation():
                                 # 전체 요인 방사형 차트
                                 cafe_name = row['cafe_name']
                                 fig_all = create_radar_chart(valid_factors, f"{cafe_name}")
-                                st.plotly_chart(fig_all, use_container_width=True)
+                                st.plotly_chart(fig_all, use_container_width=True, key=f"recommendation_radar_{idx}_{cafe_name}")
                             elif valid_factors:
                                 # plotly가 없으면 막대 그래프로 대체
                                 st.subheader("📈 요인별 점수 그래프")
@@ -1793,6 +1913,9 @@ def render_cafe_recommendation():
                                 })
                                 df_chart = df_chart.sort_values('점수', ascending=True)
                                 st.bar_chart(df_chart.set_index('요인'), height=400)
+                            
+                            # 카페 리뷰 표시
+                            _display_cafe_reviews_for_recommendation(row['cafe_name'])
                             
                             st.markdown("---")
 
