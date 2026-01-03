@@ -1410,6 +1410,58 @@ def render_cafe_factor_analysis():
 
 def render_cafe_recommendation():
     """카페 추천 탭 렌더링"""
+    # 파스텔톤 primary 버튼 스타일 적용
+    st.markdown("""
+    <style>
+    /* Primary 버튼 - 파스텔톤 하늘색 */
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background-color: #BEE3F8 !important; /* 부드러운 파우더 블루 */
+        color: #2C5282 !important; /* 텍스트는 짙은 네이비로 가독성 확보 */
+        border: none !important;
+        border-radius: 12px !important; /* 둥글게 처리하면 더 귀여움 */
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    div[data-testid="stButton"] > button[kind="primary"]:hover {
+        background-color: #90CDF4 !important; /* 호버 시 조금 더 진한 하늘색 */
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(144, 205, 244, 0.4) !important;
+    }
+    
+    /* Multiselect 선택된 태그 - 파스텔톤 노란색 */
+    div[data-baseweb="select"] p[data-baseweb="tag"],
+    div[data-baseweb="select"] span[data-baseweb="tag"],
+    div[data-baseweb="select"] div[data-baseweb="tag"],
+    div[data-testid="stMultiSelect"] p[data-baseweb="tag"],
+    div[data-testid="stMultiSelect"] span[data-baseweb="tag"],
+    div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
+        background-color: #FEF3C7 !important; /* 부드러운 파스텔톤 노란색 */
+        color: #92400E !important; /* 텍스트는 짙은 갈색으로 가독성 확보 */
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Multiselect 태그의 X 버튼 */
+    div[data-baseweb="select"] button[aria-label],
+    div[data-testid="stMultiSelect"] button[aria-label] {
+        color: #92400E !important;
+    }
+    
+    /* Multiselect 태그 호버 효과 */
+    div[data-baseweb="select"] p[data-baseweb="tag"]:hover,
+    div[data-baseweb="select"] span[data-baseweb="tag"]:hover,
+    div[data-baseweb="select"] div[data-baseweb="tag"]:hover,
+    div[data-testid="stMultiSelect"] p[data-baseweb="tag"]:hover,
+    div[data-testid="stMultiSelect"] span[data-baseweb="tag"]:hover,
+    div[data-testid="stMultiSelect"] div[data-baseweb="tag"]:hover {
+        background-color: #FDE68A !important; /* 호버 시 조금 더 진한 노란색 */
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.caption("선호하는 특성에 맞는 카페를 추천해드립니다.")
     
     # CSV 파일 경로
@@ -1475,99 +1527,179 @@ def render_cafe_recommendation():
     
     st.markdown("---")
     
-    # 2. 선호 특성 선택
-    st.subheader("🎯 선호 특성 선택")
-    preference_type = st.radio(
-        "어떤 특성을 선호하시나요?",
-        options=["물리적 특성", "활동적 특성", "의미적 특성"],
-        key="recommendation_preference_type"
-    )
+    # 2. 선호 특성 선택 (가로 버튼 배치)
+    st.subheader("선호하는 특성 선택")
     
-    st.markdown("---")
+    # 세션 상태 초기화 (안전하게)
+    if 'recommendation_preference_type' not in st.session_state:
+        st.session_state.recommendation_preference_type = None
+    if 'recommendation_selected_details' not in st.session_state:
+        st.session_state.recommendation_selected_details = []
     
-    # 3. 세부 항목 선택
-    st.subheader("✨ 세부 항목 선택")
+    # preference_type을 세션 상태에서 읽기 (항상 최신 상태 보장)
+    preference_type = st.session_state.get('recommendation_preference_type', None)
     
-    detail_options = []
+    # 가로로 3개 버튼 배치
+    col1, col2, col3 = st.columns(3)
     
-    if preference_type == "물리적 특성":
-        detail_options = [
-            ("심미성", "인테리어가 예쁜 곳"),
-            ("쾌적성", "작업하기 좋은 곳"),
-            ("접근성", "접근이 편리한 곳"),
-            ("형태성", "공간 구조가 좋은 곳"),
-            ("감각적 경험", "감각적 분위기가 좋은 곳")
-        ]
-    elif preference_type == "활동적 특성":
-        detail_options = [
-            ("사회성", "친절한 서비스"),
-            ("활동성", "작업하기 좋은 곳"),
-            ("참여성", "체험/이벤트가 있는 곳")
-        ]
-    elif preference_type == "의미적 특성":
-        detail_options = [
-            ("고유성", "독특한 콘셉트의 곳"),
-            ("기억/경험", "기억에 남는 경험을 제공하는 곳"),
-            ("지역 정체성", "지역 문화를 반영한 곳")
-        ]
+    with col1:
+        if st.button("🏛️ 물리적 특성", 
+                    use_container_width=True,
+                    type="primary" if preference_type == "물리적 특성" else "secondary",
+                    key="btn_physical"):
+            st.session_state.recommendation_preference_type = "물리적 특성"
+            st.session_state.recommendation_selected_details = []
+            st.rerun()
     
-    selected_details = st.multiselect(
-        "세부 항목을 선택하세요 (복수 선택 가능)",
-        options=[opt[0] for opt in detail_options],
-        format_func=lambda x: next(opt[1] for opt in detail_options if opt[0] == x),
-        key="recommendation_details"
-    )
+    with col2:
+        if st.button("🎭 활동적 특성",
+                    use_container_width=True,
+                    type="primary" if preference_type == "활동적 특성" else "secondary",
+                    key="btn_activity"):
+            st.session_state.recommendation_preference_type = "활동적 특성"
+            st.session_state.recommendation_selected_details = []
+            st.rerun()
     
-    st.markdown("---")
+    with col3:
+        if st.button("💭 의미적 특성",
+                    use_container_width=True,
+                    type="primary" if preference_type == "의미적 특성" else "secondary",
+                    key="btn_semantic"):
+            st.session_state.recommendation_preference_type = "의미적 특성"
+            st.session_state.recommendation_selected_details = []
+            st.rerun()
+    
+    # 3. 세부 항목 선택 (선택된 특성 아래에 표시)
+    # preference_type을 다시 한 번 확인 (버튼 클릭 후 최신 상태)
+    preference_type = st.session_state.get('recommendation_preference_type', None)
+    
+    if preference_type:
+        st.markdown("---")
+        st.subheader(f"{preference_type} 세부 항목 선택")
+        
+        detail_options = []
+        
+        if preference_type == "물리적 특성":
+            detail_options = [
+                ("심미성", "인테리어가 예쁜 곳"),
+                ("쾌적성", "쾌적한 곳"),
+                ("접근성", "접근이 편리한 곳"),
+                ("형태성", "공간 구조가 좋은 곳"),
+                ("감각적 경험", "감각적인 경험을 할 수 있는 곳")
+            ]
+        elif preference_type == "활동적 특성":
+            detail_options = [
+                ("사회성", "친절한 서비스"),
+                ("활동성", "모임하기 좋은 곳"),
+                ("참여성", "체험/이벤트가 있는 곳")
+            ]
+        elif preference_type == "의미적 특성":
+            detail_options = [
+                ("고유성", "독특한 컨셉트가 있는 곳"),
+                ("기억/경험", "기억에 남는 경험을 제공하는 곳"),
+                ("지역 정체성", "지역 문화를 반영한 곳")
+            ]
+        
+        # 세부 항목을 버튼으로 표시 (수형도처럼)
+        st.markdown("<div style='margin-left: 20px;'>", unsafe_allow_html=True)
+        
+        # 버튼을 그리드로 배치 (2열)
+        num_cols = 2
+        cols = st.columns(num_cols)
+        
+        for idx, (factor_key, factor_desc) in enumerate(detail_options):
+            col_idx = idx % num_cols
+            with cols[col_idx]:
+                # 세션 상태에서 최신 선택 상태 확인
+                current_selected = st.session_state.get('recommendation_selected_details', [])
+                is_selected = factor_key in current_selected
+                button_type = "primary" if is_selected else "secondary"
+                
+                if st.button(
+                    f"✓ {factor_desc}" if is_selected else factor_desc,
+                    use_container_width=True,
+                    type=button_type,
+                    key=f"detail_btn_{preference_type}_{factor_key}"
+                ):
+                    # preference_type이 유지되도록 명시적으로 보장
+                    st.session_state.recommendation_preference_type = preference_type
+                    
+                    # 세션 상태에서 최신 리스트 가져오기
+                    if 'recommendation_selected_details' not in st.session_state:
+                        st.session_state.recommendation_selected_details = []
+                    
+                    # 리스트 복사본으로 작업 (참조 문제 방지)
+                    current_list = list(st.session_state.recommendation_selected_details)
+                    
+                    if is_selected:
+                        # 선택 해제
+                        if factor_key in current_list:
+                            current_list.remove(factor_key)
+                    else:
+                        # 선택 추가
+                        if factor_key not in current_list:
+                            current_list.append(factor_key)
+                    
+                    # 세션 상태 업데이트
+                    st.session_state.recommendation_selected_details = current_list
+                    st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        selected_details = st.session_state.get('recommendation_selected_details', [])
+    else:
+        selected_details = []
     
     # 4. 추천 실행
-    if st.button("🔍 추천 받기", type="primary", key="recommendation_search"):
-        if not selected_details:
-            st.warning("⚠️ 최소 하나의 세부 항목을 선택해주세요.")
-        else:
-            # 추천 로직
-            recommendations = _calculate_recommendations(df_filtered, selected_details)
-            
-            if recommendations.empty:
-                st.warning("선택한 조건에 맞는 카페를 찾을 수 없습니다.")
+    if preference_type:
+        st.markdown("---")
+        if st.button("🔍 추천 받기", type="primary", key="recommendation_search", use_container_width=True):
+            if not selected_details:
+                st.warning("⚠️ 최소 하나의 세부 항목을 선택해주세요.")
             else:
-                st.success(f"✅ {len(recommendations)}개의 카페를 찾았습니다!")
-                st.markdown("---")
+                # 추천 로직
+                recommendations = _calculate_recommendations(df_filtered, selected_details)
                 
-                # 상위 3개 추천
-                top_3 = recommendations.head(3)
-                
-                for idx, (_, row) in enumerate(top_3.iterrows(), 1):
-                    with st.container():
-                        col1, col2 = st.columns([3, 1])
-                        
-                        with col1:
-                            st.markdown(f"### {idx}. {row['cafe_name']}")
-                            if pd.notna(row.get('행정구')):
-                                st.caption(f"📍 {row['행정구']}")
-                        
-                        with col2:
-                            mu_score = row.get('종합_장소성_점수_Mu', 0)
-                            if pd.notna(mu_score) and mu_score > 0:
-                                st.metric("종합 점수", f"{mu_score:.3f}")
-                            else:
-                                st.metric("종합 점수", "N/A")
-                        
-                        # 선택한 세부 항목별 점수 표시
-                        score_cols = st.columns(len(selected_details))
-                        for i, detail in enumerate(selected_details):
-                            with score_cols[i]:
-                                score_col = f"점수_{detail}"
-                                if score_col in row.index:
-                                    score = row[score_col]
-                                    if pd.notna(score) and score != 0.5:
-                                        st.metric(detail, f"{score:.3f}")
+                if recommendations.empty:
+                    st.warning("선택한 조건에 맞는 카페를 찾을 수 없습니다.")
+                else:
+                    st.success(f"✅ {len(recommendations)}개의 카페를 찾았습니다!")
+                    st.markdown("---")
+                    
+                    # 상위 3개 추천
+                    top_3 = recommendations.head(3)
+                    
+                    for idx, (_, row) in enumerate(top_3.iterrows(), 1):
+                        with st.container():
+                            col1, col2 = st.columns([3, 1])
+                            
+                            with col1:
+                                st.markdown(f"### {idx}. {row['cafe_name']}")
+                                if pd.notna(row.get('행정구')):
+                                    st.caption(f"📍 {row['행정구']}")
+                            
+                            with col2:
+                                mu_score = row.get('종합_장소성_점수_Mu', 0)
+                                if pd.notna(mu_score) and mu_score > 0:
+                                    st.metric("종합 점수", f"{mu_score:.3f}")
+                                else:
+                                    st.metric("종합 점수", "N/A")
+                            
+                            # 선택한 세부 항목별 점수 표시
+                            score_cols = st.columns(len(selected_details))
+                            for i, detail in enumerate(selected_details):
+                                with score_cols[i]:
+                                    score_col = f"점수_{detail}"
+                                    if score_col in row.index:
+                                        score = row[score_col]
+                                        if pd.notna(score) and score != 0.5:
+                                            st.metric(detail, f"{score:.3f}")
+                                        else:
+                                            st.metric(detail, "N/A")
                                     else:
                                         st.metric(detail, "N/A")
-                                else:
-                                    st.metric(detail, "N/A")
-                        
-                        st.markdown("---")
+                            
+                            st.markdown("---")
 
 
 def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.DataFrame:
