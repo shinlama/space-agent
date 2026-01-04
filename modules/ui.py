@@ -1112,9 +1112,9 @@ def _display_cafe_reviews(selected_cafe):
         st.code(traceback.format_exc())
 
 
-def _display_cafe_reviews_for_recommendation(cafe_name):
-    """추천 결과용 카페 리뷰 표시 헬퍼 함수 (간단 버전)"""
-    st.subheader("📝 리뷰")
+def _display_cafe_reviews_for_recommendation(cafe_name, selected_factors=None):
+    """추천 결과용 카페 리뷰 표시 및 요약 헬퍼 함수"""
+    st.subheader("📝 리뷰 요약 및 분석")
     
     # 리뷰 데이터 로드
     from modules.config import BASE_DIR
@@ -1199,16 +1199,51 @@ def _display_cafe_reviews_for_recommendation(cafe_name):
             available_cols = [col for col in display_cols if col in cafe_reviews.columns]
             
             if available_cols:
-                # 리뷰 표시 (최대 20개, 추천 결과에서는 간단하게)
-                max_reviews = min(20, len(cafe_reviews))
-                st.dataframe(
-                    cafe_reviews[available_cols].head(max_reviews),
-                    hide_index=True,
-                    use_container_width=True
-                )
+                # 리뷰 텍스트 추출
+                review_text_col = None
+                if '리뷰' in cafe_reviews.columns:
+                    review_text_col = '리뷰'
+                elif 'review_text' in cafe_reviews.columns:
+                    review_text_col = 'review_text'
                 
-                if len(cafe_reviews) > max_reviews:
-                    st.caption(f"상위 {max_reviews}개 리뷰만 표시됩니다. (전체 {len(cafe_reviews)}개)")
+                if review_text_col:
+                    # 리뷰 텍스트 수집 (최대 30개)
+                    max_reviews_for_summary = min(30, len(cafe_reviews))
+                    review_texts = cafe_reviews[review_text_col].head(max_reviews_for_summary).tolist()
+                    review_texts = [str(text).strip() for text in review_texts if pd.notna(text) and str(text).strip()]
+                    
+                    if review_texts:
+                        # OpenAI를 사용한 리뷰 요약 및 분석
+                        with st.spinner("🤖 리뷰 분석 중..."):
+                            summary = _generate_review_summary_with_openai(
+                                cafe_name, 
+                                review_texts, 
+                                selected_factors or []
+                            )
+                        
+                        if summary:
+                            st.markdown("### 💡 공간 특성 요약")
+                            st.markdown(summary.get('summary', ''))
+                            
+                            if summary.get('recommendation'):
+                                st.markdown("### 🎯 추천 이유")
+                                st.markdown(summary.get('recommendation', ''))
+                        else:
+                            # 요약 실패 시 기본 리뷰 표시
+                            st.dataframe(
+                                cafe_reviews[available_cols].head(10),
+                                hide_index=True,
+                                use_container_width=True
+                            )
+                    else:
+                        st.info("리뷰 텍스트를 찾을 수 없습니다.")
+                else:
+                    # 리뷰 텍스트 컬럼이 없으면 기본 표시
+                    st.dataframe(
+                        cafe_reviews[available_cols].head(10),
+                        hide_index=True,
+                        use_container_width=True
+                    )
             else:
                 st.info("표시할 수 있는 리뷰 컬럼이 없습니다.")
         else:
@@ -1216,6 +1251,96 @@ def _display_cafe_reviews_for_recommendation(cafe_name):
                 
     except Exception as e:
         st.warning(f"리뷰 데이터 로드 중 오류 발생: {e}")
+
+
+def _get_openai_client():
+    """OpenAI 클라이언트 초기화"""
+    try:
+        import os
+        from dotenv import load_dotenv
+        from openai import OpenAI
+        
+        # .env 파일 로드
+        from modules.config import BASE_DIR
+        env_path = BASE_DIR / ".env"
+        if env_path.exists():
+            load_dotenv(env_path)
+        
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return None
+        
+        return OpenAI(api_key=api_key)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def _generate_review_summary_with_openai(cafe_name, review_texts, selected_factors):
+    """OpenAI GPT-4o를 사용하여 리뷰 요약 및 추천 이유 생성"""
+    client = _get_openai_client()
+    if not client:
+        return None
+    
+    # 리뷰 텍스트 결합 (최대 5000자)
+    reviews_text = "\n".join(review_texts[:30])
+    if len(reviews_text) > 5000:
+        reviews_text = reviews_text[:5000] + "..."
+    
+    # 선택한 세부 항목 설명
+    factor_descriptions = {
+        "심미성": "인테리어가 예쁜 곳",
+        "쾌적성": "쾌적한 곳",
+        "접근성": "접근이 편리한 곳",
+        "형태성": "공간 구조가 좋은 곳",
+        "감각적 경험": "감각적인 경험을 할 수 있는 곳",
+        "사회성": "친절한 서비스",
+        "활동성": "모임하기 좋은 곳",
+        "참여성": "체험/이벤트가 있는 곳",
+        "고유성": "독특한 컨셉트가 있는 곳",
+        "기억/경험": "기억에 남는 경험을 제공하는 곳",
+        "지역 정체성": "지역 문화를 반영한 곳"
+    }
+    
+    selected_factors_desc = [factor_descriptions.get(f, f) for f in selected_factors]
+    
+    prompt = f"""다음은 '{cafe_name}' 카페에 대한 고객 리뷰입니다. 장소성 관점에서 이 공간을 분석하고 요약해주세요.
+
+## 리뷰 내용
+{reviews_text}
+
+## 사용자가 선택한 선호 특성
+{', '.join(selected_factors_desc) if selected_factors_desc else '없음'}
+
+## 요청 사항
+1. **공간 특성 요약**: 리뷰를 바탕으로 이 카페의 공간적 특성을 장소성 관점에서 요약해주세요. 인테리어, 분위기, 공간 구성, 쾌적성, 접근성, 활동적 특성, 지역 정체성이나 개인의 경험에 의미가 있는지 의미적 특성 등을 포함해주세요.
+
+2. **추천 이유**: 사용자가 선택한 선호 특성({', '.join(selected_factors) if selected_factors else '없음'})과 연결하여, 어떤 사용자에게 이 공간을 추천할 수 있는지, 그리고 추천 이유를 설명해주세요.
+
+## 출력 형식 (JSON)
+{{
+  "summary": "공간 특성 요약 (3-5문단)",
+  "recommendation": "추천 이유 및 대상 사용자 설명 (2-3문단)"
+}}
+
+JSON 형식으로만 응답해주세요."""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+            max_tokens=1000,
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        return result
+    except Exception as e:
+        st.warning(f"리뷰 요약 생성 중 오류: {str(e)}")
+        return None
 
 
 def render_cafe_factor_analysis():
@@ -1914,8 +2039,8 @@ def render_cafe_recommendation():
                                 df_chart = df_chart.sort_values('점수', ascending=True)
                                 st.bar_chart(df_chart.set_index('요인'), height=400)
                             
-                            # 카페 리뷰 표시
-                            _display_cafe_reviews_for_recommendation(row['cafe_name'])
+                            # 카페 리뷰 표시 및 요약
+                            _display_cafe_reviews_for_recommendation(row['cafe_name'], selected_details)
                             
                             st.markdown("---")
 
