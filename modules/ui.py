@@ -1257,16 +1257,35 @@ def _get_openai_client():
     """OpenAI 클라이언트 초기화"""
     try:
         import os
-        from dotenv import load_dotenv
         from openai import OpenAI
         
-        # .env 파일 로드
-        from modules.config import BASE_DIR
-        env_path = BASE_DIR / ".env"
-        if env_path.exists():
-            load_dotenv(env_path)
+        api_key = None
         
-        api_key = os.getenv("OPENAI_API_KEY")
+        # 1. .env 파일에서 우선 로드 (로컬 및 배포 환경 모두)
+        try:
+            from dotenv import load_dotenv
+            from modules.config import BASE_DIR
+            env_path = BASE_DIR / ".env"
+            if env_path.exists():
+                # override=True: .env 파일의 값으로 환경 변수를 덮어씀
+                load_dotenv(env_path, override=True)
+                api_key = os.getenv("OPENAI_API_KEY")
+        except ImportError:
+            pass
+        except Exception:
+            pass
+        
+        # 2. .env에서 못 찾으면 환경 변수에서 확인 (배포 환경용)
+        if not api_key:
+            api_key = os.getenv("OPENAI_API_KEY")
+        
+        # 3. Streamlit secrets에서 확인 (Streamlit Cloud용)
+        if not api_key:
+            try:
+                api_key = st.secrets.get("OPENAI_API_KEY", None)
+            except (AttributeError, FileNotFoundError, KeyError):
+                pass
+        
         if not api_key:
             return None
         
