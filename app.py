@@ -21,7 +21,8 @@ from modules.ui import (
     render_placeness_calculation,
     render_sentiment_analysis,
     render_detailed_results,
-    render_cafe_recommendation
+    render_cafe_recommendation,
+    render_multimodal_space_demo,
 )
 
 # render_cafe_factor_analysis는 선택적 import (배포 환경 호환성)
@@ -52,6 +53,12 @@ def init_session_state():
         st.session_state.df_place_scores = None
     if 'preview_sentiment_result' not in st.session_state:
         st.session_state.preview_sentiment_result = None
+    if 'multimodal_vlm_result' not in st.session_state:
+        st.session_state.multimodal_vlm_result = None
+    if 'multimodal_vlm_error' not in st.session_state:
+        st.session_state.multimodal_vlm_error = None
+    if 'multimodal_vlm_fingerprint' not in st.session_state:
+        st.session_state.multimodal_vlm_fingerprint = None
 
 
 def main():
@@ -94,9 +101,10 @@ def main():
         return
     
     # 탭 구조 생성
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "☕ 카페 추천",
         "📈 카페별 요인 분석",
+        "🖼️ 멀티모달 데모",
         "📊 데이터 분석",
         "📋 리뷰 데이터"
     ])
@@ -110,6 +118,9 @@ def main():
         render_cafe_factor_analysis()
     
     with tab3:
+        render_multimodal_space_demo(df_reviews)
+    
+    with tab4:
         # 3. 데이터 미리보기
         render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab3")
         
@@ -119,7 +130,7 @@ def main():
         # 5. 개별 리뷰 감성 분석
         render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_name)
     
-    with tab4:
+    with tab5:
         # 데이터 미리보기만 표시
         render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab_suffix="_tab4")
 

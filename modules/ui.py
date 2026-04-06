@@ -4,7 +4,10 @@ Streamlit UI 구성 모듈
 import streamlit as st
 import pandas as pd
 import re
+import io
+import traceback
 from collections import Counter
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pathlib import Path
 try:
@@ -19,6 +22,11 @@ try:
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
 from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD, CAFE_INFO_CSV
 
 # Streamlit 버전 호환성 처리
@@ -33,6 +41,7 @@ from modules.sentiment import run_sentiment_analysis
 from modules.score import calculate_place_scores, calculate_final_research_metrics
 from modules.preprocess import load_csv_raw, is_numeric_only, is_metadata_only, truncate_text_for_bert
 from modules.sentiment import process_sentiment_result
+from modules.vision_analysis import analyze_cafe_images_with_openai, build_vlm_fingerprint
 
 # 한글 형태소 분석 (선택적, 지연 초기화)
 HAS_KONLPY = False
@@ -2102,3 +2111,423 @@ def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.D
     df_scored = df_scored.sort_values('추천_점수', ascending=False)
     
     return df_scored
+
+
+@st.cache_data
+def _load_multimodal_demo_metrics():
+    """멀티모달 데모에서 사용할 기존 장소성 점수 CSV를 로드합니다."""
+    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
+    if not csv_path.exists():
+        return None
+
+    try:
+        return pd.read_csv(csv_path, encoding="utf-8-sig")
+    except Exception:
+        try:
+            return pd.read_csv(csv_path)
+        except Exception:
+            return None
+
+
+def _open_uploaded_image(uploaded_file):
+    """업로드된 이미지를 RGB PIL 이미지로 엽니다."""
+    if not HAS_PIL:
+        return None
+
+    try:
+        return Image.open(io.BytesIO(uploaded_file.getvalue())).convert("RGB")
+    except Exception:
+        return None
+
+
+def _calculate_image_stats(image):
+    """간단한 시각 통계량을 계산합니다."""
+    if image is None:
+        return None
+
+    image_np = np.asarray(image).astype(np.float32)
+    if image_np.ndim != 3 or image_np.shape[2] < 3:
+        return None
+
+    red = image_np[:, :, 0]
+    green = image_np[:, :, 1]
+    blue = image_np[:, :, 2]
+
+    brightness = float(image_np.mean())
+    contrast = float(image_np.std())
+
+    rg = np.abs(red - green)
+    yb = np.abs(0.5 * (red + green) - blue)
+    colorfulness = float(
+        np.sqrt(np.std(rg) ** 2 + np.std(yb) ** 2) +
+        0.3 * np.sqrt(np.mean(rg) ** 2 + np.mean(yb) ** 2)
+    )
+
+    width, height = image.size
+    return {
+        "width": int(width),
+        "height": int(height),
+        "brightness": brightness,
+        "contrast": contrast,
+        "colorfulness": colorfulness,
+        "megapixels": float((width * height) / 1_000_000),
+    }
+def _build_3dgs_concept_result(image_stats_list, shot_types, capture_sequence):
+    """실제 3DGS 재구성 대신 촬영 준비도를 계산합니다."""
+    valid_stats = [stats for stats in image_stats_list if stats is not None]
+    image_count = len(valid_stats)
+    unique_shot_types = {shot_type for shot_type in shot_types if shot_type and shot_type != "미분류"}
+
+    count_score = min(40, image_count * 4)
+    diversity_score = min(25, len(unique_shot_types) * 6)
+    sequence_score = 20 if capture_sequence else 0
+
+    avg_megapixels = float(np.mean([stats["megapixels"] for stats in valid_stats])) if valid_stats else 0.0
+    resolution_score = 10 if avg_megapixels >= 1.2 else 5 if avg_megapixels >= 0.6 else 0
+
+    coverage_bonus = 5 if {"실내 전경", "좌석 영역", "카운터/바", "창가/뷰"}.intersection(unique_shot_types) else 0
+    readiness_score = int(min(100, round(count_score + diversity_score + sequence_score + resolution_score + coverage_bonus)))
+
+    if readiness_score >= 75:
+        readiness_label = "높음"
+    elif readiness_score >= 45:
+        readiness_label = "보통"
+    else:
+        readiness_label = "낮음"
+
+    extractable_metrics = []
+    if {"실내 전경", "좌석 영역"}.issubset(unique_shot_types):
+        extractable_metrics.append("좌석 배치와 동선 연속성")
+    if {"창가/뷰", "외관"}.intersection(unique_shot_types):
+        extractable_metrics.append("개방감과 시야 축")
+    if {"카운터/바", "실내 전경"}.issubset(unique_shot_types):
+        extractable_metrics.append("출입구-카운터-좌석 간 구획 구조")
+    if "디테일/소품" in unique_shot_types:
+        extractable_metrics.append("재료감과 콘셉트 디테일 앵커링")
+    if not extractable_metrics:
+        extractable_metrics.append("현재 업로드 구성만으로는 공간 구조 지표 추출이 제한적")
+
+    recommendations = []
+    if image_count < 8:
+        recommendations.append("3DGS용으로는 최소 8장 이상, 가능하면 12장 이상을 권장합니다.")
+    if len(unique_shot_types) < 3:
+        recommendations.append("실내 전경, 좌석 영역, 카운터, 창가/뷰 등 서로 다른 시점이 필요합니다.")
+    if not capture_sequence:
+        recommendations.append("연속 동선으로 촬영한 이미지나 walkthrough 영상이 있으면 재구성 안정성이 높아집니다.")
+    if avg_megapixels < 1.2:
+        recommendations.append("해상도가 더 높은 이미지를 사용하면 세부 구조 복원에 유리합니다.")
+    if not recommendations:
+        recommendations.append("현재 업로드 구성은 데모 수준의 3DGS 실험 설계에 비교적 적합합니다.")
+
+    return {
+        "readiness_score": readiness_score,
+        "readiness_label": readiness_label,
+        "image_count": image_count,
+        "shot_type_count": len(unique_shot_types),
+        "avg_megapixels": avg_megapixels,
+        "extractable_metrics": extractable_metrics,
+        "recommendations": recommendations,
+    }
+
+
+def render_multimodal_space_demo(df_reviews: pd.DataFrame):
+    """수동 업로드 이미지 기반의 멀티모달 공간 분석 데모 탭을 렌더링합니다."""
+    st.header("🖼️ 멀티모달 공간 분석 데모")
+    st.caption("카페를 선택하고 수동으로 찾은 이미지를 업로드하면, 실제 VLM으로 장소성 요인을 분석하고 3DGS 촬영 준비도는 별도 개념 결과로 보여줍니다.")
+    st.info("VLM 결과는 실제 OpenAI vision 모델을 호출합니다. 3DGS 영역은 아직 재구성 실행이 아니라 촬영 준비도/설계 가이드입니다.")
+
+    cafe_options = sorted(df_reviews["cafe_name"].dropna().unique().tolist())
+    if not cafe_options:
+        st.info("선택할 수 있는 카페 데이터가 없습니다.")
+        return
+
+    metrics_df = _load_multimodal_demo_metrics()
+
+    selected_cafe = st.selectbox(
+        "카페 선택",
+        options=cafe_options,
+        key="multimodal_demo_cafe_select",
+        help="기존 텍스트 기반 장소성 점수와 비교할 카페를 선택하세요."
+    )
+
+    if metrics_df is not None and "cafe_name" in metrics_df.columns:
+        matched_metrics = metrics_df[metrics_df["cafe_name"] == selected_cafe]
+        if not matched_metrics.empty:
+            cafe_metrics = matched_metrics.iloc[0]
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                mu_score = cafe_metrics.get("종합_장소성_점수_Mu", 0)
+                st.metric("기존 텍스트 점수 μ", f"{mu_score:.3f}" if pd.notna(mu_score) else "N/A")
+            with col2:
+                sigma_score = cafe_metrics.get("요인_점수_표준편차_Sigma", 0)
+                st.metric("기존 표준편차 σ", f"{sigma_score:.3f}" if pd.notna(sigma_score) else "N/A")
+            with col3:
+                st.metric("기존 요약", cafe_metrics.get("Final_PlaceScore_Summary", "N/A"))
+
+    st.markdown("---")
+
+    uploaded_files = st.file_uploader(
+        "카페 공간 이미지를 업로드하세요",
+        type=["jpg", "jpeg", "png", "webp"],
+        accept_multiple_files=True,
+        key="multimodal_demo_uploader",
+        help="실내 전경, 좌석, 카운터, 외관, 창가 뷰 등을 여러 장 올리면 모델이 더 안정적으로 분석할 수 있습니다."
+    )
+
+    capture_sequence = st.checkbox(
+        "연속된 동선으로 촬영한 이미지다 (3DGS 실험 가정)",
+        value=False,
+        key="multimodal_demo_sequence"
+    )
+
+    analyst_note = st.text_area(
+        "분석 메모 (선택)",
+        placeholder="예: 한옥 리노베이션 느낌, 외부 골목과의 연결감이 좋음, 포토존이 확실함 등",
+        key="multimodal_demo_note"
+    )
+
+    model_name = st.selectbox(
+        "VLM 모델",
+        options=["gpt-4o-mini", "gpt-4o"],
+        index=0,
+        key="multimodal_demo_model_name",
+        help="`gpt-4o-mini`는 비용이 낮고 빠르며, `gpt-4o`는 더 강한 해석 품질을 기대할 수 있습니다."
+    )
+
+    if not uploaded_files:
+        st.info("이미지를 업로드하면 여기서 실제 VLM 결과와 3DGS 준비도 결과가 표시됩니다.")
+        return
+
+    st.markdown("---")
+    st.subheader("업로드 이미지")
+
+    image_stats_list = []
+    shot_types = []
+    preview_rows = []
+
+    for idx, uploaded_file in enumerate(uploaded_files):
+        image = _open_uploaded_image(uploaded_file)
+        stats = _calculate_image_stats(image)
+        image_stats_list.append(stats)
+
+        with st.expander(f"이미지 {idx + 1}: {uploaded_file.name}", expanded=(idx == 0)):
+            col1, col2 = st.columns([1, 1])
+
+            with col1:
+                if image is not None:
+                    st.image(image, caption=uploaded_file.name, use_container_width=True)
+                else:
+                    st.warning("이미지 미리보기를 불러오지 못했습니다.")
+
+            with col2:
+                shot_type = st.selectbox(
+                    "촬영 유형",
+                    options=["미분류", "실내 전경", "좌석 영역", "카운터/바", "창가/뷰", "외관", "디테일/소품"],
+                    index=0,
+                    key=f"multimodal_demo_shot_type_{idx}"
+                )
+                shot_types.append(shot_type)
+
+                if stats is not None:
+                    st.metric("해상도", f"{stats['width']} × {stats['height']}")
+                    st.metric("밝기", f"{stats['brightness']:.1f}")
+                    st.metric("색채 다양성", f"{stats['colorfulness']:.1f}")
+                    preview_rows.append({
+                        "파일명": uploaded_file.name,
+                        "촬영 유형": shot_type,
+                        "해상도": f"{stats['width']} × {stats['height']}",
+                        "밝기": f"{stats['brightness']:.1f}",
+                        "색채 다양성": f"{stats['colorfulness']:.1f}",
+                    })
+                else:
+                    st.info("이미지 통계를 계산할 수 없어 업로드 파일 정보만 사용합니다.")
+                    preview_rows.append({
+                        "파일명": uploaded_file.name,
+                        "촬영 유형": shot_type,
+                        "해상도": "N/A",
+                        "밝기": "N/A",
+                        "색채 다양성": "N/A",
+                    })
+
+    st.dataframe(pd.DataFrame(preview_rows), hide_index=True, **get_dataframe_width_param())
+
+    if len(uploaded_files) > 10:
+        st.warning("현재는 비용과 응답 시간을 고려해 최대 10장까지만 실제 VLM 분석에 사용합니다.")
+
+    vlm_fingerprint = build_vlm_fingerprint(
+        cafe_name=selected_cafe,
+        uploaded_files=uploaded_files[:10],
+        shot_types=shot_types[:10],
+        analyst_note=analyst_note,
+        model_name=model_name,
+    )
+
+    previous_fingerprint = st.session_state.get("multimodal_vlm_fingerprint")
+    if previous_fingerprint != vlm_fingerprint:
+        st.session_state.multimodal_vlm_result = None
+        st.session_state.multimodal_vlm_error = None
+        st.session_state.multimodal_vlm_fingerprint = vlm_fingerprint
+
+    analyze_clicked = st.button(
+        "실제 VLM 분석 실행",
+        type="primary",
+        key="multimodal_demo_run_vlm",
+        use_container_width=True
+    )
+
+    if analyze_clicked:
+        with st.spinner(f"{model_name} 모델로 업로드 이미지를 분석 중입니다..."):
+            try:
+                vlm_result = analyze_cafe_images_with_openai(
+                    cafe_name=selected_cafe,
+                    uploaded_files=uploaded_files[:10],
+                    shot_types=shot_types[:10],
+                    analyst_note=analyst_note,
+                    model_name=model_name,
+                    streamlit_secrets=st.secrets,
+                )
+                st.session_state.multimodal_vlm_result = vlm_result
+                st.session_state.multimodal_vlm_error = None
+            except Exception as e:
+                st.session_state.multimodal_vlm_result = None
+                st.session_state.multimodal_vlm_error = f"{e}\n\n{traceback.format_exc()}"
+
+    vlm_result = st.session_state.get("multimodal_vlm_result")
+    vlm_error = st.session_state.get("multimodal_vlm_error")
+    gs_result = _build_3dgs_concept_result(image_stats_list, shot_types, capture_sequence)
+
+    st.markdown("---")
+    col_left, col_right = st.columns(2)
+
+    with col_left:
+        st.subheader("실제 VLM 분석 결과")
+
+        if vlm_error:
+            st.error("실제 VLM 분석 중 오류가 발생했습니다.")
+            st.code(vlm_error)
+        elif vlm_result is None:
+            st.info("`실제 VLM 분석 실행` 버튼을 누르면 업로드 이미지들을 실제 비전 모델로 분석합니다.")
+        else:
+            st.caption(f"모델: `{vlm_result.get('model_name', model_name)}`")
+            if vlm_result.get("overall_summary"):
+                st.markdown("#### 요약")
+                st.write(vlm_result["overall_summary"])
+
+            result_rows = []
+            factor_score_map = {}
+            for item in vlm_result.get("factors", []):
+                factor_name = item.get("name")
+                score = float(item.get("score", 0.5))
+                confidence = float(item.get("confidence", 0.3))
+                factor_score_map[factor_name] = score
+                evidence = " / ".join(item.get("evidence", [])[:2]) if item.get("evidence") else "근거 없음"
+                result_rows.append({
+                    "요인": factor_name,
+                    "VLM 점수": round(score, 3),
+                    "신뢰도": round(confidence, 3),
+                    "시각 근거": evidence,
+                })
+
+            result_df = pd.DataFrame(result_rows).sort_values("VLM 점수", ascending=False)
+            st.dataframe(result_df, hide_index=True, **get_dataframe_width_param())
+
+            if HAS_PLOTLY and factor_score_map:
+                factor_names = list(factor_score_map.keys())
+                factor_values = [factor_score_map[factor] for factor in factor_names]
+                theta_closed = factor_names + [factor_names[0]]
+                r_closed = factor_values + [factor_values[0]]
+
+                fig = go.Figure()
+                fig.add_trace(go.Scatterpolar(
+                    r=r_closed,
+                    theta=theta_closed,
+                    fill="toself",
+                    name="VLM 점수",
+                    line=dict(color="rgb(8, 145, 178)", width=2),
+                    fillcolor="rgba(8, 145, 178, 0.18)",
+                    hovertemplate="<b>%{theta}</b><br>점수: %{r:.3f}<extra></extra>"
+                ))
+                fig.update_layout(
+                    polar=dict(
+                        radialaxis=dict(visible=True, range=[0, 1]),
+                        angularaxis=dict(rotation=90, direction="counterclockwise")
+                    ),
+                    height=520,
+                    showlegend=False,
+                    title=dict(text=f"{selected_cafe} 실제 VLM 기반 요인 점수", x=0.5)
+                )
+                st.plotly_chart(fig, use_container_width=True, key=f"multimodal_demo_radar_{selected_cafe}")
+            elif factor_score_map:
+                chart_df = pd.DataFrame({
+                    "요인": list(factor_score_map.keys()),
+                    "점수": list(factor_score_map.values())
+                }).sort_values("점수", ascending=True)
+                st.bar_chart(chart_df.set_index("요인"), height=450)
+
+            with st.expander("요인별 상세 근거 보기"):
+                for item in vlm_result.get("factors", []):
+                    st.markdown(f"**{item.get('name', '요인')}**")
+                    st.write(f"- 점수: {float(item.get('score', 0.5)):.3f}")
+                    st.write(f"- 신뢰도: {float(item.get('confidence', 0.3)):.3f}")
+                    st.write(f"- 시각 근거 부족 여부: {'예' if item.get('insufficient_visual_evidence') else '아니오'}")
+                    visible_cues = item.get("visible_cues", [])
+                    evidence = item.get("evidence", [])
+                    if visible_cues:
+                        st.write(f"- visible cues: {', '.join(visible_cues)}")
+                    if evidence:
+                        st.write(f"- evidence: {' / '.join(evidence)}")
+
+            if vlm_result.get("cross_image_observations"):
+                st.markdown("#### 다중 이미지 종합 관찰")
+                for observation in vlm_result["cross_image_observations"]:
+                    st.write(f"- {observation}")
+
+            if vlm_result.get("limitations"):
+                st.markdown("#### 시각 분석 한계")
+                for limitation in vlm_result["limitations"]:
+                    st.write(f"- {limitation}")
+
+    with col_right:
+        st.subheader("3DGS Concept 결과")
+        st.metric("재구성 준비도", f"{gs_result['readiness_score']}/100")
+        st.metric("준비도 레이블", gs_result["readiness_label"])
+        st.metric("업로드 이미지 수", f"{gs_result['image_count']}장")
+        st.metric("촬영 유형 다양성", f"{gs_result['shot_type_count']}종")
+        st.metric("평균 해상도", f"{gs_result['avg_megapixels']:.2f} MP")
+
+        st.markdown("#### 추후 추출 가능성이 있는 공간 지표")
+        for metric_name in gs_result["extractable_metrics"]:
+            st.write(f"- {metric_name}")
+
+        st.markdown("#### 다음 단계 제안")
+        for recommendation in gs_result["recommendations"]:
+            st.write(f"- {recommendation}")
+
+        if vlm_result is not None and vlm_result.get("recommended_3dgs_capture"):
+            st.markdown("#### VLM이 제안한 추가 촬영 컷")
+            for recommendation in vlm_result["recommended_3dgs_capture"]:
+                st.write(f"- {recommendation}")
+
+    if metrics_df is not None and "cafe_name" in metrics_df.columns and vlm_result is not None:
+        matched_metrics = metrics_df[metrics_df["cafe_name"] == selected_cafe]
+        if not matched_metrics.empty:
+            cafe_metrics = matched_metrics.iloc[0]
+            factor_score_map = {
+                item.get("name"): float(item.get("score", 0.5))
+                for item in vlm_result.get("factors", [])
+                if item.get("name")
+            }
+            compare_rows = []
+            for factor in ALL_FACTORS.keys():
+                text_score = cafe_metrics.get(f"점수_{factor}_calc", cafe_metrics.get(f"점수_{factor}", np.nan))
+                image_score = factor_score_map.get(factor, np.nan)
+                compare_rows.append({
+                    "요인": factor,
+                    "텍스트 점수": round(float(text_score), 3) if pd.notna(text_score) else np.nan,
+                    "이미지 VLM 점수": round(float(image_score), 3) if pd.notna(image_score) else np.nan,
+                    "차이(이미지-텍스트)": round(float(image_score) - float(text_score), 3) if pd.notna(text_score) and pd.notna(image_score) else np.nan,
+                })
+
+            st.markdown("---")
+            st.subheader("텍스트 기반 점수와 비교")
+            st.dataframe(pd.DataFrame(compare_rows), hide_index=True, **get_dataframe_width_param())
