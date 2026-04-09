@@ -1,2 +1,12 @@
 .env
 walking_time.py
+__pycache__/
+modules/__pycache__/
+scripts/__pycache__/
+*.pyc
+.codex-backups/
+.venv/
+.venv_test/
+logs/
+*_part_*.csv
+*_smoke*.csv

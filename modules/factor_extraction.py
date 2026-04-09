@@ -1,10 +1,18 @@
 """
 요인 추출 모듈 (SBERT 리뷰 → 요인 매핑)
 """
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
+
+
+def _to_numpy(embeddings):
+    """torch tensor 또는 numpy 배열을 cosine_similarity 입력 형태로 맞춥니다."""
+    if hasattr(embeddings, "cpu"):
+        return embeddings.cpu().numpy()
+    return np.asarray(embeddings)
 
 
 def extract_factor_mentions(reviews, sbert_model, factor_embeddings, factor_names, threshold):
@@ -26,8 +34,8 @@ def extract_factor_mentions(reviews, sbert_model, factor_embeddings, factor_name
     
     # 코사인 유사도 계산
     similarity_matrix = cosine_similarity(
-        review_embeddings.cpu().numpy(),
-        factor_embeddings.cpu().numpy()
+        _to_numpy(review_embeddings),
+        _to_numpy(factor_embeddings)
     )
     
     # 각 리뷰별로 임계값 이상인 요인 추출

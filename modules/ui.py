@@ -27,7 +27,20 @@ try:
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
-from modules.config import ALL_FACTORS, SIMILARITY_THRESHOLD, CAFE_INFO_CSV
+from modules.config import (
+    ALL_FACTORS,
+    CAFE_INFO_CSV,
+    CAFE_AVG_SENTIMENT_CSV_CANDIDATES,
+    FACTOR_CATEGORIES,
+    FACTOR_NAMES,
+    FACTOR_PREFERENCE_LABELS,
+    LEGACY_FACTOR_MERGES,
+    LEGACY_FACTOR_RENAMES,
+    PLACENESS_METRICS_CSV_CANDIDATES,
+    REVIEW_PLACENESS_CSV_CANDIDATES,
+    REVIEWS_WITH_SENTIMENT_CSV_CANDIDATES,
+    SIMILARITY_THRESHOLD,
+)
 
 # Streamlit 버전 호환성 처리
 def get_dataframe_width_param():
@@ -46,6 +59,125 @@ from modules.vision_analysis import analyze_cafe_images_with_openai, build_vlm_f
 # 한글 형태소 분석 (선택적, 지연 초기화)
 HAS_KONLPY = False
 okt = None
+
+
+def _resolve_existing_csv(candidates):
+    base_dir = Path(__file__).resolve().parent.parent
+    for file_name in candidates:
+        path = base_dir / file_name
+        if path.exists():
+            return path
+    return None
+
+
+def _rename_legacy_factor_columns(df, source_factor, target_factor):
+    rename_map = {}
+    for template in [
+        "점수_{}",
+        "리뷰수_{}",
+        "점수_{}_calc",
+        "리뷰수_{}_calc",
+        "Wi_{}",
+    ]:
+        old_col = template.format(source_factor)
+        new_col = template.format(target_factor)
+        if old_col in df.columns and new_col not in df.columns:
+            rename_map[old_col] = new_col
+    return df.rename(columns=rename_map)
+
+
+def _normalize_legacy_metrics_columns(df):
+    normalized = df.copy()
+
+    for old_factor, new_factor in LEGACY_FACTOR_RENAMES.items():
+        normalized = _rename_legacy_factor_columns(normalized, old_factor, new_factor)
+
+    for new_factor, old_factors in LEGACY_FACTOR_MERGES.items():
+        score_cols = [f"점수_{factor}" for factor in old_factors if f"점수_{factor}" in normalized.columns]
+        if score_cols and f"점수_{new_factor}" not in normalized.columns:
+            normalized[f"점수_{new_factor}"] = normalized[score_cols].mean(axis=1, skipna=True)
+
+        count_cols = [f"리뷰수_{factor}" for factor in old_factors if f"리뷰수_{factor}" in normalized.columns]
+        if count_cols and f"리뷰수_{new_factor}" not in normalized.columns:
+            normalized[f"리뷰수_{new_factor}"] = normalized[count_cols].fillna(0).sum(axis=1)
+
+        calc_score_cols = [f"점수_{factor}_calc" for factor in old_factors if f"점수_{factor}_calc" in normalized.columns]
+        if calc_score_cols and f"점수_{new_factor}_calc" not in normalized.columns:
+            normalized[f"점수_{new_factor}_calc"] = normalized[calc_score_cols].mean(axis=1, skipna=True)
+
+        calc_count_cols = [f"리뷰수_{factor}_calc" for factor in old_factors if f"리뷰수_{factor}_calc" in normalized.columns]
+        if calc_count_cols and f"리뷰수_{new_factor}_calc" not in normalized.columns:
+            normalized[f"리뷰수_{new_factor}_calc"] = normalized[calc_count_cols].fillna(0).sum(axis=1)
+
+        weight_cols = [f"Wi_{factor}" for factor in old_factors if f"Wi_{factor}" in normalized.columns]
+        if weight_cols and f"Wi_{new_factor}" not in normalized.columns:
+            normalized[f"Wi_{new_factor}"] = normalized[weight_cols].fillna(0).sum(axis=1).clip(upper=1.0)
+
+    return normalized
+
+
+@st.cache_data
+def _load_metrics_dataframe():
+    csv_path = _resolve_existing_csv(PLACENESS_METRICS_CSV_CANDIDATES)
+    if csv_path is None:
+        return None, None
+
+    try:
+        df_metrics = pd.read_csv(csv_path, encoding="utf-8-sig")
+    except Exception:
+        try:
+            df_metrics = pd.read_csv(csv_path)
+        except Exception:
+            return None, None
+
+    return _normalize_legacy_metrics_columns(df_metrics), csv_path
+
+
+@st.cache_data
+def _load_csv_candidates(candidates):
+    csv_path = _resolve_existing_csv(candidates)
+    if csv_path is None:
+        return None, None
+
+    try:
+        df = pd.read_csv(csv_path, encoding="utf-8-sig")
+    except Exception:
+        try:
+            df = pd.read_csv(csv_path)
+        except Exception:
+            return None, None
+
+    return df, csv_path
+
+
+def preload_result_csvs_to_session_state():
+    """Preload generated result CSVs so UI tabs use the latest saved outputs by default."""
+    if st.session_state.get("precomputed_results_loaded"):
+        return
+
+    df_metrics, metrics_path = _load_metrics_dataframe()
+    if df_metrics is not None:
+        st.session_state.df_final_metrics = df_metrics
+        st.session_state.precomputed_metrics_csv = metrics_path.name if metrics_path else None
+
+    df_review_scores, review_scores_path = _load_csv_candidates(REVIEW_PLACENESS_CSV_CANDIDATES)
+    if df_review_scores is not None:
+        st.session_state.df_review_scores = df_review_scores
+        st.session_state.precomputed_review_scores_csv = review_scores_path.name if review_scores_path else None
+
+    df_reviews_with_sentiment, reviews_sentiment_path = _load_csv_candidates(REVIEWS_WITH_SENTIMENT_CSV_CANDIDATES)
+    if df_reviews_with_sentiment is not None:
+        st.session_state.df_reviews_with_sentiment = df_reviews_with_sentiment
+        st.session_state.precomputed_reviews_with_sentiment_csv = (
+            reviews_sentiment_path.name if reviews_sentiment_path else None
+        )
+
+    df_avg_sentiment, avg_sentiment_path = _load_csv_candidates(CAFE_AVG_SENTIMENT_CSV_CANDIDATES)
+    if df_avg_sentiment is not None:
+        st.session_state.df_avg_sentiment = df_avg_sentiment
+        st.session_state.precomputed_avg_sentiment_csv = avg_sentiment_path.name if avg_sentiment_path else None
+
+    st.session_state.precomputed_results_loaded = True
 
 def _init_konlpy():
     """konlpy를 지연 초기화합니다. Java가 없으면 None을 반환합니다."""
@@ -145,12 +277,12 @@ def render_data_preview(file_path, sentiment_pipeline, sentiment_model_name, tab
             )
             
             # 재실행 버튼
-            if st.button("🔄 감성 분석 다시 실행", type="secondary", key=f"preview_sentiment_rerun{tab_suffix}"):
+            if False and st.button("🔄 감성 분석 다시 실행", type="secondary", key=f"preview_sentiment_rerun{tab_suffix}"):
                 st.session_state.preview_sentiment_result = None
                 st.rerun()
         else:
             # 감성 분석 실행 버튼
-            if st.button("🔍 감성 분석 추가 (긍정/부정/중립)", type="secondary", key=f"preview_sentiment_analyze{tab_suffix}"):
+            if False and st.button("🔍 감성 분석 추가 (긍정/부정/중립)", type="secondary", key=f"preview_sentiment_analyze{tab_suffix}"):
                 _run_preview_sentiment_analysis(df_preview_sorted, sentiment_pipeline, sentiment_model_name)
     else:
         st.warning(f"필요한 컬럼이 없습니다. 현재 컬럼: {list(df_preview.columns)}")
@@ -266,8 +398,15 @@ def render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, se
     st.caption(f"⚠️ 언급 0인 요인은 fsi=0.5, Wi=0 처리되어 Mu에 영향 없음")
     
     total_reviews_count = len(df_reviews)
+
+    precomputed_csv = st.session_state.get("precomputed_metrics_csv")
+    if st.session_state.df_final_metrics is not None:
+        if precomputed_csv:
+            st.success(f"저장된 장소성 결과 CSV를 불러와 표시 중입니다: `{precomputed_csv}`")
+        _render_placeness_results()
+        st.markdown("---")
     
-    if st.button("장소성 요인 점수 계산 시작", type="primary", key="placeness_calculation_start"):
+    if False and st.button("장소성 요인 점수 다시 계산", type="secondary", key="placeness_calculation_start"):
         with st.spinner("장소성 요인별 점수 계산 및 연구 지표 산출 중..."):
             try:
                 df_place_scores, df_review_scores = calculate_place_scores(
@@ -288,15 +427,16 @@ def render_placeness_calculation(df_reviews, sbert_model, sentiment_pipeline, se
                 st.session_state.df_review_scores = df_review_scores
                 st.session_state.df_final_metrics = df_final_metrics
                 st.session_state.df_place_scores = df_place_scores
+                st.session_state.precomputed_metrics_csv = None
+                st.session_state.precomputed_review_scores_csv = None
                 
             except Exception as e:
                 st.error(f"점수 계산 중 오류 발생: {e}")
                 import traceback
                 st.code(traceback.format_exc())
-    
-    # 결과 표시
-    if st.session_state.df_final_metrics is not None:
-        _render_placeness_results()
+                return
+
+            st.rerun()
 
 
 def _render_placeness_results():
@@ -335,7 +475,7 @@ def _render_placeness_results():
     st.download_button(
         "장소성 최종 연구 지표 CSV 다운로드 (Wi, Mu, Sigma 포함)",
         data=csv,
-        file_name="placeness_final_research_metrics.csv",
+        file_name="placeness_final_research_metrics_real.csv",
         mime="text/csv"
     )
 
@@ -375,7 +515,7 @@ def render_sentiment_analysis(df_reviews, sentiment_pipeline, sentiment_model_na
         st.download_button(
             "📥 개별 리뷰 감성 분석 결과 CSV 다운로드",
             data=csv,
-            file_name="review_sentiment_analysis.csv",
+            file_name="reviews_with_sentiment_real.csv",
             mime="text/csv"
         )
 
@@ -408,7 +548,7 @@ def render_detailed_results():
             st.download_button(
                 "📥 리뷰별 상세 결과 CSV 다운로드",
                 data=csv,
-                file_name="review_sentiment_analysis.csv",
+                file_name="reviews_with_sentiment_real.csv",
                 mime="text/csv"
             )
         elif has_placeness:
@@ -429,14 +569,14 @@ def render_detailed_results():
                 display_df, 
                 hide_index=True, 
             )
-            st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 ({len(factor_names)}개 요인 전체 표시)")
+            st.caption(f"총 {len(st.session_state.df_review_scores):,}개 리뷰 ({len(FACTOR_NAMES)}개 요인 전체 표시)")
             
             # CSV 다운로드 버튼 (원본 데이터, 포맷팅 없이)
             csv = st.session_state.df_review_scores[available_cols].to_csv(index=False).encode("utf-8-sig")
             st.download_button(
                 "📥 리뷰별 상세 결과 CSV 다운로드",
                 data=csv,
-                file_name="review_placeness_scores.csv",
+                file_name="review_placeness_scores_real.csv",
                 mime="text/csv"
             )
             
@@ -471,7 +611,7 @@ def _render_merged_results():
     if missing_factors:
         st.warning(f"⚠️ 다음 요인 컬럼이 데이터에 없습니다: {', '.join(missing_factors)}")
     
-    st.subheader(f"✅ 리뷰별 감성 분석 + 장소성 요인 점수 (전체 {len(factor_names)}개 요인)")
+    st.subheader(f"✅ 리뷰별 감성 분석 + 장소성 요인 점수 (전체 {len(FACTOR_NAMES)}개 요인)")
     st.caption(f"총 {len(df_merged):,}개 리뷰 중 필터링된 결과 표시")
     
     # 필터 옵션
@@ -514,14 +654,14 @@ def _render_merged_results():
             hide_index=True,
         )
 
-        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 ({len(factor_names)}개 요인 전체)")
+        st.caption(f"총 {len(filtered_df):,}개 리뷰 표시 ({len(FACTOR_NAMES)}개 요인 전체)")
         
         # 다운로드 버튼
         csv = filtered_df[available_cols].to_csv(index=False).encode("utf-8-sig")
         st.download_button(
             "📥 리뷰별 상세 결과 CSV 다운로드",
             data=csv,
-            file_name="review_detailed_analysis.csv",
+            file_name="review_detailed_analysis_real.csv",
             mime="text/csv"
         )
         
@@ -1317,18 +1457,7 @@ def _generate_review_summary_with_openai(cafe_name, review_texts, selected_facto
         reviews_text = reviews_text[:5000] + "..."
     
     # 선택한 세부 항목 설명
-    factor_descriptions = {
-        "심미성": "인테리어가 예쁜 곳",
-        "개방성": "답답하지 않고 트인 곳",
-        "감각적 경험": "감각적인 경험을 할 수 있는 곳",
-        "접근성": "접근이 편리한 곳",
-        "쾌적성": "쾌적한 곳",
-        "활동성": "모임하기 좋은 곳",
-        "상호작용성": "소통하기 좋은 곳",
-        "상징성": "공간 정체성이 뚜렷한 곳",
-        "기억 및 선호": "기억에 남고 다시 가고 싶은 곳",
-        "지역 정체성": "지역 문화를 반영한 곳",
-    }
+    factor_descriptions = FACTOR_PREFERENCE_LABELS
     
     selected_factors_desc = [factor_descriptions.get(f, f) for f in selected_factors]
     
@@ -1374,24 +1503,18 @@ def render_cafe_factor_analysis():
     """카페별 요인 점수 분석 탭 렌더링"""
     st.header("카페별 요인 점수 분석")
     
-    # CSV 파일 경로
-    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
-    
-    if not csv_path.exists():
-        st.error(f"⚠️ 결과 CSV 파일을 찾을 수 없습니다: {csv_path}")
-        st.info("placeness_final_research_metrics (3).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
-        return
-    
-    # CSV 파일 로드
-    try:
-        df_metrics = pd.read_csv(csv_path, encoding='utf-8-sig')
-    except Exception as e:
-        st.error(f"CSV 파일 로드 중 오류 발생: {e}")
+    df_metrics, csv_path = _load_metrics_dataframe()
+
+    if csv_path is None or df_metrics is None:
+        st.error("⚠️ 결과 CSV 파일을 찾을 수 없습니다.")
+        st.info(f"다음 파일 중 하나가 프로젝트 루트에 있는지 확인해주세요: {', '.join(PLACENESS_METRICS_CSV_CANDIDATES)}")
         return
     
     if df_metrics.empty:
         st.warning("로드된 데이터가 없습니다.")
         return
+
+    st.caption(f"현재 분석 결과 파일: {csv_path.name}")
     
     # 카페 목록 가져오기
     cafe_list = sorted(df_metrics['cafe_name'].unique().tolist())
@@ -1468,11 +1591,7 @@ def render_cafe_factor_analysis():
     
     if valid_factors:
         # 요인을 카테고리별로 그룹화
-        factor_categories = {
-            "물리적 특성": ["심미성", "개방성", "감각적 경험", "접근성", "쾌적성"],
-            "활동적 특성": ["활동성", "상호작용성"],
-            "의미적 특성": ["상징성", "기억 및 선호", "지역 정체성"],
-        }
+        factor_categories = FACTOR_CATEGORIES
         
         if HAS_PLOTLY:
             # 카테고리별로 탭 생성
@@ -1736,24 +1855,18 @@ def render_cafe_recommendation():
 
     st.caption("선호하는 특성에 맞는 카페를 추천해드립니다.")
     
-    # CSV 파일 경로
-    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
-    
-    if not csv_path.exists():
-        st.error(f"⚠️ 결과 CSV 파일을 찾을 수 없습니다: {csv_path}")
-        st.info("placeness_final_research_metrics (3).csv 파일이 프로젝트 루트에 있는지 확인해주세요.")
-        return
-    
-    # CSV 파일 로드
-    try:
-        df_metrics = pd.read_csv(csv_path, encoding='utf-8-sig')
-    except Exception as e:
-        st.error(f"CSV 파일 로드 중 오류 발생: {e}")
+    df_metrics, csv_path = _load_metrics_dataframe()
+
+    if csv_path is None or df_metrics is None:
+        st.error("⚠️ 결과 CSV 파일을 찾을 수 없습니다.")
+        st.info(f"다음 파일 중 하나가 프로젝트 루트에 있는지 확인해주세요: {', '.join(PLACENESS_METRICS_CSV_CANDIDATES)}")
         return
     
     if df_metrics.empty:
         st.warning("로드된 데이터가 없습니다.")
         return
+
+    st.caption(f"현재 추천 기준 파일: {csv_path.name}")
     
     # 행정구 파싱 (cafe_name에서 추출)
     # 서울시 실제 행정구 목록
@@ -1849,27 +1962,10 @@ def render_cafe_recommendation():
         st.markdown("---")
         st.subheader(f"{preference_type} 세부 항목 선택")
         
-        detail_options = []
-        
-        if preference_type == "물리적 특성":
-            detail_options = [
-                ("심미성", "인테리어가 예쁜 곳"),
-                ("쾌적성", "쾌적한 곳"),
-                ("접근성", "접근이 편리한 곳"),
-                ("개방성", "공간이 트여 답답하지 않은 곳"),
-                ("감각적 경험", "감각적인 경험을 할 수 있는 곳")
-            ]
-        elif preference_type == "활동적 특성":
-            detail_options = [
-                ("상호작용성", "대화와 교류가 자연스러운 곳"),
-                ("활동성", "모임하기 좋은 곳")
-            ]
-        elif preference_type == "의미적 특성":
-            detail_options = [
-                ("상징성", "독특한 공간 정체성이 있는 곳"),
-                ("기억 및 선호", "기억에 남고 다시 가고 싶은 곳"),
-                ("지역 정체성", "지역 문화를 반영한 곳")
-            ]
+        detail_options = [
+            (factor_name, FACTOR_PREFERENCE_LABELS.get(factor_name, factor_name))
+            for factor_name in FACTOR_CATEGORIES.get(preference_type, [])
+        ]
         
         # 세부 항목을 버튼으로 표시 (수형도처럼)
         st.markdown("<div style='margin-left: 20px;'>", unsafe_allow_html=True)
@@ -2114,17 +2210,8 @@ def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.D
 @st.cache_data
 def _load_multimodal_demo_metrics():
     """멀티모달 데모에서 사용할 기존 장소성 점수 CSV를 로드합니다."""
-    csv_path = Path(__file__).resolve().parent.parent / "placeness_final_research_metrics (3).csv"
-    if not csv_path.exists():
-        return None
-
-    try:
-        return pd.read_csv(csv_path, encoding="utf-8-sig")
-    except Exception:
-        try:
-            return pd.read_csv(csv_path)
-        except Exception:
-            return None
+    df_metrics, _csv_path = _load_metrics_dataframe()
+    return df_metrics
 
 
 def _open_uploaded_image(uploaded_file):
@@ -2529,3 +2616,56 @@ def render_multimodal_space_demo(df_reviews: pd.DataFrame):
             st.markdown("---")
             st.subheader("텍스트 기반 점수와 비교")
             st.dataframe(pd.DataFrame(compare_rows), hide_index=True, **get_dataframe_width_param())
+
+
+def render_sentiment_analysis_saved(df_reviews, sentiment_pipeline, sentiment_model_name):
+    """Render sentiment results from saved CSVs by default, with optional recomputation."""
+    st.header("2. 개별 리뷰 감성 분석 및 카페별 평균")
+
+    precomputed_reviews_csv = st.session_state.get("precomputed_reviews_with_sentiment_csv")
+    precomputed_avg_csv = st.session_state.get("precomputed_avg_sentiment_csv")
+
+    if st.session_state.df_reviews_with_sentiment is not None and st.session_state.df_avg_sentiment is not None:
+        source_csvs = [name for name in [precomputed_reviews_csv, precomputed_avg_csv] if name]
+        if source_csvs:
+            st.success(f"저장된 감성 분석 결과 CSV를 불러와 표시 중입니다: `{', '.join(source_csvs)}`")
+
+        st.subheader("카페별 평균 감성 점수")
+        st.dataframe(st.session_state.df_avg_sentiment.set_index("cafe_name"), **get_dataframe_width_param())
+
+        st.subheader("개별 리뷰 감성 분석 결과 샘플")
+        sample_df = st.session_state.df_reviews_with_sentiment[
+            ["cafe_name", "review_text", "sentiment_label", "sentiment_score"]
+        ].head(20)
+        st.dataframe(sample_df, **get_dataframe_width_param())
+
+        csv = st.session_state.df_reviews_with_sentiment.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "감성 분석 결과 CSV 다운로드",
+            data=csv,
+            file_name="reviews_with_sentiment_real.csv",
+            mime="text/csv",
+            key="download_reviews_with_sentiment_real",
+        )
+
+        st.markdown("---")
+
+    if False and st.button("개별 리뷰 감성 분석 다시 계산", type="secondary", key="sentiment_analysis_saved_start"):
+        with st.spinner("개별 리뷰 긍정/부정 감성 점수 계산 중...(KoBERT/KoELECTRA)..."):
+            try:
+                df_reviews_with_sentiment, df_avg_sentiment = run_sentiment_analysis(
+                    df_reviews.copy(),
+                    sentiment_pipeline,
+                    sentiment_model_name,
+                )
+
+                st.session_state.df_reviews_with_sentiment = df_reviews_with_sentiment
+                st.session_state.df_avg_sentiment = df_avg_sentiment
+                st.session_state.precomputed_reviews_with_sentiment_csv = None
+                st.session_state.precomputed_avg_sentiment_csv = None
+            except Exception as e:
+                st.error(f"감성 분석 중 오류 발생: {e}")
+                st.code(traceback.format_exc())
+                return
+
+            st.rerun()
