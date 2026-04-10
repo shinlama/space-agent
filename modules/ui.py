@@ -2026,6 +2026,7 @@ def render_cafe_recommendation():
             else:
                 # 추천 로직
                 recommendations = _calculate_recommendations(df_filtered, selected_details)
+                st.caption("추천 점수는 선택한 세부 요인의 점수를 동일 가중 평균한 값입니다. 값이 비어 있으면 중립값 0.5로 반영합니다.")
                 
                 if recommendations.empty:
                     st.warning("선택한 조건에 맞는 카페를 찾을 수 없습니다.")
@@ -2167,7 +2168,7 @@ def render_cafe_recommendation():
                             st.markdown("---")
 
 
-def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.DataFrame:
+def _calculate_recommendations_legacy(df: pd.DataFrame, selected_factors: list) -> pd.DataFrame:
     """선택한 요인에 따라 카페를 추천합니다."""
     # 각 요인별 점수 컬럼명
     factor_score_cols = [f"점수_{factor}" for factor in selected_factors]
@@ -2204,6 +2205,43 @@ def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.D
     # 추천 점수 기준으로 정렬 (내림차순)
     df_scored = df_scored.sort_values('추천_점수', ascending=False)
     
+    return df_scored
+
+
+def _calculate_recommendations(df: pd.DataFrame, selected_factors: list) -> pd.DataFrame:
+    """선택한 요인에 따라 카페를 추천합니다."""
+    if not selected_factors:
+        return pd.DataFrame()
+
+    def _resolve_factor_score(row: pd.Series, factor: str) -> float:
+        """선택된 요인은 모두 동일 가중으로 반영하고, 빈 값은 중립값 0.5로 처리합니다."""
+        candidate_cols = [f"점수_{factor}_calc", f"점수_{factor}"]
+
+        for col in candidate_cols:
+            if col not in row.index:
+                continue
+
+            score = row[col]
+            if pd.isna(score):
+                continue
+
+            try:
+                return float(score)
+            except (TypeError, ValueError):
+                continue
+
+        return 0.5
+
+    df_scored = df.copy()
+    scores = []
+
+    for _, row in df_scored.iterrows():
+        factor_scores = [_resolve_factor_score(row, factor) for factor in selected_factors]
+        scores.append(sum(factor_scores) / len(factor_scores))
+
+    df_scored["추천_점수"] = scores
+    df_scored = df_scored.sort_values("추천_점수", ascending=False)
+
     return df_scored
 
 
