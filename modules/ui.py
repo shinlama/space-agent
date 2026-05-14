@@ -1470,14 +1470,6 @@ def _is_truthy(value) -> bool:
     return str(value).strip().lower() in {"true", "1", "yes", "y", "t"}
 
 
-def _factor_category_lookup() -> dict:
-    lookup = {}
-    for category, factors in FACTOR_CATEGORIES.items():
-        for factor in factors:
-            lookup[factor] = category
-    return lookup
-
-
 def _mapped_factors_for_review(row: pd.Series) -> list:
     mapped = []
     for factor in FACTOR_NAMES:
@@ -1525,31 +1517,6 @@ def _build_review_mapping_summary(df_cafe_review_map: pd.DataFrame) -> pd.DataFr
     return pd.DataFrame(rows)
 
 
-def _render_mapping_pipeline_cards(total_reviews: int, mapped_reviews: int, sentence_mappings: int, factor_count: int):
-    st.markdown("#### 연구 모듈 진행 단계")
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.markdown("**1. Input**")
-        st.metric("선택 카페 리뷰", f"{total_reviews:,}개")
-        st.caption("원본 Google 리뷰 텍스트")
-
-    with col2:
-        st.markdown("**2. 문장 단위 분리**")
-        st.metric("요인 근거 문장", f"{sentence_mappings:,}건")
-        st.caption("리뷰를 문장 단위로 분리")
-
-    with col3:
-        st.markdown("**3. 요인 매핑**")
-        st.metric("매핑된 리뷰", f"{mapped_reviews:,}개")
-        st.caption("LLM이 codebook 기준으로 다중 라벨링")
-
-    with col4:
-        st.markdown("**4. 요약/점수화 연결**")
-        st.metric("감지 요인", f"{factor_count:,}개")
-        st.caption("요인별 언급 수와 근거를 카페 단위로 집계")
-
-
 def _render_llm_factor_mapping_demo(selected_cafe: str):
     """카페별 리뷰가 LLM 기반 장소성 요인으로 매핑되는 과정을 보여줍니다."""
     df_review_map, df_sentence_map, review_path, sentence_path = _load_llm_factor_mapping_data()
@@ -1570,14 +1537,10 @@ def _render_llm_factor_mapping_demo(selected_cafe: str):
         st.warning(f"`{selected_cafe}`에 대한 LLM 요인 매핑 결과를 찾지 못했습니다.")
         return
 
-    mapped_mask = df_cafe_review_map.apply(lambda row: bool(_mapped_factors_for_review(row)), axis=1)
-    mapped_reviews = int(mapped_mask.sum())
-    factor_count = int(df_cafe_sentence_map["factor"].nunique()) if not df_cafe_sentence_map.empty else 0
-
     st.markdown("#### 리뷰별 매핑 결과")
     review_summary = _build_review_mapping_summary(df_cafe_review_map)
 
-    filter_col1, filter_col2, filter_col3 = st.columns([1.2, 1, 1])
+    filter_col1, filter_col2 = st.columns([1.4, 1])
     with filter_col1:
         selected_factors = st.multiselect(
             "요인 필터",
@@ -1592,15 +1555,6 @@ def _render_llm_factor_mapping_demo(selected_cafe: str):
             value=False,
             key=f"llm_mapping_only_mapped_{selected_cafe}",
         )
-    with filter_col3:
-        min_confidence = st.slider(
-            "최소 신뢰도",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.0,
-            step=0.05,
-            key=f"llm_mapping_confidence_{selected_cafe}",
-        )
 
     filtered_summary = review_summary.copy()
     if selected_factors:
@@ -1610,25 +1564,12 @@ def _render_llm_factor_mapping_demo(selected_cafe: str):
         ]
     if show_only_mapped:
         filtered_summary = filtered_summary[filtered_summary["매핑 요인"] != "매핑 없음"]
-    if min_confidence > 0:
-        filtered_summary = filtered_summary[
-            filtered_summary["최고 신뢰도"].fillna(0) >= min_confidence
-        ]
 
     st.dataframe(
         filtered_summary,
         hide_index=True,
         height=460,
         **get_dataframe_width_param(),
-    )
-
-    csv = filtered_summary.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        "현재 리뷰별 매핑 결과 CSV 다운로드",
-        data=csv,
-        file_name=f"{selected_cafe}_llm_factor_mapping_reviews.csv",
-        mime="text/csv",
-        key=f"download_llm_review_mapping_{selected_cafe}",
     )
 
     st.markdown("#### 선택 리뷰의 문장별 매핑 근거")
@@ -1658,15 +1599,8 @@ def _render_llm_factor_mapping_demo(selected_cafe: str):
         st.info("이 리뷰는 장소성 요인으로 매핑된 문장이 없습니다.")
         return
 
-    sentiment_label_map = {
-        "positive": "긍정",
-        "negative": "부정",
-        "neutral": "중립",
-        "mixed": "혼합",
-    }
-    detail_rows["감성 힌트"] = detail_rows["sentiment_hint"].map(sentiment_label_map).fillna(detail_rows["sentiment_hint"])
     display_detail = detail_rows[
-        ["sentence_id", "sentence", "factor", "confidence", "evidence", "reason", "감성 힌트"]
+        ["sentence_id", "sentence", "factor", "confidence", "evidence", "reason"]
     ].rename(columns={
         "sentence_id": "문장 ID",
         "sentence": "분리된 문장",
@@ -1676,36 +1610,6 @@ def _render_llm_factor_mapping_demo(selected_cafe: str):
         "reason": "매핑 이유",
     })
     st.dataframe(display_detail, hide_index=True, **get_dataframe_width_param())
-
-    with st.expander("요인 매핑 모듈 단계와 카페 단위 분포 보기", expanded=False):
-        _render_mapping_pipeline_cards(
-            total_reviews=len(df_cafe_review_map),
-            mapped_reviews=mapped_reviews,
-            sentence_mappings=len(df_cafe_sentence_map),
-            factor_count=factor_count,
-        )
-
-        if not df_cafe_sentence_map.empty:
-            st.markdown("#### 카페 단위 매핑 분포")
-            factor_counts = (
-                df_cafe_sentence_map["factor"]
-                .value_counts()
-                .reindex(FACTOR_NAMES, fill_value=0)
-                .reset_index()
-            )
-            factor_counts.columns = ["요인", "문장 매핑 수"]
-
-            col_chart, col_table = st.columns([1.2, 1])
-            with col_chart:
-                st.bar_chart(factor_counts.set_index("요인"), height=320)
-            with col_table:
-                category_lookup = _factor_category_lookup()
-                factor_counts["상위 분류"] = factor_counts["요인"].map(category_lookup)
-                st.dataframe(
-                    factor_counts[["상위 분류", "요인", "문장 매핑 수"]],
-                    hide_index=True,
-                    **get_dataframe_width_param(),
-                )
 
 
 def _generate_review_summary_with_openai(cafe_name, review_texts, selected_factors):
