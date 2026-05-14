@@ -10,3 +10,4 @@ scripts/__pycache__/
 logs/
 *_part_*.csv
 *_smoke*.csv
+llm_factor_mapping_raw*.jsonl
