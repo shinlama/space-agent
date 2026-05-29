@@ -396,9 +396,9 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
 
 def main() -> None:
     inject_css()
-    st.title("공간 리뷰 텍스트 기반 장소성 정량화 데모")
+    st.title("공간 리뷰 텍스트 기반 장소성 정량화")
     st.markdown(
-        '<p class="research-caption">선행연구 기반 장소성 요인 평가 체계에서 출발해, 실제 리뷰의 요인 매핑 결과와 점수 산출 과정을 단계적으로 확인하는 연구용 데모입니다.</p>',
+        '<p class="research-caption">선행연구 기반 장소성 요인 평가 체계를 바탕으로 리뷰의 장소성 요인 매핑 결과와 점수 산출 과정을 단계적으로 확인하는 데모입니다.</p>',
         unsafe_allow_html=True,
     )
 
