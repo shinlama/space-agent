@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import html
+import re
 import sys
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import pandas as pd
@@ -103,8 +105,130 @@ def sentiment_badge(label: str) -> str:
     return f'<span class="badge {class_name}">{html.escape(label)}</span>'
 
 
+def compact_with_index(text: str) -> tuple[str, list[int]]:
+    chars: list[str] = []
+    indexes: list[int] = []
+    for index, char in enumerate(text):
+        if char.isspace():
+            continue
+        chars.append(char)
+        indexes.append(index)
+    return "".join(chars), indexes
+
+
+def normalized_text(text: str) -> str:
+    return re.sub(r"\s+", "", text)
+
+
+def spans_overlap(left: tuple[int, int], right: tuple[int, int]) -> bool:
+    return max(left[0], right[0]) < min(left[1], right[1])
+
+
+def find_exact_span(review_text: str, evidence: str, used_spans: list[tuple[int, int]]) -> tuple[int, int] | None:
+    start = review_text.find(evidence)
+    while start != -1:
+        span = (start, start + len(evidence))
+        if not any(spans_overlap(span, used_span) for used_span in used_spans):
+            return span
+        start = review_text.find(evidence, start + 1)
+    return None
+
+
+def find_compact_span(review_text: str, evidence: str, used_spans: list[tuple[int, int]]) -> tuple[int, int] | None:
+    compact_review, review_indexes = compact_with_index(review_text)
+    compact_evidence = normalized_text(evidence)
+    start = compact_review.find(compact_evidence)
+    while start != -1:
+        end = start + len(compact_evidence) - 1
+        span = (review_indexes[start], review_indexes[end] + 1)
+        if not any(spans_overlap(span, used_span) for used_span in used_spans):
+            return span
+        start = compact_review.find(compact_evidence, start + 1)
+    return None
+
+
+def trim_fuzzy_span(review_text: str, evidence: str, span: tuple[int, int]) -> tuple[int, int]:
+    start, end = span
+    candidate = review_text[start:end]
+    compact_candidate, candidate_indexes = compact_with_index(candidate)
+    evidence_normalized = normalized_text(evidence)
+    matching_blocks = [
+        block
+        for block in SequenceMatcher(None, evidence_normalized, compact_candidate).get_matching_blocks()
+        if block.size >= 2
+    ]
+    if not matching_blocks:
+        return span
+
+    compact_start = min(block.b for block in matching_blocks)
+    compact_end = max(block.b + block.size for block in matching_blocks)
+    if compact_end <= compact_start:
+        return span
+
+    trimmed_start = start + candidate_indexes[compact_start]
+    trimmed_end = start + candidate_indexes[compact_end - 1] + 1
+    token_start = trimmed_start
+    while token_start > 0 and not review_text[token_start - 1].isspace():
+        token_start -= 1
+    token_end = trimmed_start
+    while token_end < len(review_text) and not review_text[token_end].isspace():
+        token_end += 1
+    if token_start < trimmed_start >= token_end - 1:
+        next_start = token_end
+        while next_start < trimmed_end and review_text[next_start].isspace():
+            next_start += 1
+        if next_start < trimmed_end:
+            trimmed_start = next_start
+
+    if trimmed_end - trimmed_start < 4:
+        return span
+    return trimmed_start, trimmed_end
+
+
+def find_fuzzy_span(review_text: str, evidence: str, used_spans: list[tuple[int, int]]) -> tuple[int, int] | None:
+    tokens = list(re.finditer(r"\S+", review_text))
+    evidence_tokens = re.findall(r"\S+", evidence)
+    if not tokens or not evidence_tokens:
+        return None
+
+    target_len = len(evidence_tokens)
+    min_len = max(1, target_len - 3)
+    max_len = min(len(tokens), target_len + 3)
+    evidence_normalized = normalized_text(evidence)
+    best_span: tuple[int, int] | None = None
+    best_score = 0.0
+
+    for window_len in range(min_len, max_len + 1):
+        for start_index in range(0, len(tokens) - window_len + 1):
+            start = tokens[start_index].start()
+            end = tokens[start_index + window_len - 1].end()
+            candidate_span = (start, end)
+            if any(spans_overlap(candidate_span, used_span) for used_span in used_spans):
+                continue
+            candidate = normalized_text(review_text[start:end])
+            score = SequenceMatcher(None, evidence_normalized, candidate).ratio()
+            if score > best_score:
+                best_score = score
+                best_span = candidate_span
+
+    if best_score < 0.68:
+        return None
+    return trim_fuzzy_span(review_text, evidence, best_span)
+
+
+def merge_spans(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    if not spans:
+        return []
+    merged: list[tuple[int, int]] = []
+    for start, end in sorted(spans):
+        if not merged or start > merged[-1][1]:
+            merged.append((start, end))
+        else:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+    return merged
+
+
 def highlight_evidence(review_text: str, evidence_rows: pd.DataFrame) -> str:
-    highlighted = html.escape(review_text)
     evidences = (
         evidence_rows["evidence"]
         .dropna()
@@ -113,17 +237,27 @@ def highlight_evidence(review_text: str, evidence_rows: pd.DataFrame) -> str:
         .drop_duplicates()
         .sort_values(key=lambda s: s.str.len(), ascending=False)
     )
+
+    spans: list[tuple[int, int]] = []
     for evidence in evidences:
         if not evidence:
             continue
-        escaped = html.escape(evidence)
-        if escaped in highlighted:
-            highlighted = highlighted.replace(
-                escaped,
-                f"<mark>{escaped}</mark>",
-                1,
-            )
-    return f'<div class="review-box">{highlighted}</div>'
+        span = (
+            find_exact_span(review_text, evidence, spans)
+            or find_compact_span(review_text, evidence, spans)
+            or find_fuzzy_span(review_text, evidence, spans)
+        )
+        if span is not None:
+            spans.append(span)
+
+    parts: list[str] = []
+    cursor = 0
+    for start, end in merge_spans(spans):
+        parts.append(html.escape(review_text[cursor:start]))
+        parts.append(f"<mark>{html.escape(review_text[start:end])}</mark>")
+        cursor = end
+    parts.append(html.escape(review_text[cursor:]))
+    return f'<div class="review-box">{"".join(parts)}</div>'
 
 
 def inject_css() -> None:
