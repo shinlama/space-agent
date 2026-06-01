@@ -13,6 +13,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+RAW_REVIEW_CSV = PROJECT_ROOT / "google_reviews_scraped_cleaned.csv"
+SAMPLE_PLACE_CSV = PROJECT_ROOT / "서울시_상권_카페빵_표본.csv"
+
 from modules.research_scoring import (
     DEFAULT_MAPPING_CSV,
     FACTOR_CATEGORIES,
@@ -35,6 +38,36 @@ def load_demo_data(input_csv: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     return calculate_scores(Path(input_csv))
 
 
+@st.cache_data(show_spinner=False)
+def load_source_data_summary() -> dict[str, int | None]:
+    summary: dict[str, int | None] = {
+        "sample_place_count": None,
+        "collected_review_count": None,
+        "collected_place_count": None,
+    }
+
+    if SAMPLE_PLACE_CSV.exists():
+        for encoding in ("utf-8-sig", "cp949"):
+            try:
+                sample = pd.read_csv(SAMPLE_PLACE_CSV, encoding=encoding)
+                summary["sample_place_count"] = len(sample)
+                break
+            except (UnicodeDecodeError, ValueError):
+                continue
+
+    if RAW_REVIEW_CSV.exists():
+        for encoding in ("utf-8-sig", "cp949"):
+            try:
+                raw_reviews = pd.read_csv(RAW_REVIEW_CSV, encoding=encoding, usecols=["상호명"])
+                summary["collected_review_count"] = len(raw_reviews)
+                summary["collected_place_count"] = raw_reviews["상호명"].nunique(dropna=True)
+                break
+            except (UnicodeDecodeError, ValueError):
+                continue
+
+    return summary
+
+
 def format_score(value: float | int | None) -> str:
     if pd.isna(value):
         return "-"
@@ -45,6 +78,18 @@ def format_percent(value: float | int | None) -> str:
     if pd.isna(value):
         return "-"
     return f"{float(value) * 100:.1f}%"
+
+
+def format_count(value: float | int | None) -> str:
+    if value is None or pd.isna(value):
+        return "-"
+    return f"{int(value):,}"
+
+
+def format_count_unit(value: float | int | None, unit: str) -> str:
+    if value is None or pd.isna(value):
+        return "-"
+    return f"{int(value):,}{unit}"
 
 
 def sentiment_badge(label: str) -> str:
@@ -220,7 +265,7 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
     st.markdown(highlight_evidence(review_text, review_rows), unsafe_allow_html=True)
 
     display = review_rows[
-        ["evidence", "factor", "sentiment_label", "sentiment_value", "confidence", "reason"]
+        ["evidence", "factor", "sentiment_label", "sentiment_value", "reason"]
     ].copy()
     display = display.rename(
         columns={
@@ -228,12 +273,10 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
             "factor": "매핑 요인",
             "sentiment_label": "감성 방향",
             "sentiment_value": "계산값",
-            "confidence": "매핑 신뢰도",
             "reason": "매핑 근거",
         }
     )
     display["계산값"] = display["계산값"].map(lambda v: f"{v:.1f}")
-    display["매핑 신뢰도"] = display["매핑 신뢰도"].map(lambda v: format_score(v))
 
     st.markdown("##### 구절별 매핑 결과")
     st.dataframe(display, use_container_width=True, hide_index=True)
@@ -257,11 +300,14 @@ def render_score_results(
     st.subheader("3. 매핑된 요인의 점수화 계산 결과")
 
     selected_place = place_scores[place_scores["cafe_name"] == cafe_name].iloc[0]
+    equal_weight_score_100 = selected_place["mean_factor_score"] * 100
+    mention_weighted_score_100 = selected_place["placeness_score_100"]
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("종합 장소성 점수", f"{selected_place['placeness_score_100']:.1f} / 100")
-    c2.metric("요인 근거 구절 수", f"{int(selected_place['mapped_evidence_count']):,}개")
-    c3.metric("언급된 요인 수", f"{int(selected_place['mentioned_factor_count'])} / 10")
-    c4.metric("부정 근거 비율", format_percent(selected_place["negative_ratio"]))
+    c1.metric("동일가중 평균", f"{equal_weight_score_100:.1f} / 100")
+    c2.metric("언급비중 반영 점수", f"{mention_weighted_score_100:.1f} / 100")
+    c3.metric("요인 근거 구절 수", f"{int(selected_place['mapped_evidence_count']):,}개")
+    c4.metric("언급된 요인 수", f"{int(selected_place['mentioned_factor_count'])} / 10")
+    st.caption(f"부정 근거 비율: {format_percent(selected_place['negative_ratio'])}")
 
     st.markdown(
         """
@@ -269,7 +315,8 @@ def render_score_results(
         <b>구절 점수</b>: 긍정 = 1, 중립/혼합 = 0.5, 부정 = 0<br>
         <b>요인별 점수</b> = (긍정 구절 수 × 1 + 중립/혼합 구절 수 × 0.5 + 부정 구절 수 × 0) / 해당 요인에 매핑된 전체 구절 수<br>
         <b>요인별 언급 비중</b> = 해당 요인에 매핑된 구절 수 / 해당 장소의 전체 장소성 근거 구절 수<br>
-        <b>종합 장소성 점수</b> = Σ(요인별 점수 × 요인별 언급 비중)
+        <b>동일가중 평균</b> = Σ(요인별 점수) / 언급된 요인 수<br>
+        <b>언급비중 반영 점수</b> = Σ(요인별 점수 × 요인별 언급 비중)
         </div>
         """,
         unsafe_allow_html=True,
@@ -333,7 +380,7 @@ def render_score_results(
     selected_evidence = scored_evidence[scored_evidence["cafe_name"] == cafe_name]
     st.download_button(
         "선택 장소의 구절별 점수 데이터 다운로드",
-        data=selected_evidence.to_csv(index=False, encoding="utf-8-sig"),
+        data=selected_evidence.drop(columns=["confidence"], errors="ignore").to_csv(index=False, encoding="utf-8-sig"),
         file_name=f"{cafe_name}_scored_evidence.csv",
         mime="text/csv",
     )
@@ -349,16 +396,18 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
         step=1,
     )
     filtered = place_scores[place_scores["mapped_evidence_count"] >= min_count].copy()
+    filtered["equal_weight_score_100"] = filtered["mean_factor_score"] * 100
 
     chart = px.scatter(
         filtered,
         x="mapped_evidence_count",
         y="placeness_score_100",
         color="mentioned_factor_count",
-        hover_data=["cafe_name", "most_mentioned_factor", "positive_ratio", "negative_ratio"],
+        hover_data=["cafe_name", "equal_weight_score_100", "most_mentioned_factor", "positive_ratio", "negative_ratio"],
         labels={
             "mapped_evidence_count": "장소성 근거 구절 수",
-            "placeness_score_100": "종합 장소성 점수",
+            "placeness_score_100": "언급비중 반영 점수",
+            "equal_weight_score_100": "동일가중 평균",
             "mentioned_factor_count": "언급 요인 수",
         },
         height=420,
@@ -369,6 +418,7 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
     display = filtered[
         [
             "cafe_name",
+            "equal_weight_score_100",
             "placeness_score_100",
             "mapped_evidence_count",
             "mentioned_factor_count",
@@ -380,7 +430,8 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
     display = display.rename(
         columns={
             "cafe_name": "장소명",
-            "placeness_score_100": "종합 장소성 점수",
+            "equal_weight_score_100": "동일가중 평균",
+            "placeness_score_100": "언급비중 반영 점수",
             "mapped_evidence_count": "근거 구절 수",
             "mentioned_factor_count": "언급 요인 수",
             "most_mentioned_factor": "최다 언급 요인",
@@ -388,7 +439,8 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
             "negative_ratio": "부정 비율",
         }
     )
-    display["종합 장소성 점수"] = display["종합 장소성 점수"].map(lambda v: f"{v:.1f}")
+    display["동일가중 평균"] = display["동일가중 평균"].map(lambda v: f"{v:.1f}")
+    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(lambda v: f"{v:.1f}")
     display["긍정 비율"] = display["긍정 비율"].map(format_percent)
     display["부정 비율"] = display["부정 비율"].map(format_percent)
     st.dataframe(display, use_container_width=True, hide_index=True)
@@ -403,14 +455,26 @@ def main() -> None:
         return
 
     scored_evidence, factor_scores, place_scores = load_demo_data(str(DEFAULT_MAPPING_CSV))
+    source_summary = load_source_data_summary()
 
     with st.sidebar:
-        st.header("데이터")
-        st.caption(str(DEFAULT_MAPPING_CSV.name))
-        st.metric("매핑 근거 구절", f"{len(scored_evidence):,}")
-        st.metric("장소 수", f"{place_scores['cafe_name'].nunique():,}")
-        st.metric("리뷰 수", f"{scored_evidence['review_index'].nunique():,}")
+        st.header("데이터 흐름")
+        st.caption("공공 상권정보 표본에서 카페를 선정하고, Google Maps 리뷰에서 장소성 관련 구절을 매핑했습니다.")
+
+        st.markdown("**1. 분석 대상 표본**")
+        st.metric("서울시 카페 표본", format_count_unit(source_summary["sample_place_count"], "개"))
+
+        st.markdown("**2. 원천 리뷰 데이터**")
+        st.metric("수집 리뷰", format_count_unit(source_summary["collected_review_count"], "건"))
+        st.caption(f"리뷰 보유 장소: {format_count_unit(source_summary['collected_place_count'], '개')}")
+
+        st.markdown("**3. 장소성 매핑 데이터**")
+        st.metric("장소성 관련 리뷰", format_count_unit(scored_evidence["review_index"].nunique(), "건"))
+        st.metric("매핑 근거 구절", format_count_unit(len(scored_evidence), "개"))
+        st.caption(f"분석 가능 장소: {format_count_unit(place_scores['cafe_name'].nunique(), '개')}")
+
         st.divider()
+        st.header("장소 선택")
         cafe_options = (
             place_scores.sort_values(["mapped_evidence_count", "placeness_score"], ascending=[False, False])
             ["cafe_name"]
