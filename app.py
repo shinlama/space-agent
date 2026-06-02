@@ -27,6 +27,14 @@ from modules.research_scoring import (
     calculate_scores,
 )
 
+RECOMMENDATION_PRESETS = {
+    "분위기 좋은 곳": ["심미성", "감각적 경험", "쾌적성"],
+    "작업/공부하기 좋은 곳": ["쾌적성", "개방성", "접근성", "활동성"],
+    "친구와 대화하기 좋은 곳": ["활동성", "개방성", "쾌적성"],
+    "방문이 편한 곳": ["접근성", "개방성", "쾌적성"],
+    "전체적으로 균형 잡힌 곳": FACTOR_ORDER,
+}
+
 
 st.set_page_config(
     page_title="장소성 정량화 연구 데모",
@@ -580,6 +588,159 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
     st.dataframe(display, use_container_width=True, hide_index=True)
 
 
+def render_personalized_recommendation(
+    scored_evidence: pd.DataFrame,
+    factor_scores: pd.DataFrame,
+    place_scores: pd.DataFrame,
+) -> None:
+    st.subheader("5. 개인화 추천")
+    st.markdown(
+        """
+        <div class="formula-box">
+        <b>개인화 추천 점수</b> = 사용자가 선택한 장소성 요인의 요인 점수 평균 × 100<br>
+        추천 결과는 새로운 모델을 학습한 것이 아니라, 앞 단계에서 산출한 장소성 요인별 점수를 사용자 선호에 맞춰 다시 정렬한 결과입니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        preset_name = st.selectbox("추천 목적", list(RECOMMENDATION_PRESETS.keys()))
+    with c2:
+        selected_factors = st.multiselect(
+            "중요하게 볼 장소성 요인",
+            FACTOR_ORDER,
+            default=RECOMMENDATION_PRESETS[preset_name],
+            key=f"recommendation_factors_{preset_name}",
+        )
+
+    if not selected_factors:
+        st.info("추천에 반영할 장소성 요인을 하나 이상 선택하세요.")
+        return
+
+    selected_scores = factor_scores[factor_scores["factor"].isin(selected_factors)].copy()
+    if selected_scores.empty:
+        st.warning("선택한 요인에 해당하는 점수 데이터가 없습니다.")
+        return
+
+    min_count = st.slider(
+        "최소 장소성 근거 구절 수",
+        min_value=1,
+        max_value=int(place_scores["mapped_evidence_count"].max()),
+        value=min(10, int(place_scores["mapped_evidence_count"].max())),
+        step=1,
+        key="recommendation_min_evidence",
+    )
+
+    recommendations = (
+        selected_scores.groupby("cafe_name")
+        .agg(
+            personalized_score=("factor_score", "mean"),
+            reflected_factor_count=("factor", "nunique"),
+        )
+        .reset_index()
+    )
+    factor_names = (
+        selected_scores.groupby("cafe_name")["factor"]
+        .apply(lambda values: ", ".join([factor for factor in FACTOR_ORDER if factor in set(values)]))
+        .rename("reflected_factors")
+        .reset_index()
+    )
+    top_factor = (
+        selected_scores.sort_values(["cafe_name", "factor_score", "mention_count"], ascending=[True, False, False])
+        .drop_duplicates("cafe_name")[["cafe_name", "factor"]]
+        .rename(columns={"factor": "top_preference_factor"})
+    )
+    recommendations = (
+        recommendations.merge(factor_names, on="cafe_name", how="left")
+        .merge(top_factor, on="cafe_name", how="left")
+        .merge(
+            place_scores[
+                [
+                    "cafe_name",
+                    "mapped_evidence_count",
+                    "mentioned_factor_count",
+                    "placeness_score_100",
+                ]
+            ],
+            on="cafe_name",
+            how="left",
+        )
+    )
+    recommendations["personalized_score_100"] = recommendations["personalized_score"] * 100
+    recommendations = recommendations[recommendations["mapped_evidence_count"] >= min_count].sort_values(
+        ["personalized_score_100", "mapped_evidence_count"],
+        ascending=[False, False],
+    )
+
+    if recommendations.empty:
+        st.warning("현재 조건에 맞는 추천 장소가 없습니다. 최소 근거 구절 수를 낮춰보세요.")
+        return
+
+    st.markdown("##### 추천 결과")
+    display = recommendations.head(20)[
+        [
+            "cafe_name",
+            "personalized_score_100",
+            "top_preference_factor",
+            "reflected_factors",
+            "mapped_evidence_count",
+            "placeness_score_100",
+        ]
+    ].copy()
+    display.insert(0, "rank", range(1, len(display) + 1))
+    display = display.rename(
+        columns={
+            "rank": "순위",
+            "cafe_name": "장소명",
+            "personalized_score_100": "개인화 추천 점수",
+            "top_preference_factor": "주요 추천 요인",
+            "reflected_factors": "반영된 선호 요인",
+            "mapped_evidence_count": "근거 구절 수",
+            "placeness_score_100": "언급비중 반영 점수",
+        }
+    )
+    display["개인화 추천 점수"] = display["개인화 추천 점수"].map(lambda value: f"{value:.1f}")
+    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(lambda value: f"{value:.1f}")
+    st.dataframe(display, use_container_width=True, hide_index=True)
+
+    st.markdown("##### 추천 근거")
+    recommended_places = recommendations.head(20)["cafe_name"].tolist()
+    selected_place = st.selectbox("추천 근거를 볼 장소", recommended_places, key="recommendation_place")
+    selected_row = recommendations[recommendations["cafe_name"] == selected_place].iloc[0]
+    st.metric("개인화 추천 점수", f"{selected_row['personalized_score_100']:.1f} / 100")
+
+    place_factor_scores = selected_scores[selected_scores["cafe_name"] == selected_place].sort_values(
+        ["factor_score", "mention_count"],
+        ascending=[False, False],
+    )
+    factor_summary = ", ".join(
+        f"{row.factor} {row.factor_score * 100:.1f}점"
+        for row in place_factor_scores.itertuples()
+    )
+    st.write(
+        f"선택한 선호 요인 중 **{selected_row['top_preference_factor']}**이 가장 높게 나타났습니다. "
+        f"반영된 요인 점수는 {factor_summary}입니다."
+    )
+
+    evidence_factors = place_factor_scores["factor"].head(3).tolist()
+    evidence_rows = scored_evidence[
+        (scored_evidence["cafe_name"] == selected_place)
+        & (scored_evidence["factor"].isin(evidence_factors))
+    ].copy()
+    evidence_rows = evidence_rows.sort_values(["sentiment_value", "factor"], ascending=[False, True]).head(8)
+    evidence_display = evidence_rows[["factor", "sentiment_label", "evidence", "reason"]].rename(
+        columns={
+            "factor": "요인",
+            "sentiment_label": "감성 방향",
+            "evidence": "추천 근거 구절",
+            "reason": "매핑 근거",
+        }
+    )
+    st.dataframe(evidence_display, use_container_width=True, hide_index=True)
+
+
 def main() -> None:
     inject_css()
     st.title("공간 리뷰 텍스트 기반 장소성 정량화")
@@ -616,12 +777,13 @@ def main() -> None:
         )
         cafe_name = st.selectbox("장소 선택", cafe_options)
 
-    tab1, tab2, tab3, tab4 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
             "평가 체계",
             "리뷰 매핑",
             "점수 계산",
             "장소 비교",
+            "개인화 추천",
         ]
     )
     with tab1:
@@ -632,6 +794,8 @@ def main() -> None:
         render_score_results(scored_evidence, factor_scores, place_scores, cafe_name)
     with tab4:
         render_place_comparison(place_scores)
+    with tab5:
+        render_personalized_recommendation(scored_evidence, factor_scores, place_scores)
 
 
 if __name__ == "__main__":
