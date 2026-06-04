@@ -92,9 +92,9 @@ FACTOR_DETAILS: dict[str, dict[str, object]] = {
 
 SENTIMENT_VALUES = {
     "positive": 1.0,
-    "neutral": 0.5,
-    "mixed": 0.5,
-    "negative": 0.0,
+    "neutral": 0.0,
+    "mixed": 0.0,
+    "negative": -1.0,
 }
 
 SENTIMENT_LABELS = {
@@ -166,6 +166,10 @@ def _count_sentiment(series: pd.Series, key: str) -> int:
     return int((series == key).sum())
 
 
+def normalize_raw_factor_score(series: pd.Series) -> pd.Series:
+    return (series + 1.0) / 2.0
+
+
 def compute_factor_scores(scored_evidence: pd.DataFrame) -> pd.DataFrame:
     if scored_evidence.empty:
         return pd.DataFrame()
@@ -174,7 +178,7 @@ def compute_factor_scores(scored_evidence: pd.DataFrame) -> pd.DataFrame:
     factor_scores = grouped.agg(
         factor_category=("factor_category", "first"),
         mention_count=("sentiment_value", "size"),
-        factor_score=("sentiment_value", "mean"),
+        raw_factor_score=("sentiment_value", "mean"),
         avg_confidence=("confidence", "mean"),
         positive_count=("sentiment_key", lambda s: _count_sentiment(s, "positive")),
         neutral_count=("sentiment_key", lambda s: _count_sentiment(s, "neutral")),
@@ -182,6 +186,7 @@ def compute_factor_scores(scored_evidence: pd.DataFrame) -> pd.DataFrame:
         negative_count=("sentiment_key", lambda s: _count_sentiment(s, "negative")),
         evidence_examples=("evidence", lambda s: " | ".join(_unique_nonempty(s, limit=4))),
     ).reset_index()
+    factor_scores["factor_score"] = normalize_raw_factor_score(factor_scores["raw_factor_score"])
 
     total_mentions = (
         factor_scores.groupby("cafe_name")["mention_count"]
@@ -209,6 +214,7 @@ def compute_place_scores(factor_scores: pd.DataFrame) -> pd.DataFrame:
         mapped_evidence_count=("mention_count", "sum"),
         mentioned_factor_count=("factor", "nunique"),
         mean_factor_score=("factor_score", "mean"),
+        mean_raw_factor_score=("raw_factor_score", "mean"),
         positive_count=("positive_count", "sum"),
         neutral_count=("neutral_count", "sum"),
         mixed_count=("mixed_count", "sum"),
@@ -255,7 +261,7 @@ def complete_factor_table(factor_scores: pd.DataFrame, cafe_name: str) -> pd.Dat
     for col in count_cols:
         if col in table:
             table[col] = table[col].fillna(0).astype(int)
-    for col in ["factor_score", "avg_confidence", "mention_share", "weighted_score"]:
+    for col in ["raw_factor_score", "factor_score", "avg_confidence", "mention_share", "weighted_score"]:
         if col in table:
             table[col] = table[col].astype(float)
     table["cafe_name"] = cafe_name

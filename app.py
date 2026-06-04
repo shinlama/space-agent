@@ -17,6 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 RAW_REVIEW_CSV = PROJECT_ROOT / "google_reviews_scraped_cleaned.csv"
 SAMPLE_PLACE_CSV = PROJECT_ROOT / "서울시_상권_카페빵_표본.csv"
+SCORING_CACHE_VERSION = "raw_score_minmax_v1"
 
 from modules.research_scoring import (
     DEFAULT_MAPPING_CSV,
@@ -44,7 +45,11 @@ st.set_page_config(
 
 
 @st.cache_data(show_spinner="매핑 결과와 점수 계산 결과를 불러오는 중입니다.")
-def load_demo_data(input_csv: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_demo_data(
+    input_csv: str,
+    scoring_version: str = SCORING_CACHE_VERSION,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    _ = scoring_version
     return calculate_scores(Path(input_csv))
 
 
@@ -82,6 +87,15 @@ def format_score(value: float | int | None) -> str:
     if pd.isna(value):
         return "-"
     return f"{float(value):.3f}"
+
+
+def format_signed_score(value: float | int | None) -> str:
+    if pd.isna(value):
+        return "-"
+    numeric = float(value)
+    if numeric > 0:
+        return f"+{numeric:.0f}"
+    return f"{numeric:.0f}"
 
 
 def format_percent(value: float | int | None) -> str:
@@ -379,7 +393,7 @@ def render_factor_system() -> None:
 
 
 def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> None:
-    st.subheader("2. 리뷰 데이터에서 장소성 요인 매핑 결과")
+    st.subheader("2. 리뷰에서 장소성 요인 매핑 결과")
     cafe_rows = scored_evidence[scored_evidence["cafe_name"] == cafe_name].copy()
     if cafe_rows.empty:
         st.warning("선택한 장소의 매핑 결과가 없습니다.")
@@ -403,7 +417,7 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
     review_rows = cafe_rows[cafe_rows["review_index"] == selected_review_index].copy()
     review_text = review_rows["review_text"].iloc[0]
 
-    st.markdown("##### 원문 리뷰")
+    st.markdown("##### 리뷰")
     st.markdown(highlight_evidence(review_text, review_rows), unsafe_allow_html=True)
 
     display = review_rows[
@@ -414,13 +428,13 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
             "evidence": "근거 구절",
             "factor": "매핑 요인",
             "sentiment_label": "감성 방향",
-            "sentiment_value": "계산값",
+            "sentiment_value": "구절별 점수",
             "reason": "매핑 근거",
         }
     )
-    display["계산값"] = display["계산값"].map(lambda v: f"{v:.1f}")
+    display["구절별 점수"] = display["구절별 점수"].map(format_signed_score)
 
-    st.markdown("##### 구절별 매핑 결과")
+    st.markdown("##### 매핑 결과")
     st.dataframe(display, use_container_width=True, hide_index=True)
 
     badge_html = " ".join(
@@ -454,11 +468,12 @@ def render_score_results(
     st.markdown(
         """
         <div class="formula-box">
-        <b>구절 점수</b>: 긍정 = 1, 중립/혼합 = 0.5, 부정 = 0<br>
-        <b>요인별 점수</b> = (긍정 구절 수 × 1 + 중립/혼합 구절 수 × 0.5 + 부정 구절 수 × 0) / 해당 요인에 매핑된 전체 구절 수<br>
+        <b>구절별 점수</b>: 긍정 = +1, 중립/혼합 = 0, 부정 = -1<br>
+        <b>요인별 원점수</b> = (긍정 구절 수 - 부정 구절 수) / 해당 요인에 매핑된 전체 구절 수<br>
+        <b>정규화된 장소성 요인 점수</b> = (요인별 원점수 + 1) / 2 <span style="color:#667085;">Min-Max Scaling</span><br>
         <b>요인별 언급 비중</b> = 해당 요인에 매핑된 구절 수 / 해당 장소의 전체 장소성 근거 구절 수<br>
-        <b>동일가중 평균</b> = Σ(요인별 점수) / 언급된 요인 수<br>
-        <b>언급비중 반영 점수</b> = Σ(요인별 점수 × 요인별 언급 비중)
+        <b>동일가중 평균</b> = Σ(정규화된 장소성 요인 점수) / 언급된 요인 수<br>
+        <b>언급비중 반영 점수</b> = Σ(정규화된 장소성 요인 점수 × 요인별 언급 비중)
         </div>
         """,
         unsafe_allow_html=True,
@@ -467,15 +482,15 @@ def render_score_results(
 
     table = complete_factor_table(factor_scores, cafe_name)
     plot_df = table.copy()
-    plot_df["요인 점수"] = plot_df["factor_score"].fillna(0)
+    plot_df["정규화된 장소성 요인 점수"] = plot_df["factor_score"].fillna(0)
     plot_df["언급 비중"] = plot_df["mention_share"].fillna(0)
 
     chart = px.bar(
         plot_df,
         x="factor",
-        y="요인 점수",
+        y="정규화된 장소성 요인 점수",
         color="factor_category",
-        text=plot_df["요인 점수"].map(lambda v: f"{v:.2f}" if v > 0 else ""),
+        text=plot_df["정규화된 장소성 요인 점수"].map(lambda v: f"{v:.2f}" if v > 0 else ""),
         category_orders={"factor": FACTOR_ORDER},
         labels={"factor": "장소성 요인", "factor_category": "구분"},
         height=390,
@@ -492,6 +507,7 @@ def render_score_results(
             "mixed_count",
             "negative_count",
             "mention_count",
+            "raw_factor_score",
             "factor_score",
             "mention_share",
             "weighted_score",
@@ -507,13 +523,14 @@ def render_score_results(
             "mixed_count": "혼합",
             "negative_count": "부정",
             "mention_count": "근거 수",
-            "factor_score": "요인 점수",
+            "raw_factor_score": "요인별 원점수",
+            "factor_score": "정규화된 장소성 요인 점수",
             "mention_share": "언급 비중",
             "weighted_score": "가중 점수",
             "evidence_examples": "근거 예시",
         }
     )
-    for col in ["요인 점수", "가중 점수"]:
+    for col in ["요인별 원점수", "정규화된 장소성 요인 점수", "가중 점수"]:
         display[col] = display[col].map(format_score)
     display["언급 비중"] = display["언급 비중"].map(format_percent)
     display["근거 예시"] = display["근거 예시"].fillna("")
@@ -597,7 +614,7 @@ def render_personalized_recommendation(
     st.markdown(
         """
         <div class="formula-box">
-        <b>개인화 추천 점수</b> = 사용자가 선택한 장소성 요인의 요인 점수 평균 × 100<br>
+        <b>개인화 추천 점수</b> = 사용자가 선택한 장소성 요인의 정규화된 장소성 요인 점수 평균 × 100<br>
         추천 결과는 새로운 모델을 학습한 것이 아니라, 앞 단계에서 산출한 장소성 요인별 점수를 사용자 선호에 맞춰 다시 정렬한 결과입니다.
         </div>
         """,
@@ -749,7 +766,10 @@ def main() -> None:
         st.error(f"매핑 결과 CSV를 찾을 수 없습니다: {DEFAULT_MAPPING_CSV}")
         return
 
-    scored_evidence, factor_scores, place_scores = load_demo_data(str(DEFAULT_MAPPING_CSV))
+    scored_evidence, factor_scores, place_scores = load_demo_data(
+        str(DEFAULT_MAPPING_CSV),
+        SCORING_CACHE_VERSION,
+    )
     source_summary = load_source_data_summary()
 
     with st.sidebar:
@@ -759,7 +779,7 @@ def main() -> None:
         st.markdown("**1. 분석 대상 표본**")
         st.metric("서울시 카페 표본", format_count_unit(source_summary["sample_place_count"], "개"))
 
-        st.markdown("**2. 원천 리뷰 데이터**")
+        st.markdown("**2. 리뷰 데이터**")
         st.metric("수집 리뷰", format_count_unit(source_summary["collected_review_count"], "건"))
         st.caption(f"리뷰 보유 장소: {format_count_unit(source_summary['collected_place_count'], '개')}")
 

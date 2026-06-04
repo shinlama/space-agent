@@ -20,7 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Score LLM placeness-factor mapping results with "
-            "positive=1, neutral/mixed=0.5, negative=0."
+            "positive=+1, neutral/mixed=0, negative=-1 sentence scores, "
+            "then normalize placeness-factor scores to 0-1."
         )
     )
     parser.add_argument(
