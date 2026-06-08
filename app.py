@@ -17,7 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 RAW_REVIEW_CSV = PROJECT_ROOT / "google_reviews_scraped_cleaned.csv"
 SAMPLE_PLACE_CSV = PROJECT_ROOT / "서울시_상권_카페빵_표본.csv"
-SCORING_CACHE_VERSION = "raw_score_minmax_v1"
+SCORING_CACHE_VERSION = "signed_score_v1"
 
 from modules.research_scoring import (
     DEFAULT_MAPPING_CSV,
@@ -34,6 +34,11 @@ RECOMMENDATION_PRESETS = {
     "친구와 대화하기 좋은 곳": ["활동성", "개방성", "쾌적성"],
     "방문이 편한 곳": ["접근성", "개방성", "쾌적성"],
     "전체적으로 균형 잡힌 곳": FACTOR_ORDER,
+}
+FACTOR_CATEGORY_COLORS = {
+    "물리적 특성": "#5CB7F2",
+    "활동적 특성": "#8BD646",
+    "의미적 특성": "#FFB52E",
 }
 
 
@@ -96,6 +101,12 @@ def format_signed_score(value: float | int | None) -> str:
     if numeric > 0:
         return f"+{numeric:.0f}"
     return f"{numeric:.0f}"
+
+
+def format_signed_decimal(value: float | int | None) -> str:
+    if pd.isna(value):
+        return "-"
+    return f"{float(value):+.3f}"
 
 
 def format_percent(value: float | int | None) -> str:
@@ -456,11 +467,11 @@ def render_score_results(
     st.subheader("3. 매핑된 요인의 점수화 계산 결과")
 
     selected_place = place_scores[place_scores["cafe_name"] == cafe_name].iloc[0]
-    equal_weight_score_100 = selected_place["mean_factor_score"] * 100
-    mention_weighted_score_100 = selected_place["placeness_score_100"]
+    equal_weight_score = selected_place["mean_factor_score"]
+    mention_weighted_score = selected_place["placeness_score"]
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("동일가중 평균", f"{equal_weight_score_100:.1f} / 100")
-    c2.metric("언급비중 반영 점수", f"{mention_weighted_score_100:.1f} / 100")
+    c1.metric("동일가중 평균", format_signed_decimal(equal_weight_score))
+    c2.metric("언급비중 반영 점수", format_signed_decimal(mention_weighted_score))
     c3.metric("요인 근거 구절 수", f"{int(selected_place['mapped_evidence_count']):,}개")
     c4.metric("언급된 요인 수", f"{int(selected_place['mentioned_factor_count'])} / 10")
     st.caption(f"부정 근거 비율: {format_percent(selected_place['negative_ratio'])}")
@@ -469,11 +480,11 @@ def render_score_results(
         """
         <div class="formula-box">
         <b>구절별 점수</b>: 긍정 = +1, 중립/혼합 = 0, 부정 = -1<br>
-        <b>요인별 원점수</b> = (긍정 구절 수 - 부정 구절 수) / 해당 요인에 매핑된 전체 구절 수<br>
-        <b>정규화된 장소성 요인 점수</b> = (요인별 원점수 + 1) / 2 <span style="color:#667085;">Min-Max Scaling</span><br>
+        <b>장소성 요인 점수</b> = (긍정 구절 수 - 부정 구절 수) / 해당 요인에 매핑된 전체 구절 수<br>
         <b>요인별 언급 비중</b> = 해당 요인에 매핑된 구절 수 / 해당 장소의 전체 장소성 근거 구절 수<br>
-        <b>동일가중 평균</b> = Σ(정규화된 장소성 요인 점수) / 언급된 요인 수<br>
-        <b>언급비중 반영 점수</b> = Σ(정규화된 장소성 요인 점수 × 요인별 언급 비중)
+        <b>동일가중 평균</b> = Σ(장소성 요인 점수) / 언급된 요인 수<br>
+        <b>언급비중 반영 점수</b> = Σ(장소성 요인 점수 × 요인별 언급 비중)<br>
+        <span style="color:#667085;">점수 범위: -1은 부정적 평가, 0은 중립/혼합, +1은 긍정적 평가를 의미합니다.</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -482,20 +493,37 @@ def render_score_results(
 
     table = complete_factor_table(factor_scores, cafe_name)
     plot_df = table.copy()
-    plot_df["정규화된 장소성 요인 점수"] = plot_df["factor_score"].fillna(0)
+    plot_df["장소성 요인 점수"] = plot_df["factor_score"].fillna(0)
     plot_df["언급 비중"] = plot_df["mention_share"].fillna(0)
 
     chart = px.bar(
         plot_df,
         x="factor",
-        y="정규화된 장소성 요인 점수",
+        y="장소성 요인 점수",
         color="factor_category",
-        text=plot_df["정규화된 장소성 요인 점수"].map(lambda v: f"{v:.2f}" if v > 0 else ""),
+        color_discrete_map=FACTOR_CATEGORY_COLORS,
+        text=plot_df["장소성 요인 점수"].map(lambda v: f"{v:+.2f}" if pd.notna(v) and v != 0 else ""),
         category_orders={"factor": FACTOR_ORDER},
         labels={"factor": "장소성 요인", "factor_category": "구분"},
         height=390,
     )
-    chart.update_layout(yaxis_range=[0, 1], legend_title_text="구분", margin=dict(l=10, r=10, t=20, b=10))
+    chart.update_traces(
+        marker_line_color="rgba(255,255,255,0.75)",
+        marker_line_width=1,
+        textfont_color="#344054",
+        textposition="auto",
+    )
+    chart.update_layout(
+        yaxis_range=[-1, 1],
+        legend_title_text="구분",
+        margin=dict(l=10, r=10, t=20, b=10),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(color="#667085"),
+        yaxis=dict(gridcolor="#E7ECF3", zeroline=False),
+        xaxis=dict(tickfont=dict(color="#667085")),
+    )
+    chart.add_hline(y=0, line_width=1.2, line_dash="dash", line_color="#AAB4C0")
     st.plotly_chart(chart, use_container_width=True)
 
     display = table[
@@ -507,7 +535,6 @@ def render_score_results(
             "mixed_count",
             "negative_count",
             "mention_count",
-            "raw_factor_score",
             "factor_score",
             "mention_share",
             "weighted_score",
@@ -523,15 +550,14 @@ def render_score_results(
             "mixed_count": "혼합",
             "negative_count": "부정",
             "mention_count": "근거 수",
-            "raw_factor_score": "요인별 원점수",
-            "factor_score": "정규화된 장소성 요인 점수",
+            "factor_score": "장소성 요인 점수",
             "mention_share": "언급 비중",
             "weighted_score": "가중 점수",
             "evidence_examples": "근거 예시",
         }
     )
-    for col in ["요인별 원점수", "정규화된 장소성 요인 점수", "가중 점수"]:
-        display[col] = display[col].map(format_score)
+    for col in ["장소성 요인 점수", "가중 점수"]:
+        display[col] = display[col].map(format_signed_decimal)
     display["언급 비중"] = display["언급 비중"].map(format_percent)
     display["근거 예시"] = display["근거 예시"].fillna("")
     st.dataframe(display, use_container_width=True, hide_index=True)
@@ -555,30 +581,30 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
         step=1,
     )
     filtered = place_scores[place_scores["mapped_evidence_count"] >= min_count].copy()
-    filtered["equal_weight_score_100"] = filtered["mean_factor_score"] * 100
 
     chart = px.scatter(
         filtered,
         x="mapped_evidence_count",
-        y="placeness_score_100",
+        y="placeness_score",
         color="mentioned_factor_count",
-        hover_data=["cafe_name", "equal_weight_score_100", "most_mentioned_factor", "positive_ratio", "negative_ratio"],
+        hover_data=["cafe_name", "mean_factor_score", "most_mentioned_factor", "positive_ratio", "negative_ratio"],
         labels={
             "mapped_evidence_count": "장소성 근거 구절 수",
-            "placeness_score_100": "언급비중 반영 점수",
-            "equal_weight_score_100": "동일가중 평균",
+            "placeness_score": "언급비중 반영 점수",
+            "mean_factor_score": "동일가중 평균",
             "mentioned_factor_count": "언급 요인 수",
         },
         height=420,
     )
-    chart.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+    chart.update_layout(yaxis_range=[-1, 1], margin=dict(l=10, r=10, t=20, b=10))
+    chart.add_hline(y=0, line_width=1, line_dash="dash", line_color="#98a2b3")
     st.plotly_chart(chart, use_container_width=True)
 
     display = filtered[
         [
             "cafe_name",
-            "equal_weight_score_100",
-            "placeness_score_100",
+            "mean_factor_score",
+            "placeness_score",
             "mapped_evidence_count",
             "mentioned_factor_count",
             "most_mentioned_factor",
@@ -589,8 +615,8 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
     display = display.rename(
         columns={
             "cafe_name": "장소명",
-            "equal_weight_score_100": "동일가중 평균",
-            "placeness_score_100": "언급비중 반영 점수",
+            "mean_factor_score": "동일가중 평균",
+            "placeness_score": "언급비중 반영 점수",
             "mapped_evidence_count": "근거 구절 수",
             "mentioned_factor_count": "언급 요인 수",
             "most_mentioned_factor": "최다 언급 요인",
@@ -598,8 +624,8 @@ def render_place_comparison(place_scores: pd.DataFrame) -> None:
             "negative_ratio": "부정 비율",
         }
     )
-    display["동일가중 평균"] = display["동일가중 평균"].map(lambda v: f"{v:.1f}")
-    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(lambda v: f"{v:.1f}")
+    display["동일가중 평균"] = display["동일가중 평균"].map(format_signed_decimal)
+    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(format_signed_decimal)
     display["긍정 비율"] = display["긍정 비율"].map(format_percent)
     display["부정 비율"] = display["부정 비율"].map(format_percent)
     st.dataframe(display, use_container_width=True, hide_index=True)
@@ -614,7 +640,7 @@ def render_personalized_recommendation(
     st.markdown(
         """
         <div class="formula-box">
-        <b>개인화 추천 점수</b> = 사용자가 선택한 장소성 요인의 정규화된 장소성 요인 점수 평균 × 100<br>
+        <b>개인화 추천 점수</b> = 사용자가 선택한 장소성 요인의 장소성 요인 점수 평균<br>
         추천 결과는 새로운 모델을 학습한 것이 아니라, 앞 단계에서 산출한 장소성 요인별 점수를 사용자 선호에 맞춰 다시 정렬한 결과입니다.
         </div>
         """,
@@ -678,16 +704,15 @@ def render_personalized_recommendation(
                     "cafe_name",
                     "mapped_evidence_count",
                     "mentioned_factor_count",
-                    "placeness_score_100",
+                    "placeness_score",
                 ]
             ],
             on="cafe_name",
             how="left",
         )
     )
-    recommendations["personalized_score_100"] = recommendations["personalized_score"] * 100
     recommendations = recommendations[recommendations["mapped_evidence_count"] >= min_count].sort_values(
-        ["personalized_score_100", "mapped_evidence_count"],
+        ["personalized_score", "mapped_evidence_count"],
         ascending=[False, False],
     )
 
@@ -699,11 +724,11 @@ def render_personalized_recommendation(
     display = recommendations.head(20)[
         [
             "cafe_name",
-            "personalized_score_100",
+            "personalized_score",
             "top_preference_factor",
             "reflected_factors",
             "mapped_evidence_count",
-            "placeness_score_100",
+            "placeness_score",
         ]
     ].copy()
     display.insert(0, "rank", range(1, len(display) + 1))
@@ -711,29 +736,29 @@ def render_personalized_recommendation(
         columns={
             "rank": "순위",
             "cafe_name": "장소명",
-            "personalized_score_100": "개인화 추천 점수",
+            "personalized_score": "개인화 추천 점수",
             "top_preference_factor": "주요 추천 요인",
             "reflected_factors": "반영된 선호 요인",
             "mapped_evidence_count": "근거 구절 수",
-            "placeness_score_100": "언급비중 반영 점수",
+            "placeness_score": "언급비중 반영 점수",
         }
     )
-    display["개인화 추천 점수"] = display["개인화 추천 점수"].map(lambda value: f"{value:.1f}")
-    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(lambda value: f"{value:.1f}")
+    display["개인화 추천 점수"] = display["개인화 추천 점수"].map(format_signed_decimal)
+    display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(format_signed_decimal)
     st.dataframe(display, use_container_width=True, hide_index=True)
 
     st.markdown("##### 추천 근거")
     recommended_places = recommendations.head(20)["cafe_name"].tolist()
     selected_place = st.selectbox("추천 근거를 볼 장소", recommended_places, key="recommendation_place")
     selected_row = recommendations[recommendations["cafe_name"] == selected_place].iloc[0]
-    st.metric("개인화 추천 점수", f"{selected_row['personalized_score_100']:.1f} / 100")
+    st.metric("개인화 추천 점수", format_signed_decimal(selected_row["personalized_score"]))
 
     place_factor_scores = selected_scores[selected_scores["cafe_name"] == selected_place].sort_values(
         ["factor_score", "mention_count"],
         ascending=[False, False],
     )
     factor_summary = ", ".join(
-        f"{row.factor} {row.factor_score * 100:.1f}점"
+        f"{row.factor} {format_signed_decimal(row.factor_score)}"
         for row in place_factor_scores.itertuples()
     )
     st.write(
