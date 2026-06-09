@@ -17,7 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 RAW_REVIEW_CSV = PROJECT_ROOT / "google_reviews_scraped_cleaned.csv"
 SAMPLE_PLACE_CSV = PROJECT_ROOT / "서울시_상권_카페빵_표본.csv"
-SCORING_CACHE_VERSION = "signed_score_v1"
+SCORING_CACHE_VERSION = "signed_score_v2"
 
 from modules.research_scoring import (
     DEFAULT_MAPPING_CSV,
@@ -26,6 +26,8 @@ from modules.research_scoring import (
     FACTOR_ORDER,
     complete_factor_table,
     calculate_scores,
+    compute_factor_scores,
+    compute_place_scores,
 )
 
 RECOMMENDATION_PRESETS = {
@@ -791,15 +793,18 @@ def main() -> None:
         st.error(f"매핑 결과 CSV를 찾을 수 없습니다: {DEFAULT_MAPPING_CSV}")
         return
 
-    scored_evidence, factor_scores, place_scores = load_demo_data(
+    scored_evidence, _, _ = load_demo_data(
         str(DEFAULT_MAPPING_CSV),
         SCORING_CACHE_VERSION,
     )
+    factor_scores = compute_factor_scores(scored_evidence)
+    place_scores = compute_place_scores(factor_scores)
     source_summary = load_source_data_summary()
 
     with st.sidebar:
         st.header("데이터 흐름")
         st.caption("공공 상권정보 표본에서 카페를 선정하고, Google Maps 리뷰에서 장소성 관련 구절을 매핑했습니다.")
+        st.caption("계산 기준: 긍정 +1, 중립/혼합 0, 부정 -1 (정규화 없음)")
 
         st.markdown("**1. 분석 대상 표본**")
         st.metric("서울시 카페 표본", format_count_unit(source_summary["sample_place_count"], "개"))
