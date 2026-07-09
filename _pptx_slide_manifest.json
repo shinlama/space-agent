@@ -1,0 +1,2218 @@
+[
+  {
+    "slide_index": 1,
+    "slide_no": 1,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 3",
+        "text": "공간 리뷰 텍스트 기반 장소성 정량화 접근 방법"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 6",
+        "text": "- 서울시 휴게음식점 중 커피전문점 사용자 리뷰를 활용하여 -"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 2,
+    "slide_no": 2,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "Demo"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "https://space-agent.streamlit.app/"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 2",
+        "rid": "rId2",
+        "target": "../media/image1.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide02_image1.png",
+          "source": "ppt/media/image1.png",
+          "size": [
+            1478,
+            908
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 3,
+    "slide_no": 3,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "Demo"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 2",
+        "rid": "rId2",
+        "target": "../media/image2.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide03_image2.png",
+          "source": "ppt/media/image2.png",
+          "size": [
+            2105,
+            429
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 6",
+        "rid": "rId3",
+        "target": "../media/image3.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide03_image3.png",
+          "source": "ppt/media/image3.png",
+          "size": [
+            2091,
+            1619
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 4,
+    "slide_no": 4,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "1. 연구 배경 및 목적"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 11",
+        "text": "Highlights1. ﻿장소성은 정성적인 개념으로 설문조사나 관찰에 기반한 주관적 평가로만 이루어져 왔으며, 이에 데이터 기반 및 대형언어모델을 활용한 정량적 분석 및 활용이 필요함2. 기존 이론 및 선행연구를 바탕으로 장소성의 3가지 차원과 10개의 세부 요인 도출3. 공간 리뷰 데이터를 활용한 장소성 세부 요인별 정량화 논리 체계를 구축하고 언어 모델 기반의 일관된 평가 체계를 제안4. 서울시 카페 2,500개소에서 리뷰가 없는 곳을 제외하여 1,786개소를 대상으로 약 34,000건의 리뷰 데이터를 수집 및 전처리 후 정량화 논리 체계에 적용5. 도출된 정량 결과는 향후 사용자 중심의 공간 추천, 검색, 비교 등의 활용으로 확장 가능함"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 5,
+    "slide_no": 5,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 9",
+        "text": "위의 이론들을 종합하면, ‘장소성’은 물리적 환경, 활동적, 의미적 특성이 서로 상호작용하며 형성되는 다차원적인 개념이다."
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[1] 장소성 이론"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 6,
+    "slide_no": 6,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 36",
+        "text": "<장소성 구성 요소>"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[1] 장소성 이론"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 6",
+        "text": "장소성은 물리적 특성, 활동적 특성, 의미적 특성 간의 상호작용 속에서 생성된다."
+      },
+      {
+        "type": "text",
+        "name": "타원 4",
+        "text": "물리적 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 34",
+        "text": "장소성"
+      },
+      {
+        "type": "text",
+        "name": "타원 15",
+        "text": "활동적 특성"
+      },
+      {
+        "type": "text",
+        "name": "타원 16",
+        "text": "의미적 특성"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 7,
+    "slide_no": 7,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 9",
+        "text": "Edward Relph가 제시한 장소성의 핵심 구성 요소 3가지 설명"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 11",
+        "text": "Relph, Edward, 1976. Place and Placelessness. London: Pion."
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[1] 장소성 이론"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 8,
+    "slide_no": 8,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[2] 장소성 형성 요인"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 9,
+    "slide_no": 9,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "상업시설 환경 특성에 맞추어 장소성 요인 선별 및 유사항목 통합"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[2] 장소성 형성 요인"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 10,
+    "slide_no": 10,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "상업시설 공간 환경 특성에 맞추어 장소성 세부 요인 재구성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 32",
+        "text": "장소성 형성 요소"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 33",
+        "text": "상업시설의 공간 환경 특성"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[2] 장소성 형성 요인"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "활동적 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "의미적 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 5",
+        "text": "물리적 특성"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 11,
+    "slide_no": 11,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 32",
+        "text": "장소성 형성 요소"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 33",
+        "text": "상업시설의 공간 환경 특성"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "장소성 세부 요인 정의"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 5",
+        "text": "물리적 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "활동적 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "의미적 특성"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰[2] 장소성 형성 요인"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 12,
+    "slide_no": 12,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 5",
+        "text": "<표 1> 장소성 기반 상업공간 공간디자인 특성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 9",
+        "text": "[1] Shijie Sun, Yun Yu, Dimension and formation of placeness of commercial public space in city center: A case study of Deji Plaza in Nanjing, Frontiers of Architectural Research, Volume 10, Issue 2, 2021, Pages 229-239.[2] 류호창, \"실내공간에서의 장소성 구현 요소에 관한 연구: 주거공간을 중심으로,\" 한국실내디자인학회 논문집, 7호, 한국실내디자인학회, 1996. 4, 56-63쪽.[3] 곽풍명, 황연숙, & 이주영. (2025). 장소성 기반 박물관 공간디자인에 대한 사용자 인식 분석 연구. 한국공간디자인학회 논문집, 20(5), 181-190.[4] 이지혜 and 김지현. (2025). 복합문화공간 관점에서 본 대형카페의 공간디자인 전략 연구. 한국공간디자인학회 논문집, 20(8), 415-428."
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "장소성 세부 요인 정의 및 키워드"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 13,
+    "slide_no": 13,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "장소성 요인 리뷰에서의 표현 예시"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 14,
+    "slide_no": 14,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "장소성 관련 선행연구의 공간 스케일"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "기존 연구는 도시의 대표 장소, 특정 지역(동), 대규모 공원, 상권 단위, 혹은 단일 문화시설/ 상업 시설(박물관, 쇼핑몰) 등으로 다양한 규모의 공간을 분석 대상으로 정함 연구의 실증 대상은 상업공간 중 식품접객업을 행하는 시설로 하며, 그중 서울시 휴게음식점의 사례로서 커피전문점을 분석 단위로 설정함.  다만 커피전문점은 특정 업종의 소규모 상업공간에 해당하므로, 이를 대상으로 한 분석만으로 장소성 전반을 일반화하는 데에는 한계가 있음. 본 연구는 이러한 한계가 있으나 장소성 정량화 접근 방법의 실증 대상을 커피전문점으로 설정함."
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "3. 연구 대상 및 범위"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 15,
+    "slide_no": 15,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 141",
+        "text": "Figure 1. Overview of research"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 15",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 11",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "4. 장소성 정량화 접근 방법"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 18",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide15_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 3",
+        "rid": "rId4",
+        "target": "../media/image5.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide15_image5.png",
+          "source": "ppt/media/image5.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 21",
+        "rid": "rId5",
+        "target": "../media/image6.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide15_image6.png",
+          "source": "ppt/media/image6.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 16,
+    "slide_no": 16,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 8",
+        "text": "Input"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 16",
+        "text": "지도 기반 웹 서비스에 사용자가 작성한 텍스트 리뷰 데이터: 공간 이용 경험 및 인식에 대한 자연어 서술서울시 상업시설 중 커피 전문점을 대상으로 행정구별 각 100개, 25개 구 총 2,500군데 무작위 선정 2,500개 중 리뷰가 존재하지 않는 장소를 제외한 1,799개 시설을 리뷰 분석 대상으로 선정본 연구에서는 Google Maps 리뷰를 크롤링하여 활용장소와 관련 없는 리뷰를 제외하고 실내 공간 환경 특성을 포함하는 리뷰를 필터링하여 총 약 34,000개의 텍스트 리뷰 수집시설별 최대 100개, 평균 19.3개 리뷰"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 15",
+        "text": "예시"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 23",
+        "text": "“카페가 역에서 멀긴 한데 인테리어가 예뻐서 좋음 사장님도 친절하시고 자주 오게 될 듯”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 24",
+        "text": "…"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide16_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId4",
+        "target": "../media/image5.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide16_image5.png",
+          "source": "ppt/media/image5.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId5",
+        "target": "../media/image6.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide16_image6.png",
+          "source": "ppt/media/image6.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 17,
+    "slide_no": 17,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 8",
+        "text": "Output"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "장소성을 정량적으로 표현한 공간 평가 지표장소 간 상대적 비교가 가능한 평가 지표(본 연구에서는 0과 1 사이의 점수로 표현)장소성 요인별 점수 산출"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 12",
+        "text": "예시"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 17",
+        "text": "접근성: 0.2심미성: 0.9상호작용성: 0.8기억 및 선호: 0.9"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 18",
+        "text": "…"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide17_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId4",
+        "target": "../media/image5.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide17_image5.png",
+          "source": "ppt/media/image5.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId5",
+        "target": "../media/image6.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide17_image6.png",
+          "source": "ppt/media/image6.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 18,
+    "slide_no": 18,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 112",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 114",
+        "text": "선행연구 기반 장소성 요인 평가 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 116",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 117",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 121",
+        "text": "평가 기준 참조"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 131",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "< 장소성 정량화 시스템 내부 모듈>"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide18_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId4",
+        "target": "../media/image7.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide18_image7.png",
+          "source": "ppt/media/image7.png",
+          "size": [
+            700,
+            567
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId5",
+        "target": "../media/image8.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide18_image8.png",
+          "source": "ppt/media/image8.png",
+          "size": [
+            700,
+            541
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 19,
+    "slide_no": 19,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 8",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 95",
+        "text": "평가 기준 참조"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 28",
+        "text": "선행연구 기반 장소성 요인 평가 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 71",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 76",
+        "text": "LLM 기반 리뷰 문장 구/절의 장소성 요인 매핑"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 26",
+        "text": "리뷰 문장 의미 단위 분리(구/절 단위 분리)"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 156",
+        "text": "Input"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 157",
+        "text": "Output"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 40",
+        "text": "텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 50",
+        "text": "장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 53",
+        "text": "개방성: 0.95쾌적성: 0.8활동성: 0.8감각적 경험: 0.9"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 54",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 59",
+        "text": "< 장소성 정량화 시스템 내부 프로세스>"
+      },
+      {
+        "type": "text",
+        "name": "말풍선: 모서리가 둥근 사각형 81",
+        "text": "“매장이 넓고 통창이라서 시야가 시원합니다. 2층은 많이 시끄럽고 3층은 조용한 편이에요. 화장실도 깔끔하고 커피가 XX매장 다녀본 곳 중에서는 제일 맛있는 것 같아요.”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 83",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 101",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 3",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "장소성 요인별 리뷰 문장 긍정/ 중립·혼합/ 부정 판단"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 15",
+        "text": "장소성 요인별 점수화 및 종합 점수 산출"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 58",
+        "text": "리뷰 데이터 형식 정제 및 공간 관련 리뷰 필터링"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 11",
+        "text": "장소성 형성 요소재구성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 12",
+        "text": "장소성 요인별 건축계획 특성 정의"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 13",
+        "text": "장소성 요인별 기준 문장 정의"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 36",
+        "text": "장소성 요인별 추출 기준및 LLM 프롬프트 구조화"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 82",
+        "rid": "rId3",
+        "target": "../media/image9.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide19_image9.png",
+          "source": "ppt/media/image9.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 20,
+    "slide_no": 20,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 5",
+        "text": "“리뷰 문장에서 다음 10가지 장소성 요인 중 어떤 요인을 언급하는지 다중 라벨로 매핑한다. …”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 6",
+        "text": "개방성: 공간의 배치와 시야 구성이 외부 조망과 시각적 연결을 확보하여 확장감과 낮은 폐쇄감을 느끼게 하는 특성, …"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "개방성: 공간 배치, 시야 연속성, 채광, 외부 조망, 통창, 넓다, 답답하다, 좌석 간격, …"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "positive_examples: \"공간이 넓고 답답하지 않아서 좋다.\", \"창이 커서 개방감이 좋고 외부 뷰가 잘 보인다.“…,negative_examples: \"좌석 간격이 좁아서 답답하다.\", \"창이 작고 내부가 폐쇄적으로 느껴진다.“…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 11",
+        "text": "Instruction Prompt"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 16",
+        "text": "Output:매핑 요인 1) 개방성, 근거 구절: “창이 커서 개방감이 좋고”매핑 요인 2) 접근성, 근거 구절: “주차는 불편했다”"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 42",
+        "text": "Input: “창이 커서 개방감이 좋고, 주차는 불편했다.”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 2",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 9",
+        "text": "Task"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 13",
+        "text": "Definition"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 14",
+        "text": "Kewords"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 15",
+        "text": "Examples"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 20",
+        "text": "LLM(GPT-4o-mini)"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 21,
+    "slide_no": 21,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 6",
+        "text": "Input: 매핑 요인: 개방성, 근거 구절: “창이 커서 개방감이 좋고”, “테라스가 탁 트여서”, “창 밖 풍경이 시원해서”, “엄청 넓은 매장에”, …"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "근거 구절을긍정/중립/부정 중 하나로 분류 후 점수화(긍정 = +1, 중립 = 0, 부정 = -1)"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 11",
+        "text": "Ex) 개방성: 긍정 8개, 중립 1개, 부정 1개(개방성 점수) = (8 – 1) / 10 = 0.7"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 10",
+        "text": "점수 = (긍정 문장 수 - 부정 문장 수)/ 해당 요인에 매핑된 전체 문장 수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 14",
+        "text": "Ex) 개방성: 10개, 전체 요인: 40개 매핑(개방성 언급 빈도) = 10 / 40 = 0.25"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 12",
+        "text": "장소성 요인별 언급 빈도(매핑 수)= (매핑된 구절 수) / (전체 요인 매핑된 구절 수)"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 16",
+        "text": "Output: 개방성: 0.7점, 0.25"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 37",
+        "text": "장소성 요인 점수화 모듈"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 22,
+    "slide_no": 22,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "5. 사용 데이터"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "장소- 이용자가 방문하고 리뷰를 남긴 상업공간- 실증 대상: 서울시 카페"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 2",
+        "text": "서울시 내 카페(출처: 공공데이터포털 https://www.data.go.kr/data/15083033/fileData.do)업종 분류음식-기타 간이-빵/도넛음식-비알코올-카페총 27,661 곳"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 5",
+        "text": "2) 서울시 내 카페 표본목록 내 서울시 행정구별(25개) 100개씩 무작위 선별총 2500 곳"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 6",
+        "text": "3) 서울시 카페 2500곳의 구글맵 리뷰 수집리뷰가 없는 곳을 제외한 1,728곳을 대상으로34,671건 수집"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "해당 장소의 리뷰 텍스트"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 11",
+        "text": "4) 리뷰에서 장소성과 관련 있는 리뷰 선별17,641건의 리뷰가 장소성 요인과 매핑(1,486 곳의 장소에 해당)"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 1",
+        "text": "* 서울시 카페 전체를 대상으로 하여 리뷰 데이터 수집 중으로, 사용 데이터는 바뀔 수 있습니다."
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 23,
+    "slide_no": 23,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "5. 사용 데이터"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "설문조사와 현장 관찰에 의존하는 기존 공간 환경 평가 방식의 한계를 보완하기 위해 데이터 기반 접근법 제시공공데이터포털소상공인시장진흥공단_상가(상권)정보, 2025/10/30 기준 데이터영업 중인 전국 상가업소 데이터(상호명, 업종코드, 업종명, 지번주소, 도로명주소, 행정구역, 경도·위도 등)업종소분류 중 ‘카페‘, ‘빵/도넛’ 필터링 -> 서울시 내 카페 약 25000개소"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 10",
+        "text": "(공공데이터포털 https://www.data.go.kr/data/15083033/fileData.do)"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 13",
+        "text": "① 서울시 내 카페 25,000개 원본데이터"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 9",
+        "rid": "rId2",
+        "target": "../media/image10.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide23_image10.png",
+          "source": "ppt/media/image10.png",
+          "size": [
+            2653,
+            1419
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 12",
+        "rid": "rId3",
+        "target": "../media/image11.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide23_image11.png",
+          "source": "ppt/media/image11.png",
+          "size": [
+            2880,
+            1158
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 24,
+    "slide_no": 24,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "5. 사용 데이터"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "공공데이터포털소상공인시장진흥공단_상가(상권)정보, 2025/10/30 기준 데이터영업 중인 전국 상가업소 데이터(상호명, 업종코드, 업종명, 지번주소, 도로명주소, 행정구역, 경도·위도 등)업종소분류 중 ‘카페‘, ‘빵/도넛’ 필터링 -> 서울시 내 카페 약 25000개소 -> 2500개소 표본 데이터셋 구축"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 13",
+        "text": "② 서울시 내 카페 2500개 데이터 행정구마다 분포를 균등하게 맞추기 위해 원본 데이터에서 행정구별 카페 100개 랜덤 추출(25개 구, 약 2500개)서울시 2만 5천 개 -> 2500개로 표본 데이터셋 구축"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 6",
+        "rid": "rId2",
+        "target": "../media/image12.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide24_image12.png",
+          "source": "ppt/media/image12.png",
+          "size": [
+            2796,
+            1004
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 25,
+    "slide_no": 25,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "5. 사용 데이터"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "2) 구글 맵 리뷰 데이터서울시 내 상업공간에 대한 사용자 리뷰 수집서울시 표본 카페 2500곳을 대상으로 Python 패키지 활용하여 웹 크롤링, 리뷰 없는 곳을 제외하여 총 1799곳을 대상으로 함‘상호명+행정구명+행정동명’ 검색하여 ‘관련성순’으로 표기되는 리뷰 상위부터 최대 100개까지 수집총 34671건 텍스트 리뷰 수집(평균 19.3개)"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "카페 데이터에서 상호명, 시군구명, 행정동명 사용하여 1: N 리뷰 수집"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 2",
+        "rid": "rId2",
+        "target": "../media/image13.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide25_image13.png",
+          "source": "ppt/media/image13.png",
+          "size": [
+            1960,
+            1022
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 5",
+        "rid": "rId3",
+        "target": "../media/image14.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide25_image14.png",
+          "source": "ppt/media/image14.png",
+          "size": [
+            2651,
+            1002
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 26,
+    "slide_no": 26,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "5. 사용 데이터"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 21",
+        "text": "카페 데이터에서 상호명, 시군구명, 행정동명 사용하여 1: N 리뷰 수집"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 10",
+        "text": "2) 구글 맵 리뷰 데이터서울시 내 상업공간에 대한 사용자 리뷰 수집서울시 표본 카페 2500곳을 대상으로 Python 패키지 활용하여 웹 크롤링, 리뷰 없는 곳을 제외하여 총 1799곳을 대상으로 함‘상호명+행정구명+행정동명’ 검색하여 ‘관련성순’으로 표기되는 리뷰 상위부터 최대 100개까지 수집총 34671건 텍스트 리뷰 수집(평균 19.3개)"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 8",
+        "rid": "rId2",
+        "target": "../media/image15.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide26_image15.png",
+          "source": "ppt/media/image15.png",
+          "size": [
+            1920,
+            1032
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 13",
+        "rid": "rId3",
+        "target": "../media/image16.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide26_image16.png",
+          "source": "ppt/media/image16.png",
+          "size": [
+            1920,
+            1032
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 27,
+    "slide_no": 27,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "결론"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "본 연구는 사용자가 작성한 텍스트 리뷰 데이터를 활용하여, 장소성을 형성하는 요인을 바탕으로 정량화할 수 있음을 확인하였다.장소성 정량화 논리 체계를 제안하며, 이는 서로 다른 장소가 비교 가능한 정량 지표를 만들 수 있다.웹에서 수집할 수 있는 리뷰 데이터를 활용함으로 기존의 현장 방문 위주 연구보다 시간과 비용, 위치와 규모의 한계를 보완하였다.본 연구에서는 정량화 대상 공간을 카페로 한정하였으나 온라인 상에서 검색과 리뷰 수집이 가능한 공간이라면 공공시설, 공원, 문화시설 등 다양한 공간 유형으로의 확장이 가능하다.본 연구에서 제안한 장소성 정량화 시스템은 향후 장소 추천 및 공간 비교를 지원하는 의사결정 도구로 확장할 수 있다.Limitations본 연구는 서울시 내 커피전문점을 실증 대상으로 하였기 때문에, 연구 결과를 모든 공간 유형의 장소성으로 일반화하는 데에는 한계가 있다. 장소성은 물리적 공간에서 사용자의 경험, 활동, 의미 부여를 통해 형성되는 복합적 개념이며, 기존 장소성 연구는 도시, 거리, 복합건축물 등 비교적 다양한 스케일과 유형의 공간을 대상으로 논의되어 왔다. 이에 비해 본 연구의 대상은 소규모 상업공간에 한정되어 있으므로, 본 연구의 결과는 장소성 전반에 대한 일반화라기보다 텍스트 리뷰 데이터를 활용한 장소성 정량화 가능성을 실증적으로 검토한 사례로 이해될 필요가 있다.온라인 리뷰는 공간을 방문한 모든 사용자가 작성하는 것이 아니며, 리뷰 작성자의 주관적 경험과 플랫폼 이용 특성이 반영된 데이터이다. 따라서 리뷰 데이터만으로 모든 사용자의 공간 인식을 완전히 대변하기에는 한계가 있다."
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 28,
+    "slide_no": 28,
+    "texts": [
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "레퍼런스"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 4",
+        "text": "Relph, Edward, (1976). Place and Placelessness. London: Pion.Yoo, Y., & Lee, J.-K. (2025). Quantification and Analysis Methods of Architectural Styles Using Image-Text AI Models. Journal of the Architectural Institute of Korea, 41(5), 93–101.Na, H., Lee, D., & Lee, S. (2025). Analysis of Placeness of Major Places in Seoul, Korea : Using Text Mining and Large Language Models. Journal of Korea Planning Association, 60(5), 21-42.Sun, S., & Yu, Y. (2021). Dimension and formation of placeness of commercial public space in city center: A case study of Deji Plaza in Nanjing. Frontiers of Architectural Research, 10(2), 229–239.Lyu, H. (1996). A Study on the Embodiment-Factors of the Sense of Place in Interior Space - focused on residential environment -. Journal of the Korean Institute of Interior Design,(7), 56-63.Guo, Fengming, Hwang, Yeonsook and Juyoung Lee. (2025). User Perception Analysis of Museum Spatial Design Based on Place Characteristics. Journal of Korea Intitute of Spatial Design, 20(5), 181-190.Hwang, Y., & Hwang, Y. (2025). A case study of culturally regenerated idle spaces applying the formative factors of placeness. Proceedings of the Korean Institute of Interior Design Conference, 27(1), 363–366.CHOI SU YOUNG and Lee, Kyung-Hoon. (2023). A Study on the User Perception of the Place of Space Expression. Journal of the Architectural Institute of Korea, 39(6), 3-14.Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. arXiv preprint arXiv:1810.04805.Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. arXiv preprint arXiv:1908.10084."
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 29,
+    "slide_no": 29,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 3",
+        "text": "Backup"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 30,
+    "slide_no": 30,
+    "texts": [
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "[1] Shijie Sun, Yun Yu, Dimension and formation of placeness of commercial public space in city center: A case study of Deji Plaza in Nanjing, Frontiers of Architectural Research, Volume 10, Issue 2, 2021, Pages 229-239.[2] 류호창, \"실내공간에서의 장소성 구현 요소에 관한 연구: 주거공간을 중심으로,\" 한국실내디자인학회 논문집, 7호, 한국실내디자인학회, 1996. 4, 56-63쪽.[3] 곽풍명, 황연숙, & 이주영. (2025). 장소성 기반 박물관 공간디자인에 대한 사용자 인식 분석 연구. 한국공간디자인학회 논문집, 20(5), 181-190.[4] 이지혜 and 김지현. (2025). 복합문화공간 관점에서 본 대형카페의 공간디자인 전략 연구. 한국공간디자인학회 논문집, 20(8), 415-428."
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "장소성 세부 요인에 대한 근거"
+      },
+      {
+        "type": "text",
+        "name": "제목 1",
+        "text": "2. 이론적 고찰"
+      }
+    ],
+    "pictures": []
+  },
+  {
+    "slide_index": 31,
+    "slide_no": 31,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 8",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 95",
+        "text": "외부 데이터 적용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 28",
+        "text": "레퍼런스 기반 장소성 요인 분류 및 표준 문장 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 71",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 76",
+        "text": "장소성 요인별 근거 문장 추출"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 78",
+        "text": "장소성 요인별 관련성 높은 리뷰 문장과 매핑"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 26",
+        "text": "리뷰 문장 속성 단위 분리"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 66",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 65",
+        "text": "심미성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 67",
+        "text": "지역정체성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 143",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 156",
+        "text": "Input"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 157",
+        "text": "Output"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 138",
+        "text": "공간의 배치와 시야 구성이 외부 조망과 시각적 연결을 확보하여 이용자에게 확장감과 낮은 폐쇄감을 느끼게 하는 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 139",
+        "text": "설명"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 144",
+        "text": "큰 창, 높은 천장, 시야를 막지 않는 배치, 외부 경관과의 시각적 연결"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 145",
+        "text": "키워드"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 61",
+        "text": "물리적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 62",
+        "text": "활동적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 63",
+        "text": "의미적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 60",
+        "text": "장소성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 5",
+        "text": "장소성 구성 요소"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 40",
+        "text": "텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 50",
+        "text": "장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 53",
+        "text": "개방성: 0.95쾌적성: 0.8활동성: 0.8감각적 경험: 0.9"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 54",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 59",
+        "text": "< 장소성 정량화 시스템 내부 상세 프로세스>"
+      },
+      {
+        "type": "text",
+        "name": "말풍선: 모서리가 둥근 사각형 81",
+        "text": "“매장이 넓고 통창이라서 시야가 시원합니다. 2층은 많이 시끄럽고 3층은 조용한 편이에요. 화장실도 깔끔하고 커피가 XX매장 다녀본 곳 중에서는 제일 맛있는 것 같아요.”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 83",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 101",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 3",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "장소성 요인별매핑된 리뷰 문장의긍정/ 부정 평가"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 15",
+        "text": "장소성 요인별종합 점수 산출"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 64",
+        "text": "개방성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 58",
+        "text": "리뷰 데이터 형식 정제 및 공간 관련 리뷰 선별"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 24",
+        "text": "LLM 활용"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 82",
+        "rid": "rId3",
+        "target": "../media/image9.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide31_image9.png",
+          "source": "ppt/media/image9.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 32,
+    "slide_no": 32,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 8",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 95",
+        "text": "외부 데이터 적용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 28",
+        "text": "레퍼런스 기반 장소성 요인 분류 및 표준 문장 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 71",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 76",
+        "text": "필터링된 리뷰 문장과 장소성 요인 표준 문장 비교"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 78",
+        "text": "리뷰 문장과 관련된 장소성 요인 매핑"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 87",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 26",
+        "text": "공간 관련 리뷰 의미적 필터링"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 58",
+        "text": "리뷰 데이터 형식 정제"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 47",
+        "text": "리뷰 문장에매핑된 장소성 요인"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 22",
+        "text": "개방성,활동성,쾌적성,감각적 경험,"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 35",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 66",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 64",
+        "text": "개방성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 65",
+        "text": "심미성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 67",
+        "text": "지역정체성"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 143",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 156",
+        "text": "Input"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 157",
+        "text": "Output"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 138",
+        "text": "공간의 배치와 시야 구성이 외부 조망과 시각적 연결을 확보하여 이용자에게 확장감과 낮은 폐쇄감을 느끼게 하는 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 139",
+        "text": "요인 개념 정의"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 144",
+        "text": "큰 창, 높은 천장, 시야를 막지 않는 배치, 외부 경관과의 시각적 연결"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 145",
+        "text": "건축적 판별 기준"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 147",
+        "text": "창이 커서 시원하고 답답하지 않다.시야가 탁 트였다.테이블 간 간격이 넓다.테라스가 있고 외부 뷰가 넓게 보인다."
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 148",
+        "text": "리뷰 데이터에서 관찰가능한 예시 문장"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 61",
+        "text": "물리적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 62",
+        "text": "활동적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 63",
+        "text": "의미적 특성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 60",
+        "text": "장소성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 5",
+        "text": "장소성 요인 구성"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 40",
+        "text": "텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 50",
+        "text": "장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 53",
+        "text": "개방성: 0.95쾌적성: 0.8활동성: 0.8감각적 경험: 0.9"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 54",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "말풍선: 모서리가 둥근 사각형 81",
+        "text": "“매장이 넓고 통창이라서 시야가 시원합니다. 2층은 많이 시끄럽고 3층은 조용한 편이에요. 화장실도 깔끔하고 커피가 XX매장 다녀본 곳 중에서는 제일 맛있는 것 같아요.”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 83",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 101",
+        "text": "모듈 진행데이터 활용"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 82",
+        "rid": "rId3",
+        "target": "../media/image9.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide32_image9.png",
+          "source": "ppt/media/image9.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 33,
+    "slide_no": 33,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 131",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 59",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 61",
+        "text": "외부 데이터 참조"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 63",
+        "text": "레퍼런스 기반 장소성 요인 분류 체계"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 66",
+        "text": "장소성 및 공간디자인 이론 레퍼런스"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 67",
+        "text": "상업시설 장소성 요인 구성(3차원, 10요인)"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 69",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 72",
+        "text": "필터링된 리뷰 문장과 장소성 요인 표준 문장 비교"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 74",
+        "text": "리뷰 문장과 관련된 장소성 요인 매핑"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 77",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 80",
+        "text": "장소성 요인별긍정/ 부정 평가"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 81",
+        "text": "장소성 정량화 스케일 정의(ex. 0~1 사이의 연속형 점수)"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 83",
+        "text": "장소성 요인별 점수 산출 및 종합 점수 계산"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 88",
+        "text": "공간 관련 리뷰 의미적 필터링"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 89",
+        "text": "리뷰 데이터 형식 정제"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 92",
+        "text": "장소성 요인별 해석 기준(문장) 정의 및 언어 표현 규칙 설정"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 97",
+        "text": "텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "말풍선: 모서리가 둥근 사각형 98",
+        "text": "“매장이 넓고 통창이라서 시야가 시원합니다. 2층은 많이 시끄럽고 3층은 조용한 편이에요. 화장실도 깔끔하고 커피가 XX매장 다녀본 곳 중에서는 제일 맛있는 것 같아요.”"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 100",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 101",
+        "text": "장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 103",
+        "text": "개방성: 0.95쾌적성: 0.8활동성: 0.8감각적 경험: 0.9"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 104",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 105",
+        "text": "< 장소성 정량화 시스템 내부 프로세스>"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide33_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId4",
+        "target": "../media/image7.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide33_image7.png",
+          "source": "ppt/media/image7.png",
+          "size": [
+            700,
+            567
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId5",
+        "target": "../media/image8.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide33_image8.png",
+          "source": "ppt/media/image8.png",
+          "size": [
+            700,
+            541
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 99",
+        "rid": "rId6",
+        "target": "../media/image9.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide33_image9.png",
+          "source": "ppt/media/image9.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 34,
+    "slide_no": 34,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input정성적 텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 112",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 114",
+        "text": "레퍼런스 기반 장소성 요인 분류 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 116",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 117",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 121",
+        "text": "외부 데이터 참조"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 131",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "직사각형 8",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "장소성 요인 매핑 모듈- 리뷰 문장과 장소성 요인 표준 문장 비교- 리뷰 문장과 유사도 높은 장소성 요인 매핑"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 10",
+        "text": "장소성 요인별 점수화 모듈- 매핑된 리뷰 문장의 긍정/ 부정 평가- 언급 빈도 기반 가중치 반영한 장소성 요인별 점수 산출"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 11",
+        "text": "레퍼런스 기반 장소성 요인 분류 체계- 장소성 요인별 해석 기준 정의"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 16",
+        "text": "텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "직사각형 17",
+        "text": "INPUT"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 18",
+        "text": "장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "직사각형 19",
+        "text": "OUTPUT"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide34_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId4",
+        "target": "../media/image8.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide34_image8.png",
+          "source": "ppt/media/image8.png",
+          "size": [
+            700,
+            541
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId5",
+        "target": "../media/image7.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide34_image7.png",
+          "source": "ppt/media/image7.png",
+          "size": [
+            700,
+            567
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 35,
+    "slide_no": 35,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 112",
+        "text": "장소성 정량화 시스템"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 114",
+        "text": "선행연구 기반 장소성 요인 평가 체계"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 116",
+        "text": "장소성 요인 매핑 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 117",
+        "text": "장소성 요인별 점수화 모듈"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 121",
+        "text": "평가 기준 참조"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 131",
+        "text": "모듈 진행데이터 활용"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 8",
+        "text": "< 장소성 정량화 시스템 내부 모듈>"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 1",
+        "text": "Output장소성 점수"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 35",
+        "text": "Input텍스트 리뷰 데이터"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 22",
+        "text": "PlacenessQuantification System장소성 요인 추출 및 정량화"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 37",
+        "rid": "rId3",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide35_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 44",
+        "rid": "rId4",
+        "target": "../media/image7.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide35_image7.png",
+          "source": "ppt/media/image7.png",
+          "size": [
+            700,
+            567
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 38",
+        "rid": "rId5",
+        "target": "../media/image8.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide35_image8.png",
+          "source": "ppt/media/image8.png",
+          "size": [
+            700,
+            541
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "slide_index": 36,
+    "slide_no": 36,
+    "texts": [
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 15",
+        "text": "OutputAggregated placeness scores"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 9",
+        "text": "PlacenessQuantification SystemFeature matching and sentiment scoring"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 11",
+        "text": "InputQualitativetext review data"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 118",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 119",
+        "text": "…"
+      },
+      {
+        "type": "text",
+        "name": "사각형: 둥근 모서리 120",
+        "text": "Placeness Scores"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 141",
+        "text": "Figure 1. Overview of placeness-based text review quantification approach"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 7",
+        "text": "NLP Model"
+      },
+      {
+        "type": "text",
+        "name": "TextBox 2",
+        "text": "<1.5단계>"
+      }
+    ],
+    "pictures": [
+      {
+        "type": "image",
+        "name": "그림 18",
+        "rid": "rId2",
+        "target": "../media/image4.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide36_image4.png",
+          "source": "ppt/media/image4.png",
+          "size": [
+            512,
+            512
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 4",
+        "rid": "rId9",
+        "target": "../media/image6.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide36_image6.png",
+          "source": "ppt/media/image6.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      },
+      {
+        "type": "image",
+        "name": "그림 12",
+        "rid": "rId10",
+        "target": "../media/image17.png",
+        "media": {
+          "file": "_pptx_extracted\\media\\slide36_image17.png",
+          "source": "ppt/media/image17.png",
+          "size": [
+            700,
+            700
+          ]
+        }
+      }
+    ]
+  }
+]

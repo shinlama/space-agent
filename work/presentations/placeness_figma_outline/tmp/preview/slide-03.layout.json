@@ -1,0 +1,513 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/wmquau",
+    "id": "wmquau",
+    "slide": 3,
+    "layoutId": "246b8be9-acf5-4ec2-aa33-4a926532ec41",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "30568363-1711-4868-80b5-e1340428d904",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FBFDFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "246b8be9-acf5-4ec2-aa33-4a926532ec41",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "30568363-1711-4868-80b5-e1340428d904",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "30568363-1711-4868-80b5-e1340428d904",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u9knih4b",
+      "id": "1",
+      "name": "top-accent",
+      "bbox": [
+        0,
+        0,
+        1280,
+        14
+      ],
+      "geometry": "rect",
+      "fillColor": "#2F6EA6",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1032lszq",
+      "id": "2",
+      "name": "text",
+      "bbox": [
+        72,
+        46,
+        360,
+        26
+      ],
+      "geometry": "rect",
+      "text": "BACKGROUND",
+      "textPreview": "BACKGROUND",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#2F6EA6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "BACKGROUND"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "BACKGROUND",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#2F6EA6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "BACKGROUND",
+              "fontSize": 14,
+              "color": "#2F6EA6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cfa9w3m9",
+      "id": "3",
+      "name": "text",
+      "bbox": [
+        1120,
+        38,
+        88,
+        34
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "fontSize": 21,
+        "typeface": "+mn-lt",
+        "color": "#A8B6C6",
+        "bold": true,
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#A8B6C6",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 21,
+              "color": "#A8B6C6",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jm1cfa9w",
+      "id": "4",
+      "name": "text",
+      "bbox": [
+        72,
+        88,
+        880,
+        58
+      ],
+      "geometry": "rect",
+      "text": "Research Highlights",
+      "textPreview": "Research Highlights",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Research Highlights"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Research Highlights",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Research Highlights",
+              "fontSize": 36,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u18jqh0f",
+      "id": "5",
+      "name": "text",
+      "bbox": [
+        86,
+        170,
+        1050,
+        360
+      ],
+      "geometry": "rect",
+      "text": "• Placeness has mostly been evaluated through subjective methods such as surveys and observation, which motivates a data-based and LLM-assisted quantitative approach.\n• Placeness is structured into three dimensions and ten detailed factors based on placeness theory and prior studies.\n• A logical scoring framework is proposed to extract, classify, and quantify placeness factors from spatial review data.\n• The empirical analysis uses Google Maps reviews collected from cafés in Seoul.\n• The quantified results can be extended to place recommendation, search, and comparison.",
+      "textPreview": "• Placeness has mostly been evaluated through subjective methods such as surveys and observation, which motivates a data-based and LLM-as...",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "fontSize": 21,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 6,
+        "lines": [
+          {
+            "index": 1,
+            "text": "• Placeness has mostly been evaluated through subjective methods such as surveys and observation, which motivates a"
+          },
+          {
+            "index": 2,
+            "text": "data-based and LLM-assisted quantitative approach."
+          },
+          {
+            "index": 3,
+            "text": "• Placeness is structured into three dimensions and ten detailed factors based on placeness theory and prior studies."
+          },
+          {
+            "index": 4,
+            "text": "• A logical scoring framework is proposed to extract, classify, and quantify placeness factors from spatial review data."
+          },
+          {
+            "index": 5,
+            "text": "• The empirical analysis uses Google Maps reviews collected from cafés in Seoul."
+          },
+          {
+            "index": 6,
+            "text": "• The quantified results can be extended to place recommendation, search, and comparison."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "• Placeness has mostly been evaluated through subjective methods such as surveys and observation, which motivates a data-based and LLM-assisted quantitative approach.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Placeness has mostly been evaluated through subjective methods such as surveys and observation, which motivates a data-based and LLM-assisted quantitative approach.",
+              "fontSize": 21,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "• Placeness is structured into three dimensions and ten detailed factors based on placeness theory and prior studies.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Placeness is structured into three dimensions and ten detailed factors based on placeness theory and prior studies.",
+              "fontSize": 21,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "• A logical scoring framework is proposed to extract, classify, and quantify placeness factors from spatial review data.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• A logical scoring framework is proposed to extract, classify, and quantify placeness factors from spatial review data.",
+              "fontSize": 21,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 4,
+          "text": "• The empirical analysis uses Google Maps reviews collected from cafés in Seoul.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• The empirical analysis uses Google Maps reviews collected from cafés in Seoul.",
+              "fontSize": 21,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 5,
+          "text": "• The quantified results can be extended to place recommendation, search, and comparison.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• The quantified results can be extended to place recommendation, search, and comparison.",
+              "fontSize": 21,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1orytsvu",
+      "id": "6",
+      "name": "box",
+      "bbox": [
+        180,
+        578,
+        920,
+        66
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFF4DC",
+      "lineColor": "#F4D38C",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/c7u54zid",
+      "id": "7",
+      "name": "text",
+      "bbox": [
+        214,
+        600,
+        852,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Core contribution: converting qualitative place experience into comparable placeness indicators",
+      "textPreview": "Core contribution: converting qualitative place experience into comparable placeness indicators",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "fontSize": 20,
+        "typeface": "+mn-lt",
+        "color": "#9A6500",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Core contribution: converting qualitative place experience into comparable placeness indicators"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Core contribution: converting qualitative place experience into comparable placeness indicators",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "color": "#9A6500",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Core contribution: converting qualitative place experience into comparable placeness indicators",
+              "fontSize": 20,
+              "color": "#9A6500",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

@@ -29,6 +29,13 @@ from modules.research_scoring import (
     compute_factor_scores,
     compute_place_scores,
 )
+from modules.validation_analysis import (
+    build_cluster_feature_matrix,
+    evaluate_cluster_range,
+    get_factor_extreme_cases,
+    representative_places_for_cluster,
+    run_place_clustering,
+)
 
 RECOMMENDATION_PRESETS = {
     "분위기 좋은 곳": ["심미성", "감각적 경험", "쾌적성"],
@@ -41,6 +48,11 @@ FACTOR_CATEGORY_COLORS = {
     "물리적 특성": "#5CB7F2",
     "활동적 특성": "#8BD646",
     "의미적 특성": "#FFB52E",
+}
+FACTOR_CATEGORY = {
+    factor: category
+    for category, factors in FACTOR_CATEGORIES.items()
+    for factor in factors
 }
 
 
@@ -785,6 +797,291 @@ def render_personalized_recommendation(
     st.dataframe(evidence_display, use_container_width=True, hide_index=True)
 
 
+def render_validation_analysis(
+    scored_evidence: pd.DataFrame,
+    factor_scores: pd.DataFrame,
+    place_scores: pd.DataFrame,
+) -> None:
+    st.subheader("6. 검증 분석")
+    st.markdown(
+        """
+        <div class="formula-box">
+        <b>검증 관점</b><br>
+        1) 요인별 언급비중 반영 점수가 높은 장소와 낮은 장소의 실제 리뷰 근거가 서로 다르게 나타나는지 확인합니다.<br>
+        2) 10개 장소성 요인 점수로 장소를 유형화하여, 정량화 결과가 해석 가능한 장소성 유형을 만드는지 확인합니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    case_tab, cluster_tab = st.tabs(["요인별 상·하위 사례", "장소성 유형화"])
+
+    with case_tab:
+        st.markdown("##### 요인별 상·하위 사례 비교")
+        st.caption("언급비중 반영 점수를 기준으로 요인별 상위/하위 장소를 추출하고, 실제 매핑 근거 구절을 함께 확인합니다.")
+
+        c1, c2, c3, c4 = st.columns([1.4, 1, 1, 1])
+        with c1:
+            selected_factor = st.selectbox("검토할 장소성 요인", FACTOR_ORDER, key="validation_factor")
+        with c2:
+            min_total_mentions = st.slider(
+                "최소 전체 근거 수",
+                min_value=1,
+                max_value=max(1, int(place_scores["mapped_evidence_count"].max())),
+                value=min(10, max(1, int(place_scores["mapped_evidence_count"].max()))),
+                step=1,
+                key="validation_min_total_mentions",
+            )
+        with c3:
+            max_factor_mentions = max(1, int(factor_scores["mention_count"].max()))
+            min_factor_mentions = st.slider(
+                "최소 요인 근거 수",
+                min_value=1,
+                max_value=max_factor_mentions,
+                value=min(3, max_factor_mentions),
+                step=1,
+                key="validation_min_factor_mentions",
+            )
+        with c4:
+            n_cases = st.slider(
+                "사례 수",
+                min_value=3,
+                max_value=10,
+                value=5,
+                step=1,
+                key="validation_n_cases",
+            )
+
+        top_cases, bottom_cases = get_factor_extreme_cases(
+            scored_evidence,
+            factor_scores,
+            place_scores,
+            factor=selected_factor,
+            min_total_mentions=min_total_mentions,
+            min_factor_mentions=min_factor_mentions,
+            n_cases=n_cases,
+        )
+        combined_cases = pd.concat([top_cases, bottom_cases], ignore_index=True)
+        if combined_cases.empty:
+            st.warning("현재 조건에 맞는 상·하위 사례가 없습니다. 최소 근거 수를 낮춰보세요.")
+        else:
+            display = combined_cases[
+                [
+                    "case_type",
+                    "cafe_name",
+                    "weighted_score",
+                    "factor_score",
+                    "mention_share",
+                    "mention_count",
+                    "mapped_evidence_count",
+                    "positive_count",
+                    "neutral_count",
+                    "mixed_count",
+                    "negative_count",
+                    "representative_evidence",
+                ]
+            ].copy()
+            display = display.rename(
+                columns={
+                    "case_type": "구분",
+                    "cafe_name": "장소명",
+                    "weighted_score": "언급비중 반영 점수",
+                    "factor_score": "장소성 요인 점수",
+                    "mention_share": "언급 비중",
+                    "mention_count": "요인 근거 수",
+                    "mapped_evidence_count": "전체 근거 수",
+                    "positive_count": "긍정",
+                    "neutral_count": "중립",
+                    "mixed_count": "혼합",
+                    "negative_count": "부정",
+                    "representative_evidence": "대표 근거 구절",
+                }
+            )
+            display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(format_signed_decimal)
+            display["장소성 요인 점수"] = display["장소성 요인 점수"].map(format_signed_decimal)
+            display["언급 비중"] = display["언급 비중"].map(format_percent)
+            st.dataframe(display, use_container_width=True, hide_index=True)
+
+            st.markdown("##### 사례별 근거 구절 확인")
+            case_options = [
+                f"{row.case_type} · {row.cafe_name}"
+                for row in combined_cases.itertuples()
+            ]
+            selected_case_label = st.selectbox("근거를 볼 사례", case_options, key="validation_case_detail")
+            selected_case = combined_cases.iloc[case_options.index(selected_case_label)]
+            evidence_rows = scored_evidence[
+                (scored_evidence["cafe_name"] == selected_case["cafe_name"])
+                & (scored_evidence["factor"] == selected_factor)
+            ].copy()
+            ascending = selected_case["case_type"] == "하위"
+            evidence_rows = evidence_rows.sort_values(
+                ["sentiment_value", "confidence"],
+                ascending=[ascending, False],
+            )
+            evidence_display = evidence_rows[
+                ["sentiment_label", "sentiment_value", "evidence", "reason", "review_text"]
+            ].rename(
+                columns={
+                    "sentiment_label": "평가 방향",
+                    "sentiment_value": "구절별 점수",
+                    "evidence": "근거 구절",
+                    "reason": "매핑 근거",
+                    "review_text": "리뷰",
+                }
+            )
+            evidence_display["구절별 점수"] = evidence_display["구절별 점수"].map(format_signed_score)
+            st.dataframe(evidence_display, use_container_width=True, hide_index=True)
+
+    with cluster_tab:
+        st.markdown("##### 장소성 점수 기반 유형화")
+        st.caption("각 장소를 10개 장소성 요인 점수 벡터로 표현하고, 유사한 장소성 특성을 가진 장소끼리 군집화합니다.")
+
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            score_option = st.radio(
+                "군집분석 기준",
+                ["언급비중 반영 점수", "장소성 요인 점수"],
+                horizontal=True,
+                key="cluster_score_option",
+            )
+        with c2:
+            cluster_min_mentions = st.slider(
+                "군집분석 최소 전체 근거 수",
+                min_value=1,
+                max_value=max(1, int(place_scores["mapped_evidence_count"].max())),
+                value=min(10, max(1, int(place_scores["mapped_evidence_count"].max()))),
+                step=1,
+                key="cluster_min_mentions",
+            )
+
+        score_column = "weighted_score" if score_option == "언급비중 반영 점수" else "factor_score"
+        feature_matrix = build_cluster_feature_matrix(
+            factor_scores,
+            place_scores,
+            score_column=score_column,
+            min_total_mentions=cluster_min_mentions,
+        )
+        if len(feature_matrix) < 3:
+            st.warning("군집분석을 수행할 장소 수가 부족합니다. 최소 전체 근거 수를 낮춰보세요.")
+            return
+
+        k_eval = evaluate_cluster_range(feature_matrix, k_min=2, k_max=8)
+        if k_eval.empty:
+            st.warning("군집 수를 평가하기에 충분한 데이터가 없습니다.")
+            return
+
+        best_k = int(k_eval.sort_values("silhouette_score", ascending=False).iloc[0]["k"])
+        best_score = float(k_eval.sort_values("silhouette_score", ascending=False).iloc[0]["silhouette_score"])
+        c1, c2, c3 = st.columns(3)
+        c1.metric("군집분석 대상 장소", format_count_unit(len(feature_matrix), "개"))
+        c2.metric("추천 군집 수", f"{best_k}개")
+        c3.metric("최고 Silhouette", f"{best_score:.3f}")
+
+        line_chart = px.line(
+            k_eval,
+            x="k",
+            y="silhouette_score",
+            markers=True,
+            labels={"k": "군집 수", "silhouette_score": "Silhouette score"},
+            height=300,
+        )
+        line_chart.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+        st.plotly_chart(line_chart, use_container_width=True)
+
+        selected_k = st.slider(
+            "적용할 군집 수",
+            min_value=int(k_eval["k"].min()),
+            max_value=int(k_eval["k"].max()),
+            value=best_k,
+            step=1,
+            key="selected_cluster_k",
+        )
+        cluster_result = run_place_clustering(
+            feature_matrix,
+            place_scores,
+            n_clusters=selected_k,
+        )
+
+        scatter = px.scatter(
+            cluster_result.clustered_places,
+            x="pc1",
+            y="pc2",
+            color="cluster_label",
+            hover_data=["cafe_name", "placeness_score", "mapped_evidence_count", "most_mentioned_factor"],
+            labels={"pc1": "PC1", "pc2": "PC2", "cluster_label": "장소성 유형"},
+            height=460,
+        )
+        scatter.update_layout(margin=dict(l=10, r=10, t=20, b=10))
+        st.plotly_chart(scatter, use_container_width=True)
+
+        summary = cluster_result.cluster_summary.copy()
+        summary_display = summary.rename(
+            columns={
+                "cluster_label": "군집",
+                "place_count": "장소 수",
+                "avg_placeness_score": "평균 언급비중 반영 점수",
+                "avg_mapped_evidence_count": "평균 근거 수",
+                "top_factors": "상위 요인",
+                "low_factors": "하위 요인",
+            }
+        )[
+            ["군집", "장소 수", "평균 언급비중 반영 점수", "평균 근거 수", "상위 요인", "하위 요인"]
+        ]
+        summary_display["평균 언급비중 반영 점수"] = summary_display["평균 언급비중 반영 점수"].map(format_signed_decimal)
+        summary_display["평균 근거 수"] = summary_display["평균 근거 수"].map(lambda value: f"{float(value):.1f}")
+        st.dataframe(summary_display, use_container_width=True, hide_index=True)
+
+        selected_cluster_label = st.selectbox(
+            "상세히 볼 장소성 유형",
+            summary["cluster_label"].tolist(),
+            key="selected_cluster_label",
+        )
+        selected_cluster = int(summary[summary["cluster_label"] == selected_cluster_label].iloc[0]["cluster"])
+
+        profile = cluster_result.cluster_profiles[
+            cluster_result.cluster_profiles["cluster"] == selected_cluster
+        ][FACTOR_ORDER].T.reset_index()
+        profile.columns = ["factor", "mean_score"]
+        profile["factor_category"] = profile["factor"].map(FACTOR_CATEGORY)
+        profile_chart = px.bar(
+            profile,
+            x="factor",
+            y="mean_score",
+            color="factor_category",
+            color_discrete_map=FACTOR_CATEGORY_COLORS,
+            labels={"factor": "장소성 요인", "mean_score": "군집 평균 점수", "factor_category": "구분"},
+            height=360,
+        )
+        profile_chart.update_layout(yaxis_range=[-1, 1], margin=dict(l=10, r=10, t=20, b=10))
+        profile_chart.add_hline(y=0, line_width=1, line_dash="dash", line_color="#98a2b3")
+        st.plotly_chart(profile_chart, use_container_width=True)
+
+        representatives = representative_places_for_cluster(
+            cluster_result,
+            factor_scores,
+            scored_evidence,
+            cluster=selected_cluster,
+            limit=10,
+        )
+        rep_display = representatives.rename(
+            columns={
+                "cafe_name": "대표 장소",
+                "distance_to_center": "군집 중심 거리",
+                "placeness_score": "언급비중 반영 점수",
+                "mapped_evidence_count": "근거 수",
+                "dominant_factor": "대표 요인",
+                "dominant_weighted_score": "대표 요인 가중 점수",
+                "representative_evidence": "대표 근거 구절",
+            }
+        )[
+            ["대표 장소", "군집 중심 거리", "언급비중 반영 점수", "근거 수", "대표 요인", "대표 요인 가중 점수", "대표 근거 구절"]
+        ]
+        rep_display["군집 중심 거리"] = rep_display["군집 중심 거리"].map(lambda value: f"{float(value):.3f}")
+        rep_display["언급비중 반영 점수"] = rep_display["언급비중 반영 점수"].map(format_signed_decimal)
+        rep_display["대표 요인 가중 점수"] = rep_display["대표 요인 가중 점수"].map(format_signed_decimal)
+        st.dataframe(rep_display, use_container_width=True, hide_index=True)
+
+
 def main() -> None:
     inject_css()
     st.title("공간 리뷰 텍스트 기반 장소성 정량화")
@@ -827,13 +1124,14 @@ def main() -> None:
         )
         cafe_name = st.selectbox("장소 선택", cafe_options)
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         [
             "평가 체계",
             "리뷰 매핑",
             "점수 계산",
             "장소 비교",
             "개인화 추천",
+            "검증 분석",
         ]
     )
     with tab1:
@@ -846,6 +1144,8 @@ def main() -> None:
         render_place_comparison(place_scores)
     with tab5:
         render_personalized_recommendation(scored_evidence, factor_scores, place_scores)
+    with tab6:
+        render_validation_analysis(scored_evidence, factor_scores, place_scores)
 
 
 if __name__ == "__main__":

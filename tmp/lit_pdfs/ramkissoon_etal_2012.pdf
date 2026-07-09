@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+    <head prefix="
+        og: http://ogp.me/ns#
+        profile: http://ogp.me/ns/profile#
+        article: https://ogp.me/ns/article#
+        book: https://ogp.me/ns/book#
+        music: https://ogp.me/ns/music#
+        video: https://ogp.me/ns/video#
+    ">
+        <meta charset="utf-8"/>
+        <title>Research Portal</title>
+        <base href="/esploro/"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+        <meta content="index, follow" name="robots"/>
+        <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+        <link rel="stylesheet" href="assets/fonts/clarivate.css" nonce="espNonceGoesHere"/>
+        <link rel="stylesheet" href="assets/files/index.css" nonce="espNonceGoesHere"/>
+    <link rel="stylesheet" href="styles-NQOTILDB.css"></head>
+    <body>
+        <esp-root ngcspnonce="espNonceGoesHere">
+            <div class="loader-container">
+                <svg height="4rem" id="esp-init-loader" viewBox="0 0 100 100" width="4rem" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gradient" x1="100%" x2="0%" y1="100%" y2="0%">
+                            <stop class="spinner-color-start" offset="0%"></stop>
+                            <stop class="spinner-color-end" offset="100%"></stop>
+                        </linearGradient>
+                    </defs>
+
+                    <circle cx="50" cy="50" r="45" stroke="url(#gradient)"></circle>
+                </svg>
+
+                <a href="https://clarivate.com/products/scientific-and-academic-research/research-funding-and-analytics/esploro/" id="esp-init-loader-message" target="_blank">
+                    <span>Powered by <strong>Esploro</strong> from Clarivate</span>
+                </a>
+            </div>
+        </esp-root>
+        <input class="ot-sdk-show-settings" id="ot-sdk-btn" type="hidden"/>
+        <script src="assets/files/index.js" nonce="espNonceGoesHere"></script>
+    <script src="polyfills-J2TRIYDX.js" type="module" nonce="espNonceGoesHere"></script><script src="scripts-3DIW3GWZ.js" defer="" nonce="espNonceGoesHere"></script><script src="main-M4TIWA7Q.js" type="module" nonce="espNonceGoesHere"></script></body>
+</html>

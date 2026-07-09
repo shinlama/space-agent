@@ -1,0 +1,538 @@
+
+
+===== PAGE 1 =====
+ISSN 2733-6239(Print) ISSN 2733-6247(Online)
+©Copyright 2025 Architectural Institute of Korea https://doi.org/10.5659/JAIK.2025.41.5.93
+이미지-텍스트 AI모델 활용 건축 스타일 정량화 및 분석
+Quantification and Analysis Methods of Architectural Styles Using Image-Text AI Models
+유 영 진* 이 진 국**
+Yoo, Youngjin Lee, Jin-Kook .
+* 연세대 실내건축학과 석사, Master’s Degree, Dept. of Interior Architecture and Built Environment, Yonsei University, Korea
+** 연세대 실내건축학과 교수, Associate Professor, Dept. of Interior Architecture and Built Environment, Yonsei University, Korea
+(Corresponding author : leejinkook@yonsei.ac.kr)
+………………………………………………………………………………………………………………………
+Abstract
+This study introduces a quantitative method for analyzing architectural styles, addressing the limitations of traditional qualitative approaches.
+An objective measurement system was developed using an Image-Text AI model to analyze architectural images and convert visual
+characteristics into numerical values. The analysis focuses on four key features: curvature, color saturation, transparency, and symmetry. Each
+feature is measured on a normalized scale between two opposing states, with the results including mean values, standard deviations, and
+standout characteristics. The method was validated using approximately 9,000 images from works by 30 renowned architects, including
+Pritzker Prize winners. Feature modification tests confirmed consistent results, with minimal variation (±0.05) in features that were not altered.
+Clustering analysis revealed meaningful patterns within individual architects’ work and across different architects, aligning closely with
+traditional qualitative classifications. This method provides a structured framework for objectively comparing and classifying architectural
+styles, especially valuable as digital visualization becomes more common in architectural design. Although currently limited to four visual
+features, the approach lays a foundation for future expansion, with potential applications in style evaluation, building similarity searches,
+architectural database organization, and curated style exploration.
+………………………………………………………………………………………………………………………
+키워드 : 건축 스타일 정량화, 건축 스타일 분석, 이미지-텍스트 AI, 스타일 특성, 군집 분석
+Keywords : Architectural Style Quantification, Architectural Style Analysis, Image-Text AI, Style Features, Cluster Analysis
+………………………………………………………………………………………………………………………
+1. 서 론 을 위해 건축 디자인의 특성을 정량적으로 분석하는 연
+구가 증가하고 있으며, 컴퓨터 비전과 인공지능 기술의
+1.1 연구의 배경 및 목적1) 발전이 이를 가속화하고 있다(Demir et al., 2021).
+건축 디자인과 스타일은 시대, 그룹, 또는 개별 작품들 동시에, 디지털 기술의 발전으로 건축 디자인의 시각적
+간의 차이를 식별하는 표현 양식이다(Chan, 1992). 건축 자료 생성과 유통이 급속도로 증가하고 있다. 특히, 생성
+연구자들은 스타일 분석을 통해 건축물의 시대적 특성을 형 인공지능은 빠른 시간 내에 다양하고 새로운 디자인
+파악하고, 건축 작품들의 유형을 분류하며, 건축 디자인 을 시각화할 수 있게 해주었다(Lee, Yoo & Cha, 2024;
+의 발전 과정을 체계화한다(Schapiro, 1961). 스타일 연구 Yoo & Lee, 2024). 이는 건축 디자인의 가능성을 확장시
+는 건축물의 형태, 공간 구성, 재료 사용, 빛의 처리 등 키는 동시에, 이러한 대량의 시각 자료를 효율적으로 분
+시각적으로 표현되는 디자인 요소들을 종합적으로 분석 석하고 관리할 수 있는 새로운 방법의 필요성을 부각시
+하는 과정이며, 이에 따라 이미지, 도면, 사진 등의 시각 키고 있다. 이러한 맥락에서 인공지능(AI) 기술, 특히 컴
+자료가 분석의 기본 도구로 활용된다(Bafna, 2008). 퓨터 비전 분야의 이미지 인식 및 처리 기술은 대량의
+건축 디자인 스타일 분석은 현재 전문가의 정성적 판 시각 데이터를 빠르고 일관되게 처리할 수 있다는 점에
+단에 의존하고 있다. 정성적 접근은 디자인의 심층적 이 서, 변화하고 있는 건축 디자인 분야에서 건축 디자인을
+해를 가능하게 하지만, 전문가의 해석에 따라 분석 결과 객관적으로 평가 및 분석하는데 활용될 수 있다(Kim &
+가 달라지는 한계가 있다(Groat & Wang, 2013). 특히 다 Lee, 2020; Demir et al., 2021).
+수의 건축물 비교 분석과 스타일 변화 추적 과정에서 일 특히, 생성형 인공지능의 등장으로 건축 디자인의 시각
+관된 기준 적용이 어렵다(Nasar, 1994). 이러한 한계 극복 적 자료 생성과 유통이 급증하면서 효율적인 스타일 분
+석 도구의 필요성이 더욱 증가하고 있다(Lee, Yoo &
+본 연구는 국토교통부/국토교통과학기술진흥원의 2025년도 지원 Cha, 2024). 이에 본 연구는 이미지-텍스트 AI 모델을 활
+으로 수행되었음. 과제번호: RS-2021-KA163269.
+93
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 2 =====
+유영진․이진국
+용하여 건축 스타일을 정량적으로 분석하는 방법을 제안 양식의 구체적 특징을 이해하고 스타일을 구분하는 기준
+한다. 본 연구는 제안된 정량 분석 방법의 개발과 실증적 으로 활용된다.
+검증을 통해 건축물의 시각적 특성을 객관적으로 측정하 또한 분석 요소나 기준이 연구자마다 다양하여 일관성
+고 비교할 수 있는 기반을 제공하여, 전문가의 정성적 평 이 부족할 수 있다는 점도 한계로 지적된다. 이러한 주관
+가를 보완하는 체계적인 스타일 분석 체계를 구축하는 성과 비일관성은 건축 스타일을 객관적으로 비교하고 분
+것을 목적으로 한다. 석하는 데 제약으로 작용할 수 있다. 아울러 정성적 스타
+일 분석 연구는 주로 소수의 대표적 건축물이나 특정 시
+1.2 연구의 방법 및 범위 기의 제한된 사례 분석에 집중되는 경향이 있는데(Seo &
+본 연구는 다음과 같은 절차로 진행된다. 먼저 선행연 Lim, 2010; Yang, 2021; Park, 2024), 이는 다수의 건축물
+구를 바탕으로 건축물의 시각적 특성을 정량적으로 평가 의 스타일을 일관된 기준으로 분석하고 비교하는 데 실
+하는 방법론을 제안한다. 다음으로 이미지-텍스트 AI 모 질적인 어려움이 있기 때문이다.
+델인 CLIP 모델을 활용하여 제안된 평가 방법을 구현하
+는데, 이 과정에서 건축 형태와 관련된 4가지 주요 특징 2.2 건축 스타일 정량적 분석 접근 사례
+을 선정하고 각각의 특징에 대한 정량화 방안을 마련한 건축물의 정량적 분석은 시각적 특성을 객관적이고 측
+다(Radford et al., 2021). 이를 통해 건축 스타일을 정량 정 가능한 데이터로 변환하여 분석하는 방법으로, 주관성
+적으로 분석하는 체계를 구축한다. 마지막으로 제안된 분 을 최소화하고 객관적이고 일관된 결과를 도출하는 것을
+석 방법의 유효성 검증을 위해 다양한 건축 사례에 적용 목표로 한다(Groat & Wang, 2013). 이러한 정량적 분석은
+하여 정량적 분석 데이터를 도출하고 그 결과를 분석한 Birkhoff(1933)의 연구에서 시작되었는데, 그는 질서
+다. (order)와 복잡성(complexity)의 비율을 통해 미적 가치를
+건축 스타일은 시각적인 형태 외에도 역사적 맥락, 문 수학적으로 정량화하고자 했다.
+화적 배경 등 다양한 측면으로 이루어졌는데, 본 연구는 이후 Chan(1994)은 건축 디자인 스타일을 특징들의 집
+이미지나 사진에서 시각적으로 관찰 가능한 요소들로 범 합으로 정의하고 이를 정량적으로 분석하는 방법론을 제
+위를 한정한다. 건축 스타일의 다양한 시각적 구성요소 안했다. 그는 건축물의 시각적 특성을 여러 변수로 분해
+중 곡률성, 색상채도, 투명성, 그리고 대칭성과 같이 비교 하고, 스타일 인식에 필요한 최소한의 특징 개수와 각 특
+적 직관적인 시각적 특징에 초점을 맞추어 분석을 수행 징의 영향도를 실험적으로 분석했다. 유명 건축가들의 대
+한다. 분석 대상은 건축물의 외관 스타일로, 프리츠커상 표작에서 시각적 특징을 추출하여 스타일 간 패턴과 유
+수상자를 비롯한 전 세계적으로 영향력 있는 저명한 건 사성을 수치화했으나, 분석 과정의 수동성과 복합적인 특
+축가들의 작품을 선별하여, 각 건축가의 스타일 특성을 징을 분석 기준으로 사용함으로 인해 일반화된 적용에는
+정량적으로 분석한다. 한계가 있었다.
+CNN 모델의 등장은 건축 스타일의 정량적 분석에 새
+2. 이론적 고찰 로운 가능성을 제시했다. Yoshimura et al.(2019)은 34명
+의 건축가 스타일을 학습하여 실내 공간 및 건물 외관
+2.1 정성적 건축 스타일 분석 이미지를 자동으로 분류했으며, Kim & Lee(2020)는 실내
+건축 디자인의 시각적 분석에 있어 전통적인 접근 방 디자인 양식 학습을 통한 공간 이미지 분류 시스템을 개
+식은 주로 정성적 특성을 띠고 있다. 이러한 정성적 분석 발했다. Demir et al.(2021)은 딥컨볼루션 신경망을 활용
+은 실제 건물, 사진, 도면, 3D 모델링 등에서 관찰되는 하여 예술 작품과 건축물의 시각적 디자인 원리를 분석
+시각적 특징을 연구자의 전문적 지식과 경험을 바탕으로 했다.
+해석하고 서술하는 형태로 수행된다(Groat & Wang, 그러나 CNN 기반 분석 방식은 몇 가지 한계점을 보
+2013). 건축의 복잡한 특성을 포괄적으로 이해하는 데 유 인다. Lee & Han(2023)이 지적했듯이, CNN의 블랙박스
+용한 이 방식은 다양한 건축 스타일을 구분하고 평가하 특성으로 인해 분류 과정에서의 의사결정 기준을 명확
+는 데 널리 활용되어 왔다(Venturi, 1966). 하게 파악하기 어렵다. 선행연구들이 각 스타일의 세부
+다수의 연구와 이론 저서는 이러한 정성적 접근을 통 적 특징을 상세히 기술하고 있으나, 모델 학습 시 사용
+해 지역별, 시대별 건축 양식을 분석하고 분류해 왔다 된 라벨이 단순히 스타일명과 같은 포괄적인 수준에 그
+(Calloway & Cromley, 1996; Hopkins, 2014). 특히 쳐 실제 모델의 스타일 구분 기준을 검증하기 어렵다.
+Calloway & Cromley(1996)는 문, 창문, 벽, 천장, 바닥, 조 또한 CNN 기반 분석은 학습된 데이터에 한정된 분석만
+명 등 다양한 건축 요소의 특징을 분석하여 각 스타일을 가능하며, 건축 스타일과 관련된 텍스트 설명이나 설계
+구분하는 기준을 제시하였다. 예를 들어, 영국 빅토리아 의도 등 다양한 맥락적 정보를 종합적으로 고려하지 못
+스타일의 정문에 대해 "패널로 나뉘어 있으며, 때로는 고 한다는 제약이 있다. 이러한 한계점들은 건축 스타일의
+딕 양식의 아치형이고, 주로 녹색이나 나뭇결 무늬로 마 정량적 분석에 있어 이미지와 텍스트를 함께 처리할 수
+감된다"라고 서술하여 형태, 재료, 색상과 같은 시각적 있는 모델과 같이 더욱 진보된 AI 기술의 필요성을 시사
+특징을 체계적으로 기술하였다. 이러한 서술 방식은 건축 한다.
+94
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 3 =====
+이미지-텍스트 AI모델 활용 건축 스타일 정량화 및 분석
+2.3 건축 디자인 스타일의 구성요소 축 스타일을 구성하는 시각적 요소들을 독립적으로 분석
+Schapiro(1961)와 Smithies(1981)는 구별 가능한 특징들 하고, 이를 종합하여 스타일의 전체적인 시각적 특성을
+의 조합이 하나의 디자인을 형성하고, 이것이 나아가 스 정량적으로 표현하는 방법이다. 이 방법을 통해 스타일
+타일을 구성한다고 주장했다. 이는 디자인이 여러 시각적 ()의 여러 시각적 특징들을 개별적으로 정량화한 후, 이
+인 요소들의 조합으로 이루어져 있어, 이를 통해 디자인 를 통합하여 하나의 대표적인 수치로 도출한다.
+과 스타일을 구분할 수 있음을 의미한다. 구체적으로, 디 정량화의 기본 개념은 다음과 같다. 먼저, 건축물의 시
+자인 스타일은 형태, 비례, 색상, 재료 등 시각적으로 인 각적 특징들을 독립적으로 측정한다. 각 특징은 상반된
+지할 수 있는 모든 특징들로 구성되며, 이러한 특징들의 두 극단 상태(예: 곡선과 직선, 고채도와 저채도)를 기준
+특정한 조합을 통해 각 건축물의 고유한 시각적 특성이 으로 수치화되며, 해당 특징이 나타내는 상대적 위치를
+형성된다. Unwin(2009)은 이러한 특징들의 조합을 통해 건 특징 값으로 산출한다. 이러한 특징 값들은 일정한 수치
+축물의 시각적 특성을 체계적으로 이해하고 설명할 수 있 스케일이나 색상 스펙트럼과 같은 척도로 표현된다. 이렇
+다고 보았으며, 이는 건축물의 복잡성을 분석하는 데 유 게 도출된 각각의 수치를 ‘특징 값( )’이라 정의하며,
+
+용한 프레임워크를 제공한다(Calloway & Cromley, 1996).
+본 연구에서는 이를 0과 1 사이의 수치로 표현한다. 여기
+스타일의 각 특징은 물리적 형태, 패턴, 또는 건축물의
+서 1은 해당 특징이 완전히 존재하는 상태를, 0은 반대
+특정 구별 가능한 특성을 포함하는 광범위한 의미를 가
+상태를 나타내며, 중간 상태는 0과 1 사이의 값으로 표현
+진다(Chan, 1994). 본 연구에서는 일관된 정량 분석을 위
+된다.
+해 '수평으로 길게 확장된 켄틸레버(Cantilever)'와 같은
+복합적 스타일 특성이 아닌, 모든 건축물에서 보편적으로
+발견되며 그 정도의 차이로 표현할 수 있는 기본적 속성
+을 분석 대상으로 한다. 이를 통해 모든 건축물에 동일한
+분석 기준을 적용하고, 특정 스타일에 국한되지 않는 포
+괄적 분석이 가능하도록 한다. 본 연구는 Calloway &
+Cromley(1996), Hopkins(2014)와 같은 건축 스타일을 시각
+적으로 분석한 저서를 바탕으로 이러한 건축 특징들을
+식별하였다(Table 1).
+Table 1. Examples of architectural design style features
+Category Features Definition State
+The degree to which Figure 1. Architectural style quantification approach
+Curvilinear,
+Curvature a building's exterior
+(F1) exhibits curved or Rectilinear, 도출된 개별 특징 값들은 평균()과 표준편차()를 기
+etc.
+linear characteristics.
+Form 반으로 종합되어 최종적인 정량화 결과를 구성한다
+The degree of
+Symmetric,
+Symmetry symmetrical arrange- (Equation 1). 특징 값들의 산술 평균을 통해 스타일의 전
+Asymmetric,
+(F2) ment or balance in the
+etc. 체적 경향을 파악할 수 있으며, 표준편차는 특징들 간의
+building's structure
+The intensity and 변동성을 보여준다. 또한, 해당 스타일의 모든 특징값 중
+(Color) Chromatic,
+saturation of color use
+Sat ( u F r 3 at ) ion in the building's A et c c. hromatic, 평균적인 수치에서 크게 벗어난 ‘특이 특징( ± )'들을
+exterior
+Surface 함께 나타냄으로써 해당 스타일의 독특한 특성을 파악하
+The degree of light
+Transparency transmission in Transparent, 는 데 도움을 준다. 이러한 특이 특징은 각 특징의 절대
+(F4) architectural materials Opaque, etc.
+and visual connection 적 값(0~1 스케일)과는 별개로, 다른 특징들과의 상대적
+차이를 나타내는 것으로, 동일한 평균과 표준편차를 가진
+이 중에서 곡률성, 색상채도, 투명성, 대칭성과 같이 건
+스타일이라도 어떤 특징이 두드러지는지를 식별할 수 있
+축물을 인지할 때 즉각적으로 관찰되며, 정도의 차이로
+게 해준다. 이러한 방식은 특징의 수에 관계없이 일관된
+명확하게 구분할 수 있는 특징들을 분석 대상으로 선정
+요약을 제공하여 스타일의 특성을 효과적으로 표현할 수
+하였다(Ching, 2007; Rasmussen, 1964). 이러한 특징들은
+있게 한다.
+질감이나 패턴과 같이 상세한 관찰이 필요한 요소나, 복
+      ±        (1)
+잡성이나 반복성과 같이 맥락적 이해가 필요한 특성들과  
+달리 단일 이미지에서도 객관적으로 식별이 가능하다는 건축 스타일의 정량화는 스타일의 객관적 비교를 위한
+장점을 가진다. 기초를 제공하지만, 이는 디자인의 품질이나 적합성을 직
+접적으로 평가하지는 않는다. 예를 들어, 곡률성이 높은
+3. 건축 스타일 정량화 방법 정량화 값은 해당 건축물이 곡선적 성질이 강하다는 것
+을 의미할 뿐, 디자인의 우수성과는 무관하다. 특정 상태
+3.1 건축 스타일 구성요소별 정량화 접근 가 더 적합하거나 이상적인지를 판단하기 위해서는 별도
+본 연구에서 제안하는 건축 스타일 정량화 방법은 건 의 평가 기준이 필요하다. 본 정량화 방법의 주된 가치는
+95
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 4 =====
+유영진․이진국
+서로 다른 건축물 간의 객관적 비교를 가능하게 하는 데 정량화 과정의 첫 단계는 특징 값 산출이다. 이 단계에
+있다. 정량화 값이 크게 다른 두 건축물은 서로 매우 다 서는 각 특징의 양 극단 상태를 기준으로 각 상태와 건
+른 특성을 가질 가능성이 크며, 이를 통해 스타일 특성의 축 스타일과의 유사도를 측정한다. 먼저, CLIP 모델을 사
+차이를 정량적으로 파악할 수 있다. 용하여 Hessel et al.(2021)이 제안한 방식으로 CLIPscore
+를 도출한다. 구체적으로, CLIP 모델을 활용하여 이미지
+3.2 건축 스타일의 대표성 정량화 방법 와 텍스트 프롬프트를 각각 동일한 차원의 벡터로 변환
+건축 스타일의 정량화는 기본적으로 한 장의 이미지를 한 후, 이 두 벡터 간의 cosine similarity를 계산한다. 예
+기반으로 스타일을 수치화한다. 하지만, 스타일은 한 장 를 들어, 곡률성 특징을 측정할 때는 “곡선적 건물”과
+의 이미지만으로는 완벽하게 포착하기 어렵다. 이는 하나 “직선적 건물”이라는 두 가지 상반된 프롬프트에 대해
+의 건축물이라도 다양한 각도와 맥락에서 관찰될 수 있 각각 이미지와의 유사도를 도출한다. 이후 두 점수를
+으며, 스타일의 본질적 특성은 여러 작품에 걸쳐 일관되 softmax 함수로 정규화 하여 0(완전히 직선적)과 1(완전히
+게 나타나는 패턴을 통해 더욱 명확히 드러나기 때문이 곡선적) 사이의 특징 값( )으로 변환한다. 이 과정을 모
+
+다. Ackerman(1963)의 연구에 따르면, 특정 시기, 지역, 든 특징에 대해 반복하여 각 특징 값을 산출한다.
+또는 디자이너의 작품들은 허용된 범위 내에서 일정한 그 다음, 도출된 특징 값들을 종합하여 최종적인 정량
+패턴의 시각적 특징들을 공유하며, 이러한 반복되는 특징
+화 결과를 산출한다. 이 과정에서 특징 값들의 평균()과
+들이 해당 스타일을 다른 스타일과 구분 짓는 고유한 특
+표준편차()를 계산하고, 평균에서 표준편차 이상의 차이
+성이 된다. 예를 들어, 한 건축가의 작품들에서 나타나는
+가 나는 특징들을 특이 특징( )으로 선별한다. 특이
+±
+곡선의 사용 정도나 색상의 채도가 일정 범위 내에서 유
+특징은 평균을 기준으로 표준편차 이상 벗어난 값에 따
+지되는 경향이 관찰된다.
+라 '+'(초과) 또는 '-'(미만) 기호로 표시하여 각 특징의 상
+이러한 특성을 반영하여, 본 정량화 방법은 앞서 제안
+대적 강도를 직관적으로 파악할 수 있게 한다.
+한 단일 이미지 기반의 분석 방식을 확장한다. 각각의 이
+미지에서 추출된 특징 값을 동일 특징끼리 평균하여 스
+타일을 대표하는 특징 값을 계산한다. 예를 들어, 한 건
+축가의 여러 작품 이미지에서 도출된 곡률성 값들의 평
+균은 해당 건축가 스타일의 대표적인 곡률성 특징 값이
+된다. 이렇게 도출된 평균 특징 값들은 앞서 설명한 정량
+화 방식에 따라 종합되어, 해당 스타일의 전반적 특성을
+나타내는 수치로 변환된다. 이러한 방식은 개별 이미지의
+특성이 아닌 스타일 전반에 걸친 평균적 특성을 정량화
+할 수 있다는 장점이 있다.
+다수의 이미지를 정량화하여 스타일 특성을 도출할 경
+우, 각 특징 값들의 변동성 측정이 가능해진다. Chan
+(1994)은 스타일을 구별하는 데 있어 스타일의 일관성이
+중요한 역할을 한다고 보았는데, 이는 특정 스타일이 가
+진 고유한 특성이 일관되게 나타날수록 다른 스타일과의
+구분이 명확해지기 때문이다. 이러한 스타일의 일관성은
+각 특징 값들의 표준편차로 계산되는 변동성을 통해 측
+정할 수 있다. 예를 들어, 변동성 값이 낮다면 이는 스타
+일이 전반적으로 일관된 특성을 보임을 의미한다. 반면,
+높은 변동성은 스타일 내에서 다양한 변주를 보임을 의
+미하며, 이는 디자이너의 실험적 시도나 스타일의 진화
+과정을 반영할 수 있다.
+4. 건축 스타일 정량화 알고리즘 개발
+4.1 건축 스타일 구성요소 정량화 알고리즘
+건축 스타일 정량화 알고리즘은 건축 디자인의 시각적
+Figure 2. Architectural style quantification algorithm
+요소를 정량적으로 분석하는 과정을 단계적으로 수행한
+다. 알고리즘은 크게 입력, 정량화, 출력의 세 단계로 구 다수의 이미지를 기반으로 하나의 스타일을 정량화하는
+성되며, 이미지 데이터를 입력받아 특징 값을 산출하고 경우, 각 이미지에서 도출된 특징 값들을 평균하여 대표
+이를 종합하여 정량적 분석 결과를 도출한다(Figure 2). 특징값()으로 산출한다. 이렇게 산출된 대표 특징값
+
+96
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 5 =====
+이미지-텍스트 AI모델 활용 건축 스타일 정량화 및 분석
+들을 바탕으로 단일 이미지 분석(Equation 1)과 동일하게 Burden(1995)과 Ching(2007)의 건축 이론을 기반으로 재구
+최종 정량화 결과를 도출한다. 또한, 각 특징마다 입력된 성한 프롬프트를 통해 특징 값을 도출하였다. 정량화를
+이미지들의 해당 특징 값들 간의 표준편차를 계산하여 변 수행한 특징으로는 곡률성(곡선형-직선형)1), 색상 채도(고
+동성(Variability)을 계산하는데, 이는 해당 특징이 여러 이 채도-저채도)2), 투명성(투명한-불투명한)3), 대칭성(대칭적
+미지에 걸쳐 얼마나 일관되게 나타나는지를 보여준다. -비대칭적)4)을 선정하였으며, 각 특징별로 상반된 두 상
+태를 기준으로 평가하였다.
+4.2 건축 스타일 구성요소 합산 수치 시각화 제안된 정량화 방법의 검증을 위해 건축 전문 온라인
+건축 스타일에서 도출된 정량 수치의 시각화는 다수의 잡지에서 프리츠커상 수상자를 비롯한 전 세계적으로 영
+특성을 독립적인 축으로 매핑할 수 있는 방식이라면 적 향력 있는 건축가 30인의 작품 이미지를 수집하였다. 각
+용 가능하며, 대표적인 예시로 방사형 차트(Radial chart) 건축가별로 5개의 대표작을 선정하였으며, 건물의 외관
+나 병렬 좌표계(Parallel coordinates)가 있다. 두 방식 모 특성이 명확히 드러나는 정면 이미지로 제한하여 총 150
+두 여러 특징 값들을 동시에 표현하고 비교할 수 있으며, 여 장의 이미지를 분석 대상으로 하였다. 이미지 한 장당
+건축 스타일의 특성 분포와 관계를 효과적으로 시각화할 정량 수치 도출에는 약 3-5초가 소요되었으며, 이렇게 도
+수 있다. 방사형 차트는 각 특징을 방사형으로 배치하여 출된 수치들은 대부분 건축물의 시각적 특성이 유사하게
+전체적인 패턴을 직관적으로 파악할 수 있게 하며, 병렬 정량화되었다. Table 2의 Original Case는 그 결과의 한
+좌표계는 다차원 데이터를 2차원 평면에 체계적으로 표 예시로, 직선적 형태, 낮은 채도, 높은 투명성, 대칭적 구
+현한다. 이러한 시각화 방식들은 데이터의 특성과 분석 성과 같은 시각적 특징들이 직관적 관찰과 일치하는 수
+목적에 따라 선택적으로 활용될 수 있다. 준으로 정량화되었음을 보여준다. 전반적으로 도출된 정
+량 수치들은 건축물의 주요 시각적 특성들을 일관성 있
+게 포착하여 수치화하는 것으로 나타났다.
+더 나아가, 본 정량화 방법의 객관성과 일관성을 검증
+하기 위해 특징 변형 테스트를 수행하였다. 실제 건축물
+이미지의 단일 특징을 각각 변경한 테스트 세트를 구축
+하였으며, 이를 바탕으로 도출한 정량 수치를 비교 분석
+하였다. 분석 결과(Table 2), 특정 요소가 변경될 때 해당
+특성값은 유의미한 변화를 보인 반면, 변경되지 않은 특
+성들의 값은 0-1 사이로 정규화된 척도에서 ±0.05 이내
+의 미미한 변동만을 나타냈다. 일부 변경되지 않은 특징
+에서도 미세한 변화가 관찰되는 것은, 한 특성의 변경이
+다른 시각적 특성의 인식에 영향을 줄 수 있기 때문이다.
+예를 들어, 투명성이 변경되면 건물의 형태나 색상이 더
+Figure 3. Visualization of quantification results
+명확히 혹은 불명확하게 보일 수 있다. 그러나 이러한 변
+본 연구에서는 비교적 적은 특징 개수에 적합하며 건 화는 매우 미미하여 전체 분석 결과에 큰 영향을 미치지
+축 스타일 특성의 직관적 파악이 용이한 방사형 차트를 않았다. 이는 제안된 정량 수치가 건축 스타일의 시각적
+주로 사용한다. Figure 3에서 볼 수 있듯이, 이 그래프는 특성을 객관적이고 정량적으로 측정할 수 있는 도구로서
+각 특징을 원형으로 배치된 축에 매핑하며, 특징 값들을 활용될 수 있음을 시사한다.
+연결하여 하나의 도형 형태로 표현한다. 이렇게 형성된
+도형의 형태는 건축 스타일의 고유한 특성을 시각적으로 1) 곡률성의 긍정 상태는 곡선(Curvilinear)으로, "building with
+보여주며, 유사한 형태는 유사한 스타일 특성을 의미한 completely curvilinear forms, wavy, ...”등을 프롬프트로 사용했다.
+다. 정량화된 수치의 평균과 표준편차는 서로 다른 색상 반대 상태는 직선(Rectilinear)으로, "building with completely
+rectilinear shapes, linear, ...”등을 프롬프트로 사용했다.
+의 실선과 영역으로 표시되며, 다중 이미지 기반 분석의
+2) 색상 채도의 긍정 상태는 고채도(Chromatic)로, "color
+경우 각 특징의 변동성도 함께 시각화되어 스타일의 일
+photograph of a building in vivid, intense, ...”등을 프롬프트로
+관성을 직관적으로 파악할 수 있다.
+사용했다. 반대 상태는 저채도(Achromatic)로, "color photograph
+of a building in grayscale, black, ...”등을 프롬프트로 사용했다.
+5. 건축 스타일 정량화 방법 구현 및 적용 3) 투명성의 긍정 상태는 투명(Transparent)으로, "see-through
+and transparent building, glazed, ...”등을 프롬프트로 사용했다.
+5.1 이미지 기반 건축 스타일 정량화 반대 상태는 불투명(Opaque)으로, "solid and opaque building,
+enclosed, ...”등을 프롬프트로 사용했다.
+본 연구에서는 제안된 건축 스타일 정량화 방법의 적
+4) 대칭성의 긍정 상태는 대칭(Symmetric)으로, "building with
+용성을 검증하기 위해 실제 건축물 이미지를 대상으로
+perfect symmetry, precisely, ...”등을 프롬프트로 사용했다. 반
+분석을 수행하였다. CLIP 모델(ViT-L/32)을 활용하여 건축
+대 상태는 비대칭(Asymmetric)으로, "building with asymmetrical
+물의 시각적 특징을 분석하고 정량화하였으며, design, unbalanced, ...”등을 프롬프트로 사용했다.
+97
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 6 =====
+유영진․이진국
+Case Original Curvature modified Saturation modified Transparency modified Symmetry modified
+Image
+Graph
+5.2 건축가별 건축 스타일 정량화
+본 연구는 제안된 정량화 방법이 다수의 작품 이미지
+를 종합적으로 분석할 수 있는지, 그리고 이를 통해 스타
+일의 특성을 정확하게 축약하고 대표할 수 있는지 검증
+하였다. 건축가 스타일의 정량화는 각 건축가별로 개별
+작품(하위 단위)과 건축가 전체(상위 단위)에 대해 두 차
+례에 걸쳐 진행되었다. 이를 위해 30인의 건축가의 스타
+일을 대상으로 하여 작품 이미지의 정량적 특성을 분석
+하였다. 각 건축가별로 10개 이상의 작품에 대해 다양한
+각도와 시간대에서 촬영된 최소 10장 이상의 이미지를
+수집하였다. 수집된 이미지는 건물의 특성이 명확히 드러
+나도록 전처리 과정을 거쳤다. 이후, 각 작품별로 다수의
+이미지들을 바탕으로 대표 특징값을 도출하고, 다시 작품
+별 대표 특징값을 바탕으로 건축가의 대표 특징값 및 건
+축가의 최종 스타일 정량화 결과를 도출하였다.
+대표적인 예로, Luis Barragan의 스타일은 Calvario
+Figure 4. Quantification result of Luis Barragan style
+Chapel, Gilardi House 등 16개 작품에 걸쳐 총 329장의
+이미지를 바탕으로 정량화하였다. 이를 분석한 결과
+(Figure 4), 직선적이고 고채도의 색상을 사용하며 낮은
+투명성과 중간 정도의 대칭성이라는 일관된 스타일 특성
+이 그래프에서 안정적인 값의 분포로 나타난다. 특히 흰
+색을 주조색으로 사용한 예외적 사례인 Calvario Chapel
+을 제외한 대부분의 작품에서 Gilardi House와 같이 분홍
+색 등 강렬한 색채를 사용한 특징이 높은 채도값의 일관
+성으로 명확히 드러난다. 이렇게 대다수 작품에서 나타나
+는 일관된 특성은 자연스럽게 건축가의 정량 수치에도
+반영되어 Barragan 스타일의 대표적 특징으로 나타난다.
+또 다른 예시로, SANAA의 스타일은 La Samaritaine,
+Louvre-Lens를 포함한 17개 작품 이미지 총 337장을 바
+탕으로 정량화하였다. 그 결과(Figure 5), 일관되게 낮은
+채도 값을 보이면서도 곡률성과 투명성에서는 의미 있는
+변화를 보인다. 직선적인 형태의 New Contemporary Art
+Museum에서 유기적 곡선의 Grace Farms에 이르는 스타
+일 변화가 정량적으로 기록되었다. 이는 본 정량화 방법
+이 건축가의 일관된 스타일 특성뿐만 아니라 다양성과
+변화까지도 포착할 수 있음을 보여준다. Figure 5. Quantification result of SANAA style
+98
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+Feature
+Scores
+Table 2. Comparison between results of architectural style scores with modified features
+F1 0.14 0.77 (+0.63) 0.16 (+0.02) 0.09 (-0.05) 0.15 (+0.01)
+F2 0.06 0.08 (+0.02) 0.95 (+0.89) 0.10 (+0.04) 0.04 (-0.02)
+F3 0.67 0.69 (-0.02) 0.65 (-0.02) 0.12 (-0.55) 0.72 (+0.05)
+F4 0.83 0.88 (+0.05) 0.79 (-0.04) 0.84 (+0.02) 0.16 (-0.67)
+Style Scores 0.43±0.33|+F3, -F2 0.61±0.31|-F2 0.64±0.30|+F2, -F1 0.29±0.32|+F3 0.27±0.27|+F4
+
+===== PAGE 7 =====
+이미지-텍스트 AI모델 활용 건축 스타일 정량화 및 분석
+이러한 분석 방법을 프리츠커상 수상자를 비롯한 전
+세계적으로 영향력 있는 30인의 건축가들에게 확장 적용
+하여 약 9천 장의 이미지를 분석하였다. 이를 통해 제안
+된 방법이 건축가의 고유한 스타일 특성을 체계적이고
+객관적으로 정량화할 수 있음을 검증함과 동시에, 다양한
+건축가들의 스타일을 대상으로 정량 수치 데이터베이스
+를 구축하였다. 구축된 데이터베이스는 각 건축가 스타일
+의 일관성과 변화를 모두 정량적으로 포착할 수 있어, 향
+후 건축 스타일의 분석과 활용을 위한 객관적 기반을 제
+공할 것으로 기대된다.
+5.3 건축 스타일 정량 수치 기반 클러스터링 분석
+본 연구에서는 제안된 정량화 방법의 체계적 분석 도
+구로서의 활용 가능성을 검증하기 위해 구축된 데이터베
+이스를 대상으로 군집 분석을 수행하였다. 분석은 개별
+Figure 6. Silhouette analysis for cluster number
+건축가의 작품군 내 스타일 분류와 건축가들 간의 스타
+일 분류, 두 가지 스케일에서 진행되었으며, 각각 실루엣
+분석을 통해 최적 군집 수를 도출하였다(Figure 6).
+개별 건축가 스타일 분석의 예시로 SANAA의 작품들을
+살펴보면, 실루엣 분석 결과 도출된 3개의 군집이 의미
+있는 분류를 보여준다(Figure 7). 작품들은 상대적으로 불
+투명하고 직선적인 입면(Cluster 0), 투명하고 다소 직선
+적인 입면(Cluster 2), 그리고 투명하고 곡선적인 입면
+(Cluster 1)을 가진 스타일로 분류되었다. 실제 Figure 5에
+제시된 SANAA 스타일의 평균과 표준편차를 기준으로 분
+석한 결과, Cluster 0에서는 곡률성이 건축가 평균 미만의
+특이 특징 범주에 속하는 반면, Cluster 1의 곡률성은 건
+축가 평균 초과의 특이 특징 범주에 속하는 것으로 나타
+났다. 투명성의 경우, Cluster 0과 달리, Cluster 1과
+Cluster 2에서 초과 특이 특징 범주에 속했다. 대칭성은
+Cluster 2에서만 초과 특이 특징 범주에 나타났으며, 색상
+채도는 모든 클러스터에서 일관되게 미만 특이 특징 범
+주에 속했다. 이러한 구분은 SANAA의 작품들이 투명성과 Figure 7. Clustering results for SANAA style (k=3)
+곡률성이라는 두 가지 특성의 조합을 중심으로 분포함을
+보여준다. 클러스터링 결과는 Martínez & Ramos(2022)의
+연구에서 제시된 SANAA 건축의 패턴과 상응하며, 이러한
+분석은 투명성과 곡률성의 조합이 SANAA 건축의 주요
+특징임을 정량적 근거로 뒷받침한다.
+30인의 건축가 스타일 분류에서는 9개의 군집이 도출
+되었으며, 시각적으로 유사한 특성을 지닌 건축가들이 실
+제 유사한 스타일 수치를 도출하며 같은 군집으로 분류
+되었다(Figure 8). 그 예시로, 동일하게 곡률성 수치가 0.5
+를 넘어 유기적인 형태를 보이며, 각 건축가 평균보다 높
+은 채도와 낮은 투명도가 특징인 Antoni Gaudi(0.48±0.16|
++F2,-F3)와 Mario Botta(0.42±0.12|+F2,-F3)가 Cluster 1로
+분류되었다. 미래지향적인 스타일의 Bjarke
+Ingels(0.44±0.05| +F1,-F3), Norman
+Foster(0.48±0.07|+F1,-F3), Renzo Piano (0.49±0.01|+F1,-F2)
+는 모두 균형 잡힌 특징값 분포를 보이며, 공통적으로 곡
+률성이 초과 특이 특징으로 나타났다. 이들은 높은 대칭
+성을 보이고 상대적으로 낮은 투명성과 채도 수치를 나 Figure 8. Clustering results for renown architects’ styles (k=9)
+99
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 8 =====
+유영진․이진국
+타내며, Cluster 7로 분류되었다. 이러한 결과는 성과 일관성을 높이는 데 기여할 것으로 기대된다.
+Trachtenberg & Hyman(1986)이 제시한 정성적 분류와도 하지만, 현재 본 연구에서 제안된 방법은 제한된 수의
+높은 일치도를 보였다. 시각적 특징만을 분석 대상으로 한다는 한계를 가진다. 향
+이러한 분석 결과는 본 정량화 방법이 건축 스타일의 후 연구에서는 건축물의 시각적 특성을 더 포괄적으로 분
+시각적 특성을 체계적이고 객관적으로 분석할 수 있는 석할 수 있도록 정량화 대상 특징의 범위를 확장하고, 역
+도구로 활용될 수 있음을 입증한다. 특히 직선적-곡선적, 사적 및 지역적 스타일과 같은 다양한 스타일 분류체계로
+투명-불투명, 고채도-저채도와 같은 시각적 특성을 기준 데이터베이스를 구축하여 본 방법의 적용 범위를 넓히고자
+으로 건축물들을 자동으로 분류할 수 있어, 형태적 유사 한다. 또한 제안된 방법의 성능 및 정확도 평가를 위해 건
+성에 기반한 건축물 분류나 새로운 건축 작품의 스타일 축 전문가들을 대상으로 한 실증 연구를 수행하고, 건축
+분석, 더 나아가 유사 건축물 추천 시스템 구축 등 다양 도메인에 특화된 이미지-텍스트 모델을 개발하여 분석의
+한 실용적 활용이 가능할 것으로 기대된다. 정확도를 높이며, 나아가 실제 건축 실무에서 활용 가능한
+스타일 분석 및 평가 도구로 구현하고자 한다.
+6. 결 론
+REFERENCES
+본 연구는 건축 스타일의 시각적 특성을 객관적이고
+정량적으로 분석하기 위한 방법을 제안하였다. 제안된 방 1. Ackerman, J. S. (1963). Style, In J. S. Ackerman, & R.
+법은 이미지-텍스트 AI모델을 활용하여 건축물의 시각적 Carpenter (Eds.), Art and Archaeology, Prentice-Hall,
+요소들을 상반된 극단 상태 사이의 상대적 위치로 정량 174-186.
+화하고, 이를 종합하여 스타일의 전반적 특성을 나타내는 2. Bafna, S. (2008). How architectural drawings work —
+정량적 수치를 도출한다. CLIP 모델을 활용하여 구현된 and what that implies for the role of representation in
+본 방법은 곡선성, 채도, 투명성, 대칭성 등의 시각적 특 architecture, The Journal of Architecture, 13(5), 535–564.
+징을 독립적으로 정량화하고, 이를 평균, 표준편차, 특이 3. Birkhoff, G. (1933). Aesthetic Measure. Harvard
+특징을 포함하는 종합적인 정량 수치로 도출한다. 다중 University Press, 3-15.
+이미지 분석을 통해 변동성 개념을 도입함으로써, 건축가 4. Burden, E. (1995). Elements of Architectural Design: A
+스타일의 일관성과 변화까지 포착할 수 있는 분석 도구 Visual Resource. Van Nostrand Reinhold.
+로 발전시켰다. 5. Calloway, S., & Cromley, E. (1996). The Elements of
+제안된 방법론의 유효성은 프리츠커상 수상자를 포함 Style: An Practical Encyclopedia of Interior Architectural
+한 영향력 있는 건축가 30인의 약 9천 장의 작품 이미지 Details from 1485 to the Present. Revised ed., Simon &
+를 대상으로 한 군집 분석을 통해 검증되었다. 단일 건축 Schuster, Inc.
+가의 작품군 내에서 스타일의 일관성과 변화를 정량적으 6. Chan, C. (1992). Exploring individual style in design,
+로 파악할 수 있었으며, 건축가들의 스타일을 성공적으로 Environment and Planning B: Planning and Design,
+분류하였다. 특히 직선적-곡선적, 투명-불투명, 고채도-저 19(5), 503-523.
+채도와 같은 시각적 특성을 기준으로 한 자동 분류가 가 7. Chan, C. (1994). Operational definitions of style,
+능함을 확인하였으며, 이러한 분석 결과는 기존 건축 이 Environment and Planning B: Planning and Design, 21,
+론가들의 정성적 분류와도 높은 일치도를 보였다. 이러한 223-246.
+결과는 본 연구가 제안한 방안이 건축 스타일의 시각적 8. Ching, F. D. K. (2007). Architecture: Form, Space, and
+특성을 정량적으로 분석하는 틀로써 활용될 수 있음을 Order. 3rd ed., John Wiley & Sons.
+보여준다. 9. Demir, G., Çekmis¸ A., Yesilkaynak, V., & Unal, G.
+해당 방법론은 건축 시각자료를 정량적으로 분석 및 (2021). Detecting visual design principles in art and
+처리할 수 있다는 점에서 다양한 실용적 활용이 가능할 architecture through deep convolutional neural networks,
+것으로 사료된다. 예를 들어, 디자인 과정에서 시각적 특 Automation in Construction, 130, 103826.
+성의 일관성 평가와 대안 비교를 위한 참조 도구로 활용 10. Groat, L., & Wang, D. (2013). Architectural Research
+될 수 있으며, 건축 비평가와 전문가의 정성적 판단을 보 Methods. 2nd ed., John Wiley & Sons, 257-258.
+완하여 디자인 평가의 객관성을 높이는 데 기여할 수 있 11. Hessel, J., Holtzman, A., Forbes, M., Le Bras, R., &
+다. 또한 건축 관련 시각 데이터의 효율적 관리와 유사 Choi, Y. (2021). CLIPScore: A reference-free evaluation
+스타일 검색을 위한 객관적 기준을 제공할 수 있을 것이 metric for image captioning, ArXiv:abs/2104.08718.
+다. 특히 생성형 AI가 만들어내는 건축 이미지의 스타일 12. Hopkins, O. (2014). Architectural Styles: A Visual
+특성을 객관적으로 평가하고 분류하는 기준으로 기능하 Guide. Laurence Kin Publishing.
+여, 건축 전문 지식의 명확한 전달과 응용에 기여할 수 13. Kim, J., & Lee, J. K. (2020). Implementation and
+있다. 이러한 정량화 방법은 전문가의 정성적 판단과 상 application of interior design style training model using
+호보완적 관계를 구축함으로써, 건축 스타일 분석의 객관 deep learning, Korean Institute of Interior Design
+100
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025
+
+===== PAGE 9 =====
+이미지-텍스트 AI모델 활용 건축 스타일 정량화 및 분석
+Journal, 29(5), 96-104.
+14. Lee, J. K., Yoo, Y., & Cha, S. H. (2024). Generative
+early architectural visualizations: Incorporating architect's
+style- trained models, Journal of Computational Design
+and Engineering, 11(5), 40-59.
+15. Lee, S., & Han, J. (2023). Analysis of architectural
+design style using CNN output layer values, Journal of
+the Architectural Institute of Korea, 39(3), 23-30.
+16. Martinez, P., & Ramos, F. (2022). Emerging patterns in
+the construction of Sejima's, Sanaa's and Nishizawa's
+domestic spaces, from 1987 to 2010, Frontiers of
+Architectural Resesarch, 11(3), 375-401.
+17. Nasar, J. (1994). Urban design aesthetics: The evaluative
+qualities of building exteriors, Environment and
+Behavior, 26(3), 377-401.
+18. Park, S. (2024). A study on cubist characteristics of
+Frank Gehry architecture, Journal of the Korea Institute
+of Spatial Design, 19(3), 67-80.
+19. Radford, A., Kim, J., Hallacy, C., Ramesh, A., Goh, A., ...,
+& Sutskever, I. (2021). Learning transferable visual models
+from natural language supervision, ArXiv:2103.00020
+20. Rasmussen, S. E. (1964). Experiencing Architecture. 2nd
+ed., MIT Press, 9-34.
+21. Schapiro, M. (1961). Style, In M. Philipson (Ed.),
+Aesthetics Today, World Publishing Company, 81-113.
+22. Seo, J., & Lim, L. (2010). The concept and embodiment
+of ‘Atmosphere’ in SANAA’s architecture, Journal of the
+Architectural Institute of Korea, 26(10), 193-200.
+23. Smithies, K. W. (1981). Principles of Design in
+Architecture. Van Nostrand Reinhold.
+24. Trachtenberg, I., & Hyman, M. (1986). Architecture: From
+PreHistory to Post-Modernism. 1st ed., H.N. Abrams, .
+25. Unwin, S. (2009). Analysing Architecture. 3rd ed.,
+Routledge, 19-32.
+26. Venturi, R. (1966). Complexity and Contradiction in
+Architecture. Doubleday & Company.
+27. Yang, J. (2021). A study on nonlinear expression
+characteristics in Zaha Hadid architecture, Journal of the
+Korea Institute of Spatial Design, 16(5), 263-276.
+28. Yoo, Y., & Lee, J. (2024), Generative AI-based exterior
+building design visualization approach in the early
+design stage -Leveraging architects’ style-trained
+models-, Journal of Korean Institute of Building
+Information Modeling, 14(2), 13-24.
+29. Yoshimura, Y., Cai, B., Wang, Z., Ratti, C. (2019).
+Deep learning architect: Classification for architectural
+design through the eye of artificial intelligence, In
+Geertman, S., Zhan, Q., Allan, A., Pettit, C. (eds),
+Computational Urban Planning and Management for
+Smart Cities, Springer, 249-265.
+(Received Feb. 6, 2025/ Revised Mar. 4, 2025/ Accepted Apr. 7, 2025)
+101
+Journal of the Architectural Institute of Korea Vol.41 No.5 (Serial No.439) May 2025

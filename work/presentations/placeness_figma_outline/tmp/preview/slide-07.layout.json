@@ -1,0 +1,4167 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/rsrcki",
+    "id": "rsrcki",
+    "slide": 7,
+    "layoutId": "246b8be9-acf5-4ec2-aa33-4a926532ec41",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "30568363-1711-4868-80b5-e1340428d904",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FBFDFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "246b8be9-acf5-4ec2-aa33-4a926532ec41",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "30568363-1711-4868-80b5-e1340428d904",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "30568363-1711-4868-80b5-e1340428d904",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/adsji5sn",
+      "id": "1",
+      "name": "top-accent",
+      "bbox": [
+        0,
+        0,
+        1280,
+        14
+      ],
+      "geometry": "rect",
+      "fillColor": "#2F6EA6",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h4byhgn2",
+      "id": "2",
+      "name": "text",
+      "bbox": [
+        72,
+        46,
+        360,
+        26
+      ],
+      "geometry": "rect",
+      "text": "LITERATURE REVIEW",
+      "textPreview": "LITERATURE REVIEW",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#2F6EA6",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "LITERATURE REVIEW"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "LITERATURE REVIEW",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#2F6EA6",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "LITERATURE REVIEW",
+              "fontSize": 14,
+              "color": "#2F6EA6",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sji5snel",
+      "id": "3",
+      "name": "text",
+      "bbox": [
+        1120,
+        38,
+        88,
+        34
+      ],
+      "geometry": "rect",
+      "text": "07",
+      "textPreview": "07",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "fontSize": 21,
+        "typeface": "+mn-lt",
+        "color": "#A8B6C6",
+        "bold": true,
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "07"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "07",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#A8B6C6",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "07",
+              "fontSize": 21,
+              "color": "#A8B6C6",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3m94fu18",
+      "id": "4",
+      "name": "text",
+      "bbox": [
+        72,
+        88,
+        880,
+        58
+      ],
+      "geometry": "rect",
+      "text": "Placeness Factors in Prior Studies",
+      "textPreview": "Placeness Factors in Prior Studies",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Placeness Factors in Prior Studies"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Placeness Factors in Prior Studies",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Placeness Factors in Prior Studies",
+              "fontSize": 36,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a5gbq1or",
+      "id": "5",
+      "name": "text",
+      "bbox": [
+        74,
+        150,
+        1080,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Placeness factors were selected and similar items were integrated according to the environmental characteristics of commercial spaces.",
+      "textPreview": "Placeness factors were selected and similar items were integrated according to the environmental characteristics of commercial spaces.",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "fontSize": 20,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Placeness factors were selected and similar items were integrated according to the environmental characteristics of commercial"
+          },
+          {
+            "index": 2,
+            "text": "spaces."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Placeness factors were selected and similar items were integrated according to the environmental characteristics of commercial spaces.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Placeness factors were selected and similar items were integrated according to the environmental characteristics of commercial spaces.",
+              "fontSize": 20,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lszqtcj6",
+      "id": "6",
+      "name": "rect",
+      "bbox": [
+        54,
+        208,
+        42,
+        34
+      ],
+      "geometry": "rect",
+      "fillColor": "#E9EEF5",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/s72x4nap",
+      "id": "7",
+      "name": "box",
+      "bbox": [
+        54,
+        208,
+        42,
+        34
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#7C8796",
+      "lineWidth": 0.6
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zidonyd0",
+      "id": "8",
+      "name": "text",
+      "bbox": [
+        59,
+        216,
+        32,
+        14
+      ],
+      "geometry": "rect",
+      "text": "No.",
+      "textPreview": "No.",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "N"
+          },
+          {
+            "index": 2,
+            "text": "o."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "No.",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "No.",
+              "fontSize": 11,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1gvy90j",
+      "id": "9",
+      "name": "rect",
+      "bbox": [
+        96,
+        208,
+        160,
+        34
+      ],
+      "geometry": "rect",
+      "fillColor": "#E9EEF5",
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8nqxs72x",
+      "id": "10",
+      "name": "box",
+      "bbox": [
+        96,
+        208,
+        160,
+        34
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#7C8796",
+      "lineWidth": 0.6
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/18jqh0fe",
+      "id": "11",
+      "name": "text",
+      "bbox": [
+        101,
+        216,
+        150,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Study",
+      "textPreview": "Study",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Study"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Study",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Study",
+              "fontSize": 11,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qh0fepkz",
+      "id": "12",
+      "name": "rect",
+      "bbox": [
+        256,
+        208,
+        350,
+        34
+      ],
+      "geometry": "rect",
+      "fillColor": "#E9EEF5",
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/j2t83itg",
+      "id": "13",
+      "name": "box",
+      "bbox": [
+        256,
+        208,
+        350,
+        34
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#7C8796",
+      "lineWidth": 0.6
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8bat47y1",
+      "id": "14",
+      "name": "text",
+      "bbox": [
+        261,
+        216,
+        340,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Title",
+      "textPreview": "Title",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Title"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Title",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Title",
+              "fontSize": 11,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1w7mp0bi",
+      "id": "15",
+      "name": "rect",
+      "bbox": [
+        606,
+        208,
+        140,
+        34
+      ],
+      "geometry": "rect",
+      "fillColor": "#E9EEF5",
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q5o7qpg3",
+      "id": "16",
+      "name": "box",
+      "bbox": [
+        606,
+        208,
+        140,
+        34
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#7C8796",
+      "lineWidth": 0.6
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jqh0fepk",
+      "id": "17",
+      "name": "text",
+      "bbox": [
+        611,
+        216,
+        130,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Target",
+      "textPreview": "Target",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Target"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Target",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Target",
+              "fontSize": 11,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/c3ylc7u5",
+      "id": "18",
+      "name": "rect",
+      "bbox": [
+        746,
+        208,
+        468,
+        34
+      ],
+      "geometry": "rect",
+      "fillColor": "#E9EEF5",
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1kre1w7m",
+      "id": "19",
+      "name": "box",
+      "bbox": [
+        746,
+        208,
+        468,
+        34
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#7C8796",
+      "lineWidth": 0.6
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/58z25kb6",
+      "id": "20",
+      "name": "text",
+      "bbox": [
+        751,
+        216,
+        458,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Placeness factors",
+      "textPreview": "Placeness factors",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Placeness factors"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Placeness factors",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#172033",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Placeness factors",
+              "fontSize": 11,
+              "color": "#172033",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gn29gr2p",
+      "id": "21",
+      "name": "rect",
+      "bbox": [
+        54,
+        242,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/n29gr2p8",
+      "id": "22",
+      "name": "box",
+      "bbox": [
+        54,
+        242,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/yhgn29gr",
+      "id": "23",
+      "name": "text",
+      "bbox": [
+        59,
+        249,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "1",
+      "textPreview": "1",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "1"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "1",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "1",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5wjudg7a",
+      "id": "24",
+      "name": "rect",
+      "bbox": [
+        96,
+        242,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gbq1oryt",
+      "id": "25",
+      "name": "box",
+      "bbox": [
+        96,
+        242,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nuxc3ylc",
+      "id": "26",
+      "name": "text",
+      "bbox": [
+        101,
+        249,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Guo, Hwang & Lee\n(2025)",
+      "textPreview": "Guo, Hwang & Lee | (2025)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Guo, Hwang & Lee"
+          },
+          {
+            "index": 2,
+            "text": "(2025)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Guo, Hwang & Lee",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Guo, Hwang & Lee",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(2025)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(2025)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/y90je9cv",
+      "id": "27",
+      "name": "rect",
+      "bbox": [
+        256,
+        242,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5sneloj2",
+      "id": "28",
+      "name": "box",
+      "bbox": [
+        256,
+        242,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cbulwval",
+      "id": "29",
+      "name": "text",
+      "bbox": [
+        261,
+        249,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "User perception analysis of museum spatial design based on place characteristics",
+      "textPreview": "User perception analysis of museum spatial design based on place characteristics",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "User perception analysis of museum spatial design based on place characteristics"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "User perception analysis of museum spatial design based on place characteristics",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "User perception analysis of museum spatial design based on place characteristics",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q1orytsv",
+      "id": "30",
+      "name": "rect",
+      "bbox": [
+        606,
+        242,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 31,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fmlkjm1c",
+      "id": "31",
+      "name": "box",
+      "bbox": [
+        606,
+        242,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 32,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/87ed8bat",
+      "id": "32",
+      "name": "text",
+      "bbox": [
+        611,
+        249,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Museum",
+      "textPreview": "Museum",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Museum"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Museum",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Museum",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 33,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xs72x4na",
+      "id": "33",
+      "name": "rect",
+      "bbox": [
+        746,
+        242,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 34,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qtcj6tov",
+      "id": "34",
+      "name": "box",
+      "bbox": [
+        746,
+        242,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 35,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/je9cvixc",
+      "id": "35",
+      "name": "text",
+      "bbox": [
+        751,
+        249,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "[Physical] accessibility, territoriality, attractiveness, comfort\n[Activity] interactivity, convenience\n[Meaning] symbolism, educational value",
+      "textPreview": "[Physical] accessibility, territoriality, attractiveness, comfort | [Activity] interactivity, convenience | [Meaning] symbolism, educatio...",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "[Physical] accessibility, territoriality, attractiveness, comfort"
+          },
+          {
+            "index": 2,
+            "text": "[Activity] interactivity, convenience"
+          },
+          {
+            "index": 3,
+            "text": "[Meaning] symbolism, educational value"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "[Physical] accessibility, territoriality, attractiveness, comfort",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Physical] accessibility, territoriality, attractiveness, comfort",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "[Activity] interactivity, convenience",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Activity] interactivity, convenience",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "[Meaning] symbolism, educational value",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Meaning] symbolism, educational value",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 36,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8z25kb6x",
+      "id": "36",
+      "name": "rect",
+      "bbox": [
+        54,
+        292,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 37,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1gvy90je",
+      "id": "37",
+      "name": "box",
+      "bbox": [
+        54,
+        292,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 38,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qpg3ex0n",
+      "id": "38",
+      "name": "text",
+      "bbox": [
+        59,
+        299,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "2",
+      "textPreview": "2",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "2"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "2",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 39,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fa9w3m94",
+      "id": "39",
+      "name": "rect",
+      "bbox": [
+        96,
+        292,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 40,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/z61032ls",
+      "id": "40",
+      "name": "box",
+      "bbox": [
+        96,
+        292,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 41,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/al87ed8b",
+      "id": "41",
+      "name": "text",
+      "bbox": [
+        101,
+        299,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Na, Lee & Lee\n(2025)",
+      "textPreview": "Na, Lee & Lee | (2025)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Na, Lee & Lee"
+          },
+          {
+            "index": 2,
+            "text": "(2025)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Na, Lee & Lee",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Na, Lee & Lee",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(2025)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(2025)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 42,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hcrmhk3q",
+      "id": "42",
+      "name": "rect",
+      "bbox": [
+        256,
+        292,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 43,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/orytsvu9",
+      "id": "43",
+      "name": "box",
+      "bbox": [
+        256,
+        292,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 44,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zupwb2hw",
+      "id": "44",
+      "name": "text",
+      "bbox": [
+        261,
+        299,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Analysis of placeness of major places in Seoul using text mining and large language models",
+      "textPreview": "Analysis of placeness of major places in Seoul using text mining and large language models",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Analysis of placeness of major places in Seoul using text mining and large language"
+          },
+          {
+            "index": 2,
+            "text": "models"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Analysis of placeness of major places in Seoul using text mining and large language models",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Analysis of placeness of major places in Seoul using text mining and large language models",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 45,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a9w3m94f",
+      "id": "45",
+      "name": "rect",
+      "bbox": [
+        606,
+        292,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 46,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h0fepkzu",
+      "id": "46",
+      "name": "box",
+      "bbox": [
+        606,
+        292,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 47,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sfil0rqd",
+      "id": "47",
+      "name": "text",
+      "bbox": [
+        611,
+        299,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "71 major places\nin Seoul",
+      "textPreview": "71 major places | in Seoul",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "71 major places"
+          },
+          {
+            "index": 2,
+            "text": "in Seoul"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "71 major places",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "71 major places",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "in Seoul",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "in Seoul",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 48,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zqtcj6to",
+      "id": "48",
+      "name": "rect",
+      "bbox": [
+        746,
+        292,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 49,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/65wjudg7",
+      "id": "49",
+      "name": "box",
+      "bbox": [
+        746,
+        292,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 50,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0je9cvix",
+      "id": "50",
+      "name": "text",
+      "bbox": [
+        751,
+        299,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Symbolism, culturality, everydayness, specificity, vitality, quietness, naturalness",
+      "textPreview": "Symbolism, culturality, everydayness, specificity, vitality, quietness, naturalness",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Symbolism, culturality, everydayness, specificity, vitality, quietness, naturalness"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Symbolism, culturality, everydayness, specificity, vitality, quietness, naturalness",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Symbolism, culturality, everydayness, specificity, vitality, quietness, naturalness",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 51,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/t47y1kre",
+      "id": "51",
+      "name": "rect",
+      "bbox": [
+        54,
+        342,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 52,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/idonyd0z",
+      "id": "52",
+      "name": "box",
+      "bbox": [
+        54,
+        342,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 53,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/byhgn29g",
+      "id": "53",
+      "name": "text",
+      "bbox": [
+        59,
+        349,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "3",
+      "textPreview": "3",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "3"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "3",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "3",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 54,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0rqd4vmt",
+      "id": "54",
+      "name": "rect",
+      "bbox": [
+        96,
+        342,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 55,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tcj6tova",
+      "id": "55",
+      "name": "box",
+      "bbox": [
+        96,
+        342,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 56,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/il0rqd4v",
+      "id": "56",
+      "name": "text",
+      "bbox": [
+        101,
+        349,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Sun & Yu\n(2021)",
+      "textPreview": "Sun & Yu | (2021)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Sun & Yu"
+          },
+          {
+            "index": 2,
+            "text": "(2021)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Sun & Yu",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Sun & Yu",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(2021)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(2021)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 57,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b6xkf6dc",
+      "id": "57",
+      "name": "rect",
+      "bbox": [
+        256,
+        342,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 58,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/032lszqt",
+      "id": "58",
+      "name": "box",
+      "bbox": [
+        256,
+        342,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 59,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tovahoza",
+      "id": "59",
+      "name": "text",
+      "bbox": [
+        261,
+        349,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Dimension and formation of placeness of commercial public space in city center",
+      "textPreview": "Dimension and formation of placeness of commercial public space in city center",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Dimension and formation of placeness of commercial public space in city center"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Dimension and formation of placeness of commercial public space in city center",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Dimension and formation of placeness of commercial public space in city center",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 60,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tgfmlkjm",
+      "id": "60",
+      "name": "rect",
+      "bbox": [
+        606,
+        342,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 61,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vmtwra5",
+      "id": "61",
+      "name": "box",
+      "bbox": [
+        606,
+        342,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 62,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bat47y1k",
+      "id": "62",
+      "name": "text",
+      "bbox": [
+        611,
+        349,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Commercial\nfacility",
+      "textPreview": "Commercial | facility",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Commercial"
+          },
+          {
+            "index": 2,
+            "text": "facility"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Commercial",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Commercial",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "facility",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "facility",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 63,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mp0bi9s3",
+      "id": "63",
+      "name": "rect",
+      "bbox": [
+        746,
+        342,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 64,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tsvu9kni",
+      "id": "64",
+      "name": "box",
+      "bbox": [
+        746,
+        342,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 65,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/47y1kre1",
+      "id": "65",
+      "name": "text",
+      "bbox": [
+        751,
+        349,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "[Physical] traffic convenience, visibility, safety, comfort, openness\n[Activity] activity, seating, environmental pleasure\n[Meaning] regional landmarkness, functional context",
+      "textPreview": "[Physical] traffic convenience, visibility, safety, comfort, openness | [Activity] activity, seating, environmental pleasure | [Meaning] ...",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "[Physical] traffic convenience, visibility, safety, comfort, openness"
+          },
+          {
+            "index": 2,
+            "text": "[Activity] activity, seating, environmental pleasure"
+          },
+          {
+            "index": 3,
+            "text": "[Meaning] regional landmarkness, functional context"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "[Physical] traffic convenience, visibility, safety, comfort, openness",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Physical] traffic convenience, visibility, safety, comfort, openness",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "[Activity] activity, seating, environmental pleasure",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Activity] activity, seating, environmental pleasure",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "[Meaning] regional landmarkness, functional context",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Meaning] regional landmarkness, functional context",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 66,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bm58z25k",
+      "id": "66",
+      "name": "rect",
+      "bbox": [
+        54,
+        392,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 67,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/m1cfa9w3",
+      "id": "67",
+      "name": "box",
+      "bbox": [
+        54,
+        392,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 68,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/twra5gbq",
+      "id": "68",
+      "name": "text",
+      "bbox": [
+        59,
+        399,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "4",
+      "textPreview": "4",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "4"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "4",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "4",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 69,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4byhgn29",
+      "id": "69",
+      "name": "rect",
+      "bbox": [
+        96,
+        392,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 70,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ed8bat47",
+      "id": "70",
+      "name": "box",
+      "bbox": [
+        96,
+        392,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 71,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7u54zido",
+      "id": "71",
+      "name": "text",
+      "bbox": [
+        101,
+        399,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Lyu\n(1996)",
+      "textPreview": "Lyu | (1996)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Lyu"
+          },
+          {
+            "index": 2,
+            "text": "(1996)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Lyu",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Lyu",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(1996)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(1996)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 72,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wfyxobm5",
+      "id": "72",
+      "name": "rect",
+      "bbox": [
+        256,
+        392,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 73,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/l0rqd4vm",
+      "id": "73",
+      "name": "box",
+      "bbox": [
+        256,
+        392,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 74,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/eloj2t83",
+      "id": "74",
+      "name": "text",
+      "bbox": [
+        261,
+        399,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "A study on embodiment factors of sense of place in interior space",
+      "textPreview": "A study on embodiment factors of sense of place in interior space",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A study on embodiment factors of sense of place in interior space"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A study on embodiment factors of sense of place in interior space",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A study on embodiment factors of sense of place in interior space",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 75,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/36hcrmhk",
+      "id": "75",
+      "name": "rect",
+      "bbox": [
+        606,
+        392,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 76,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wra5gbq1",
+      "id": "76",
+      "name": "box",
+      "bbox": [
+        606,
+        392,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 77,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lc7u54zi",
+      "id": "77",
+      "name": "text",
+      "bbox": [
+        611,
+        399,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Residential\nspace",
+      "textPreview": "Residential | space",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Residential"
+          },
+          {
+            "index": 2,
+            "text": "space"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Residential",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Residential",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "space",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "space",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 78,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/epkzupwb",
+      "id": "78",
+      "name": "rect",
+      "bbox": [
+        746,
+        392,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 79,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7adsji5s",
+      "id": "79",
+      "name": "box",
+      "bbox": [
+        746,
+        392,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 80,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bat47y1k",
+      "id": "80",
+      "name": "text",
+      "bbox": [
+        751,
+        399,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Centrality, boundary, control, safety, comfort, symbolism, orientation, sociality, interior design elements",
+      "textPreview": "Centrality, boundary, control, safety, comfort, symbolism, orientation, sociality, interior design elements",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Centrality, boundary, control, safety, comfort, symbolism, orientation, sociality, interior design elements"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Centrality, boundary, control, safety, comfort, symbolism, orientation, sociality, interior design elements",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Centrality, boundary, control, safety, comfort, symbolism, orientation, sociality, interior design elements",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 81,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mp0bi9s3",
+      "id": "81",
+      "name": "rect",
+      "bbox": [
+        54,
+        442,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 82,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tgfmlkjm",
+      "id": "82",
+      "name": "box",
+      "bbox": [
+        54,
+        442,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 83,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vmtwra5",
+      "id": "83",
+      "name": "text",
+      "bbox": [
+        59,
+        449,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "5",
+      "textPreview": "5",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "5"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "5",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "5",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 84,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bm58z25k",
+      "id": "84",
+      "name": "rect",
+      "bbox": [
+        96,
+        442,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 85,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/m1cfa9w3",
+      "id": "85",
+      "name": "box",
+      "bbox": [
+        96,
+        442,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 86,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tsvu9kni",
+      "id": "86",
+      "name": "text",
+      "bbox": [
+        101,
+        449,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Lee & Kim\n(2025)",
+      "textPreview": "Lee & Kim | (2025)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Lee & Kim"
+          },
+          {
+            "index": 2,
+            "text": "(2025)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Lee & Kim",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Lee & Kim",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(2025)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(2025)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 87,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/47y1kre1",
+      "id": "87",
+      "name": "rect",
+      "bbox": [
+        256,
+        442,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 88,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bq1oryts",
+      "id": "88",
+      "name": "box",
+      "bbox": [
+        256,
+        442,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 89,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/m58z25kb",
+      "id": "89",
+      "name": "text",
+      "bbox": [
+        261,
+        449,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Spatial design strategy of large cafés from the perspective of complex cultural space",
+      "textPreview": "Spatial design strategy of large cafés from the perspective of complex cultural space",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Spatial design strategy of large cafés from the perspective of complex cultural space"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Spatial design strategy of large cafés from the perspective of complex cultural space",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Spatial design strategy of large cafés from the perspective of complex cultural space",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 90,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w7mp0bi9",
+      "id": "90",
+      "name": "rect",
+      "bbox": [
+        606,
+        442,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 91,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/psfil0rq",
+      "id": "91",
+      "name": "box",
+      "bbox": [
+        606,
+        442,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 92,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/e1w7mp0b",
+      "id": "92",
+      "name": "text",
+      "bbox": [
+        611,
+        449,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Eight large\ncafés",
+      "textPreview": "Eight large | cafés",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Eight large"
+          },
+          {
+            "index": 2,
+            "text": "cafés"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Eight large",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Eight large",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "cafés",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "cafés",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 93,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7mp0bi9s",
+      "id": "93",
+      "name": "rect",
+      "bbox": [
+        746,
+        442,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 94,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wval87ed",
+      "id": "94",
+      "name": "box",
+      "bbox": [
+        746,
+        442,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 95,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pg3ex0nu",
+      "id": "95",
+      "name": "text",
+      "bbox": [
+        751,
+        449,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Complexity, accessibility, participation, symbolism, expertise, historicity, experience, diversity, aesthetics, culture, openness, continuity",
+      "textPreview": "Complexity, accessibility, participation, symbolism, expertise, historicity, experience, diversity, aesthetics, culture, openness, contin...",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Complexity, accessibility, participation, symbolism, expertise, historicity, experience, diversity, aesthetics, culture, openness,"
+          },
+          {
+            "index": 2,
+            "text": "continuity"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Complexity, accessibility, participation, symbolism, expertise, historicity, experience, diversity, aesthetics, culture, openness, continuity",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Complexity, accessibility, participation, symbolism, expertise, historicity, experience, diversity, aesthetics, culture, openness, continuity",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 96,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/epkzupwb",
+      "id": "96",
+      "name": "rect",
+      "bbox": [
+        54,
+        492,
+        42,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 97,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7adsji5s",
+      "id": "97",
+      "name": "box",
+      "bbox": [
+        54,
+        492,
+        42,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 98,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wra5gbq1",
+      "id": "98",
+      "name": "text",
+      "bbox": [
+        59,
+        499,
+        32,
+        40
+      ],
+      "geometry": "rect",
+      "text": "6",
+      "textPreview": "6",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "6"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "6",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "6",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 99,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lc7u54zi",
+      "id": "99",
+      "name": "rect",
+      "bbox": [
+        96,
+        492,
+        160,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 100,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1gvy90j",
+      "id": "100",
+      "name": "box",
+      "bbox": [
+        96,
+        492,
+        160,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 101,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zidonyd0",
+      "id": "101",
+      "name": "text",
+      "bbox": [
+        101,
+        499,
+        150,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Waxman\n(2008)",
+      "textPreview": "Waxman | (2008)",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Waxman"
+          },
+          {
+            "index": 2,
+            "text": "(2008)"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Waxman",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Waxman",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "(2008)",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "(2008)",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 102,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/s36hcrmh",
+      "id": "102",
+      "name": "rect",
+      "bbox": [
+        256,
+        492,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 103,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hoza1gvy",
+      "id": "103",
+      "name": "box",
+      "bbox": [
+        256,
+        492,
+        350,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 104,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ap4r65wj",
+      "id": "104",
+      "name": "text",
+      "bbox": [
+        261,
+        499,
+        340,
+        40
+      ],
+      "geometry": "rect",
+      "text": "The Coffee Shop: Social and physical factors influencing place attachment",
+      "textPreview": "The Coffee Shop: Social and physical factors influencing place attachment",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The Coffee Shop: Social and physical factors influencing place attachment"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The Coffee Shop: Social and physical factors influencing place attachment",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The Coffee Shop: Social and physical factors influencing place attachment",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 105,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/za1gvy90",
+      "id": "105",
+      "name": "rect",
+      "bbox": [
+        606,
+        492,
+        140,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 106,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/svu9knih",
+      "id": "106",
+      "name": "box",
+      "bbox": [
+        606,
+        492,
+        140,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 107,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hgn29gr2",
+      "id": "107",
+      "name": "text",
+      "bbox": [
+        611,
+        499,
+        130,
+        40
+      ],
+      "geometry": "rect",
+      "text": "Three cafés\nin Alabama",
+      "textPreview": "Three cafés | in Alabama",
+      "resolvedFontSize": 8.8,
+      "resolvedTextStyle": {
+        "fontSize": 8.8,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Three cafés"
+          },
+          {
+            "index": 2,
+            "text": "in Alabama"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Three cafés",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Three cafés",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "in Alabama",
+          "resolvedTextStyle": {
+            "fontSize": 8.8,
+            "color": "#172033",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "in Alabama",
+              "fontSize": 8.8,
+              "color": "#172033",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 108,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/adsji5sn",
+      "id": "108",
+      "name": "rect",
+      "bbox": [
+        746,
+        492,
+        468,
+        50
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7FAFC",
+      "lineWidth": 0
+    },
+    {
+      "order": 109,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3ylc7u54",
+      "id": "109",
+      "name": "box",
+      "bbox": [
+        746,
+        492,
+        468,
+        50
+      ],
+      "geometry": "roundRect",
+      "lineColor": "#C9D3DF",
+      "lineWidth": 0.5
+    },
+    {
+      "order": 110,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5o7qpg3e",
+      "id": "110",
+      "name": "text",
+      "bbox": [
+        751,
+        499,
+        458,
+        40
+      ],
+      "geometry": "rect",
+      "text": "[Physical] hygiene, scent, lighting, furniture, exterior view, seating layout\n[Activity] staying, territoriality, stability, anonymity, productivity, interaction\n[Meaning] emotional bond",
+      "textPreview": "[Physical] hygiene, scent, lighting, furniture, exterior view, seating layout | [Activity] staying, territoriality, stability, anonymity,...",
+      "resolvedFontSize": 8.31,
+      "resolvedTextStyle": {
+        "fontSize": 8.31,
+        "typeface": "+mn-lt",
+        "color": "#172033",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "[Physical] hygiene, scent, lighting, furniture, exterior view, seating layout"
+          },
+          {
+            "index": 2,
+            "text": "[Activity] staying, territoriality, stability, anonymity, productivity, interaction"
+          },
+          {
+            "index": 3,
+            "text": "[Meaning] emotional bond"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "[Physical] hygiene, scent, lighting, furniture, exterior view, seating layout",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Physical] hygiene, scent, lighting, furniture, exterior view, seating layout",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "[Activity] staying, territoriality, stability, anonymity, productivity, interaction",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Activity] staying, territoriality, stability, anonymity, productivity, interaction",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "[Meaning] emotional bond",
+          "resolvedTextStyle": {
+            "fontSize": 8.31,
+            "color": "#172033",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "[Meaning] emotional bond",
+              "fontSize": 8.31,
+              "color": "#172033",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 111,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/g3ex0nux",
+      "id": "111",
+      "name": "box",
+      "bbox": [
+        310,
+        600,
+        660,
+        62
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#E8F3FF",
+      "lineColor": "#9DC6EA",
+      "lineWidth": 1
+    },
+    {
+      "order": 112,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nih4byhg",
+      "id": "112",
+      "name": "text",
+      "bbox": [
+        338,
+        620,
+        604,
+        20
+      ],
+      "geometry": "rect",
+      "text": "Integrated into 3 dimensions and 10 placeness factors for commercial spaces",
+      "textPreview": "Integrated into 3 dimensions and 10 placeness factors for commercial spaces",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#2F6EA6",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Integrated into 3 dimensions and 10 placeness factors for commercial spaces"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Integrated into 3 dimensions and 10 placeness factors for commercial spaces",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#2F6EA6",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Integrated into 3 dimensions and 10 placeness factors for commercial spaces",
+              "fontSize": 18,
+              "color": "#2F6EA6",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

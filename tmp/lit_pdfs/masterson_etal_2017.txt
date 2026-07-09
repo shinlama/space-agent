@@ -1,0 +1,1509 @@
+Copyright © 2017 by the author(s). Published here under license by the Resilience Alliance.
+Masterson, V . A., R. C. Stedman, J. Enqvist, M. Tengö, M. Giusti, D. Wahl, and U. Svedin. 2017. The contribution of sense of place
+to social-ecological systems research: a review and research agenda. Ecology and Society 22(1):49. https://doi.org/10.5751/
+ES-08872-220149
+Synthesis
+The contribution of sense of place to social-ecological systems research: a
+review and research agenda
+Vanessa A. Masterson 1, Richard C. Stedman 2, Johan Enqvist 1, Maria Tengö 1, Matteo Giusti 1, Darin Wahl 1,3 and Uno Svedin 1
+ABSTRACT. To develop and apply goals for future sustainability, we must consider what people care about and what motivates them
+to engage in solving sustainability issues. Sense of place theory and methods provide a rich source of insights that, like the social-
+ecological systems perspective, assume an interconnected social and biophysical reality. However, these fields of research are only
+recently beginning to converge, and we see great potential for further engagement. Here, we present an approach and conceptual tools
+for how the sense of place perspective can contribute to social-ecological systems research. A brief review focuses on two areas where
+relation to place is particularly relevant: stewardship of ecosystem services, and responses to change in social-ecological systems. Based
+on the review, we synthesize specific ways in which sense of place may be applied by social-ecological systems researchers to analyze
+individual and social behaviors. We emphasize the importance of descriptive place meanings and evaluative place attachment as tools
+to study the patterned variation of sense of place within or among populations or types of places and the implications for resilience
+and transformative capacity. We conclude by setting out an agenda for future research that takes into account the concerns of resilience
+thinking such as the effects of dynamic ecology, interactions between temporal and spatial scales, and the interplay of rapid and
+incremental change on sense of place and place-related behaviors. This future research agenda also includes concerns from the broader
+sense of place literature such as the importance of structural power relationships on the creation of place meanings and how scaling
+up a sense of place may influence pro-environmental behavior.
+Key Words: cognitions; place attachment; place meanings; resilience thinking; responses to change; sense of place; social-ecological
+systems; stewardship; transformation
+INTRODUCTION
+In recent years, there has been increased interest in planetary-level
+initiatives such as the newly launched Sustainable Development
+Goals (United Nations 2014). The adoption of these
+sustainability goals reflects a growing realization that
+environmental problems require not only an understanding of
+ecological systems, but also of integrated social-ecological
+systems (SES). To develop and pursue these ambitious goals, we
+must consider what people care about and what motivates them
+to engage in solving sustainability issues. It is necessary to
+understand the human feedback mechanisms in the dynamics of
+SES, and how such responses are underpinned by values,
+cognitions, and perceptions of human relationships with nature
+(Raymond et al. 2013, von Heland and Folke 2014, Chan et al.
+2016).  
+The research that informs such sustainability goals includes
+broadly the field of sustainability science and lenses such as
+resilience thinking and the SES perspective (Berkes and Folke
+1998, Folke 2006). The SES perspective builds on interdisciplinary
+research linking ecology to economy and political science (Berkes
+and Folke 1998, Folke 2006, Liu et al. 2007). Cognitions have been
+relatively neglected and undertheorized in SES research (Jones et
+al. 2016), but scholars are asking questions about the deeper,
+slower variables in social systems such as identity, core values, and
+worldviews (Folke et al. 2010, Berkes and Ross 2013) that guide
+and constrain human actions (Adger et al. 2009). The need to
+understand and assess more systematically these variables
+requires closer engagement with social sciences and humanities
+(Daniel et al. 2012, Brown et al. 2013, Pröpper and Haupts 2014).
+One field of research that directly addresses values and behavior,
+and which also shares the ontology of an interconnected social
+and natural world, is that of sense of place.  
+Invoking notions of sense of place is already helping to improve
+analysis in SES research. However, sense of place is often not
+operationalized in a way that leverages the richer theoretical and
+empirical tradition within sense of place literature, and this
+sometimes contributes to conceptual confusion or misuse. More
+than just acknowledging sense of place as a relevant concept, we
+emphasize the role of sense of place as a field of research with
+conceptual and methodological tools that have great potential to
+inform emerging SES research. Given that sense of place research,
+in some instances, has lacked construct clarity and has used
+conflicting definitions (Jorgensen and Stedman 2001), we present
+a user-friendly approach for SES scholars. We select and define a
+specific set of core sense of place constructs, including place
+attachment and place meaning, and briefly lay out the onto-
+epistemological assumptions that we think make this approach
+compatible with SES analyses.  
+We review how sense of place has been employed within two key
+areas of enquiry in SES research and resilience thinking:
+stewardship of ecosystem services and responses to change. These
+are areas where SES scholars have started to implicitly or explicitly
+invoke relation to place: sense of place is considered as a
+motivation for stewardship and actions to care for the
+environment; it is also presented as a cognitive and emotional
+variable that mediates how people respond to social-ecological
+change. We point out where the engagement has been incomplete
+1Stockholm Resilience Centre, Stockholm University, 2Human Dimensions Research Unit, Department of Natural Resources, Cornell University,
+3Portland State University, Portland, Oregon (current)
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+or imprecise and highlight how this may have generated some
+contradictory and incompatible findings. We then synthesize a set
+of specific applications in which a sense of place perspective
+would help advance the tools and approaches of SES researchers.
+In addition, we highlight future research questions that arise from
+considering the broader interests of both research fields.
+AN APPROACH TO SENSE OF PLACE RESEARCH
+Sense of place has a 40-year trajectory of scholarship, and SES
+research should draw on and respond to this trajectory to make
+the best use of the theory. We emphasize that there are myriad
+different methodological approaches that can and have been used
+to study sense of place (for a useful review see Trentleman 2009;
+for a spirited debate see Stedman and Beckley 2007, Williams and
+Patterson 2007). The sense of place literature includes multiple
+constructs and conflicting definitions, leading some to describe
+the scholarship as confusing, contradictory, or messy (e.g.,
+Hidalgo and Hernández 2001, Jorgensen and Stedman 2001,
+Pretty et al. 2003). In response, and at risk of oversimplification,
+we sort place scholarship into two main domains. The first, the
+phenomenological domain, includes approaches that emphasize
+the particular character of lived experience in place. Qualitative
+methodologies are emphasized that avoid “a priori theory and
+concepts, hypotheses, predetermined methodological procedures
+[and] statistical measures of correlation...” (Seamon 2000:163).
+Trentleman (2009) notes that foundational place writings are
+often in this vein.  
+The second domain embraces cause and effect relationships
+between concepts, prediction, hypothesis testing, and where
+appropriate, generalization (e.g., see Shamai 1991, Lalli 1992,
+Jorgensen and Stedman 2001). This approach separates core
+constructs into different spheres such as cognition and emotion,
+and emphasizes the individual as the unit of analysis. Our paper
+employs the latter approach to sense of place as potentially readily
+embedded within the systems perspective that characterizes
+resilience thinking and studies of SES. We emphasize that these
+two domains ought not to be seen as oppositional, but rather,
+complementary, each providing its own set of insights that can
+be conjoined (see Stedman and Beckley 2007).  
+We have presented our approach and its specific relevance for
+research that assumes an interconnected social and biophysical
+reality. Next, we clarify several key concepts that are well-reflected
+within our approach and which are readily linked to the SES
+framework (see Fig. 1). We then specify some onto-
+epistemological assumptions that underlie our approach and
+shape how the concepts are applied.
+An introduction to key terms
+Sense of place is described by Tuan (1977) as the meanings and
+attachment to a setting held by an individual or group. As such,
+it is often viewed as the most encompassing core construct within
+associated research (e.g., Shamai 1991, Kaltenborn 1998).
+Crucially, our approach to sense of place analysis emphasizes
+both attachment and meanings, although these concepts are
+sometimes conflated and greater analytical emphasis is given to
+place attachment than to place meanings (Stedman 2008).  
+Place attachment is an emotional bond, usually positive, between
+individuals or groups and their environment (Altman and Low
+1992). As such, it is fundamentally evaluative (i.e., good vs. bad,
+important vs. unimportant). Place attachment is sometimes
+conceived as having two subdomains: dependence and identity.
+Place dependence (Stokols and Shumaker 1981) conveys an
+instrumental connection between people and place, conceived and
+measured as the ability of a setting to facilitate goal achievement
+and to satisfy important needs (see also Tidball and Stedman 2013
+for reflections on the positive nature of dependence). It has been
+measured through survey items such as, “This is the best place to
+do the things I enjoy” (Jorgensen and Stedman 2001). In
+comparison, place identity is defined by Proshansky (1978:155) as
+“those dimensions of self that define the individual’s personal
+identity in relation to the physical environment.” Place elements
+thus become partial answers to the symbolic question of “Who
+am I?” and play a part in the formation of the self (Sack 1997).
+Place identity is an evaluative concept and should not be confused
+with the structures and functions that characterize a particular
+setting (what resilience literature refers to as system identity; Folke
+et al. 2010) or with what is sometimes called place character (e.g.,
+Lyon 2014). A person’s place identity has been measured through
+survey items such as, “[This place] really reflects the kind of person
+I am” (e.g., Jorgensen and Stedman 2001). Although dependence
+and identity can be articulated as distinct conceptual domains,
+research results are mixed: some scholars (Moore and Graefe
+1994) find these to be distinct components of attachment, whereas
+others (e.g., Stedman 2002) find that they conjoin into a common
+domain.
+Fig. 1. The relationships among key sense of place concepts.
+Stedman (2008) argues that the relative neglect of place meaning 
+in sense of place research has led to some serious issues in sense
+of place research and practice, such as assuming that all people
+who have strong attachment will mobilize to protect their place
+from a particular threat. Meanings stand in contrast to attachment
+in that they are descriptive statements (cognitions, in social
+psychology terms) about what a place is, what it is like, and the
+kinds of images it conveys (Manzo 2005, Brehm et al. 2013,
+Jacquet and Stedman 2013). We can think of them simply as a
+series of adjectives, i.e., answers to what kind of a place a setting
+is: polluted, lonely, warm. A second type of meaning is a little less
+descriptive and a little more symbolic or interpretive, i.e., what,
+symbolically, does a place mean: Home? Escape? Third, place
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+meanings can be considered as place character (Lyon 2014): a
+given setting can be a farmscape, a tourist place, or a wilderness,
+for example.
+Key assumptions of our sense of place approach
+Here, we explain how our sense of place approach explores a
+reality with interconnected social and biophysical components.
+We see the assumptions we describe next as compatible with the
+SES perspective and therefore important for forging connections
+between the two research fields.  
+1. Sense of place forms through experience, although this
+experience is not solely individualistic, but also social. A
+central question in sense of place research involves how sense
+of place is formed. Early sense of place thinkers (e.g., Relph
+1976, Tuan 1977) posit that sense of place is formed through
+freely chosen direct encounter with landscape; these
+encounters help to form highly personalized place meanings.
+Much subsequent scholarship has taken this approach.
+Although useful, this emphasis has probably impeded the
+integration of sense of place and SES analyses. Our
+approach recognizes that sense of place may also be formed
+through social experiences. This social nature of experience
+is expressed in several ways. First, experiences differ in
+systematic, predictable ways based on roles that are socially
+produced and have socially derived expectations associated
+with them: one encounters a landscape through his or her
+role as (for example) a hunter, a real estate developer, or a
+botanist. The meanings are based, at least in part, on the
+social expectations associated with each of these roles. A
+second way in which meanings are fundamentally social
+rather than just individually formed is based on power
+relations that affect interpretation and meaning making.
+Social actors are taught, e.g., through education programs
+(Kudryavtsev et al. 2012) and interpretation (Rickard and
+Stedman 2015), about what is important or normative about
+a place, rather than creating these meanings on their own.
+Power exerts itself in a subtler way as well: even our
+experiences are not freely chosen, but are influenced by the
+current configuration of the landscape (Pred 1984, Zukin
+1991, Stokowski 2002). Power establishes rules that manage
+the landscape and guide meanings. Institutions “create” the
+environment (Freudenburg et al. 1995) by setting regulations
+and upholding cultural norms that promote some activities
+and meanings over others. 
+2. Sense of place emerges from human interactions with the
+biophysical environment. Lewicka (2011:213) notes, “For
+many years, interest in social dimensions of place
+attachment has been stronger than interest in its physical
+dimensions.” Sense of place has been viewed mostly as a
+social construction, a product of shared behavioral and
+cultural processes, rather than the result of perceptual and
+cognitive processes rooted in physical characteristics of
+settings (e.g., Greider and Garkovich 1994). However, some
+authors suggest that we can think of the material
+environment as contributing to sense of place through direct
+and indirect causal mechanisms: (1) directly, as the raw
+material for meanings inferred directly from the landscape:
+it is easier, for example, to distill wilderness meanings from
+a landscape with old-growth trees and clean water than from
+a landscape polluted by human use; (2) indirectly, by
+enabling or constraining experiences that contribute to
+meanings. One cannot catch fish (and create meanings such
+as good fishing places) where no fish exist, e.g., if the water
+has become polluted or too warm. For an example, see
+Stedman (2003 a) and Stedman and Hammer (2006), who
+quantitatively assessed the relationship between the number
+of houses on the shoreline of lakes and meanings,
+attachment, and concern about water quality. Therefore, we
+view sense of place as an emergent property of a social-
+biophysical interaction, although so far, sense of place
+research has had a limited appreciation of the role of nature
+and ecology in forming place (but see, e.g., Stedman and
+Ingalls (2014), who engage the intersection of topophilia
+and biophilia as mutually constitutive). 
+3. Place meanings and attachment are subjective, but they vary
+systematically. Although each person’s sense of place is
+fundamentally unique, this variation is patterned, rather
+than random, where different types of people, experiences,
+and environments will lead to systematic differences in
+meanings, attachment, and behavior. The subjectivity of
+meanings is crucial for engaging transformation and
+stewardship, and sense of place tools enable researchers to
+ask comparative questions that examine variation. Sources
+of variation (i.e., based on characteristics of people or place)
+are important to understand to connect sense of place to
+systems perspectives (Stedman 2016). This is also useful for
+relating subjective meanings and their variation to system-
+level effects. 
+4. Patterned relationships with place help to predict specific types
+of behavior. Sense of place has been shown to be a powerful
+predictor of attitudes toward potential changes and
+behavioral intentions, both reactive and proactive (Bonaiuto
+et al. 2002, Devine-Wright 2009). A great deal of the sense
+of place literature implicitly assumes (or explicitly asserts)
+that greater place attachment leads to pro-environmental
+behavior. While the truism that “we fight for the places we
+are attached to” is generically plausible, the relationship is
+not so simple. People do not simply engage in places they
+are attached to; their particular forms of engagement rest
+on place meanings they hold dear and perceive as threatened
+(Vorkinn and Riese 2001, Kyle et al. 2004). Because there
+can be a range of meanings associated with the same place,
+people respond to change differently depending on how their
+respective meanings are affected by this change (Stedman
+2003 a, 2008). Our approach to sense of place provides the
+tools to assess and characterize the relationship between
+attachment and behavioral intentions and actions. In
+particular, because place is not the same as environment, not
+all threats to place meanings are environmental; for instance,
+attachment to place that symbolizes one’s social connections
+(civic place attachment) has been found not to be correlated
+with pro-environmental behavior (Scannell and Gifford
+2010).
+A BRIEF REVIEW OF THE USE OF SENSE OF PLACE IN
+SOCIAL-ECOLOGICAL SYSTEMS RESEARCH
+Place is increasingly important as an organizational concept in
+SES studies, building on the experiences of the Millennium
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Ecosystem Assessment and the move toward long-term
+comparative place-based studies (Carpenter et al. 2009, Wilbanks
+2015). Previous engagements with sense of place by SES scholars
+treat it as a phenomenon relevant to understanding certain social-
+ecological processes. Although this engagement often operates in
+similar intellectual terrain as sense of place research without
+necessarily using the same language (i.e., indirect engagement), it
+has also more directly invoked constructs from sense of place
+literature such as place attachment or identity.  
+We next review SES research that engages sense of place both
+directly and indirectly to demonstrate the relevance of further
+engagement with sense of place and to identify weaknesses and
+gaps that can be strengthened by a more rigorous approach to
+sense of place. The review is organized into two themes in which
+engagement with sense of place is already taking place and in
+which we see considerable potential for theory and methods from
+the field of sense of place research to inform thinking.
+Sense of place and stewardship of ecosystem services
+Stewardship generally refers to a responsible management or
+caretaking, often of natural resources or the environment. The
+term has been adopted by SES scholars to describe more
+specifically an active shaping of development trajectories at
+multiple scales, in a way that manages for uncertainty and
+threshold effects, and the normative goals of building ecological
+resilience and improving human well-being (Chapin et al. 2011,
+Folke et al. 2011). We review three ways in which sense of place
+is drawn on to understand stewardship.
+People-place relations can strengthen protective norms
+Among the most straightforward arguments linking stewardship
+to sense of place is as a “motivation for long-term stewardship”
+(Chapin and Knapp 2015:38) or in other ways supporting pro-
+environmental or pro-conservation behavior (for reviews, see
+Meyfroidt 2013, Gifford 2014, and Zylstra et al. 2014). This
+argument draws on early explorations of how to manage SES that
+invoke sense of place as a complex concept that influences
+peoples’ perceptions and actions (Davidson-Hunt and Berkes
+2003, Andersson et al. 2007), and the role of relationships to place
+and nature for stewardship actions, including local and traditional
+ecological knowledge, as embedded in institutions for stewardship
+(Folke et al. 2003, 2005). This is expressed explicitly by Chapin
+and Knapp (2015:39), who argue that, “capitaliz[ing] on the
+attachment that people feel to particular places [can] provide a
+foundation for stewardship strategies.” Sense of place is seen as
+a prerequisite condition for residents to notice degradation and
+trigger action through public concern (Chapin et al. 2012). There
+is also growing interest in sense of place from related fields such
+as conservation ecology, which has begun to explore place
+attachment as motivating conservation behavior (e.g., Farmer et
+al. 2011, Raymond et al. 2011, Larson et al. 2013).  
+Further, it has been argued that contested senses of place can be
+an obstacle for stewardship (Chapin and Knapp 2015) and,
+alternatively, that consensus regarding place meanings can
+contribute to community cohesion and sustainability (Chapin et
+al. 2012). Scholars studying civic engagement in stewardship
+groups have identified tensions between how different members’
+relations to a place are articulated (Ernstson and Sörlin 2009) and
+have started to explore the consequences of such heterogeneity
+within groups (Enqvist et al. 2014). While this is a good starting
+point, these attempts have yet to engage fully and rigorously with
+concepts of sense of place such as place meaning and how it
+influences people’s behavioral intentions.
+Sense of place in assessment of ecosystem management
+Sense of place has been employed in a range of ways in relation
+to assessments of ecosystem services and their management: for
+assessment of preferences in planning, as an indicator of cultural
+ecosystem services, and as a constituent of well-being as derived
+from ecosystems. First, sense of place has been applied as a tool
+for assessing values and preferences in ecosystem assessments
+(Martín-López et al. 2012, Plieninger et al. 2013), for example, to
+identify human-valued priority areas for environmental
+conservation and management (Raymond et al. 2009) and to
+inform land-use planning (Brown and Raymond 2007).  
+Second, ecosystem assessments have explicitly incorporated sense
+of place as an ecosystem service in its own right (Millennium
+Ecosystem Assessment 2005, Hausman et al. 2016) and as a
+quantitative indicator (see Hernández-Morcillo et al. 2013). In
+particular, it has been used in the realm of cultural ecosystem
+services, which include intangible values that are difficult to
+measure (Butler and Oluoch-Kosura 2006, Chan et al. 2012),
+partly because of the subjective and place-based variation of
+cultural ecosystem services (e.g., Daniel et al. 2012, Milcu et al.
+2013). Some of these challenges may be resolved through more
+systematic engagement with sense of place as an indicator of
+cultural ecosystem services.  
+Third, sense of place has been theorized as a constituent of well-
+being, including well-being contingent upon ecosystem services
+(Summers et al. 2012, Russell et al. 2013). However, there has been
+insufficient attention to understanding well-being as co-created
+by people and ecosystems (Smith et al. 2013), as well as
+incorporating the subjectivity of well-being in this context
+(Breslow et al. 2016). It is notoriously difficult to assess human
+well-being in a way that captures fine-grained variations within
+or among groups of people in the same place (Raudsepp-Hearne
+et al. 2010, Daw et al. 2011, Russell et al. 2012). Applying sense
+of place tools as an indicator of subjective well-being could
+contribute to meeting these challenges.
+Stewardship practices and knowledge are embedded in place
+Place-based approaches to ecosystem assessments are beneficial
+for clarifying local contexts, values, and priorities (Potschin and
+Haines-Y oung 2013). Place has been implicitly invoked in studies
+linking ecosystem resilience to community well-being (Berkes and
+Folke 1998), especially in the coevolution of local and traditional
+ecological knowledge, adaptive institutions, and responding to
+changes in nature and landscape dynamics (Berkes et al. 2000,
+Olsson and Folke 2001, Tengö and von Heland 2011).  
+Chapin and Knapp (2015) argue that stewardship can be fostered
+by the place attachments produced through repeated personal
+experiences filtered through identity and social context. Research
+focusing on stewardship in urban SES has argued that a stronger
+sense of place is associated not only with stronger protective
+norms but also more local ecological knowledge (Andersson et
+al. 2007). Barthel et al. (2013:1149) argue that relation to place
+matters for “stewardship memory” because “biophysical
+elements, including species, landscape features, written accounts
+and artifacts [...] structure management practices” and thereby
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+provide a guide for stewardship that is better adapted to local
+conditions. Learning through experience that is embedded in local,
+place-based institutions is emphasized in this context, as well as
+the role of emotional and cultural connections to place (e.g., Berkes
+et al. 2003, von Heland and Folke 2014). Recent work also
+emphasizes that the emotional attachment to place can serve as a
+bridge between ecosystem functioning and stakeholders’
+engagement in environmental stewardship (Andersson et al. 2015).
+So far, the use of sense of place as a concept in this literature has
+been vague and ad hoc and stands to gain considerably from a
+more systematic empirical engagement with sense of place
+literature.
+Sense of place and responding to change in social-ecological
+systems
+Another important area within SES research concerns the capacity
+of individuals, communities, and institutions to respond and adapt
+to social and ecological change (Berkes et al. 2003, Walker et al.
+2004, Westley et al. 2011) or to transform fundamentally the nature
+of SES toward more sustainable trajectories (Walker et al. 2004,
+Chapin et al 2010). Transformative change often involves shifts in
+perception and meaning (Folke et al. 2010). Disturbances to SES
+such as flooding, industry closure, or climate change can affect the
+character of a place through a change to the material and social
+aspects of place, and consequently, can affect the symbolic
+meanings that residents hold dear, causing psychological and
+emotional distress (Albrecht et al. 2007, Jacquet and Stedman
+2014). Therefore, sense of place has been studied as a cognitive-
+emotional factor that may affect how individuals and communities
+engage in change processes (Adger et al. 2009, 2013, Clayton et al.
+2015) by adapting practices to new conditions, relocating to
+another place, or shifting economic strategies. We review two main
+areas of engagement with sense of place and its influence on
+responses to change.
+Strong place attachment may support adaptation to change
+SES research has begun to point to sense of place as an important
+foundation of community resilience (e.g., Berkes and Ross 2013).
+Studies show that place attachment may support adaptation when
+livelihoods are threatened by changes such as declining agricultural
+viability in the face of climate change (Marshall et al. 2012, Eakin
+et al. 2016), declining populations and services (Amundsen 2013),
+increased risk of flooding (Quinn 2014), or gradual industry
+closure (Sampson and Goodrich 2005, Lyon 2014). By adapting
+to these changes, community structure and character of place can
+be retained, which may foster social resilience (Sampson and
+Goodrich 2005, Lyon 2014). Specifically, Marshall et al. (2012)
+suggest that place attachment enhances adaptive capacity,
+proposing that social capital, local knowledge, and reciprocal
+networks facilitate adaptation to incremental social-ecological
+change. Eakin et al. (2016) show that for farmers in Arizona, USA,
+it is the commitment to community associated with place
+attachment that contributes to adaptive learning to maintain
+viability as farmers.  
+Resilience thinking has improved the understanding of adaptation
+as the ability to change in order to remain in a current state.
+However, to understand better how emotion and perception affect
+adaptation requires better attention to what people are attached
+to, as well as how the specific changes may influence individual
+and group identity. For example, adaptations to climate change
+may be supported by an understanding of the threat that climate
+change poses to place identity (Adger et al. 2011, Fresque-Baxter
+and Armitage 2012), e.g., farming that has remained in a place
+for several generations. Similarly, adaptation strategies can also
+be resisted by certain groups if the required adaptations threaten
+such identities. Without a thorough understanding of these
+dimensions of sense of place, studies may not be able to assess
+accurately adaptive capacity in communities facing novel
+circumstances.
+Place attachment as a barrier for transformative change
+Place attachment may also be a barrier to navigating change when
+incremental responses are insufficient and more fundamental
+change is required to break feedbacks that lead to degradation of
+ecosystems and well-being. For example, strong place attachment
+is negatively related to peanut farmers’ and cattle grazers’
+willingness to incorporate transformative change into their work
+lives by relocating along with the industry when conditions are
+no longer tenable (Marshall et al. 2012, Marshall and Stokes
+2014). The nature of change is important: if a shift of occupation
+or location is required, strong place attachment can be a barrier
+to change. In this way, strong attachment constrains migration
+away from areas of high exposure to, for example, climate change
+effects (Adger et al. 2013).  
+Other studies have begun to assess the role of sense of place on
+transformative change within a place. Marshall et al. (2016)
+engaged agricultural producers who may be subject to untenable
+agricultural conditions because of predicted climate change
+effects. They assessed transformative capacity in terms of the
+willingness to change land-use production and diversify
+livelihoods and found that strong place attachment was correlated
+with low transformative capacity. In contrast, preliminary work
+points to the importance of place meanings for successful
+transformation: Lyon (2014) argues that the culturally inherited
+character of a place can function as an asset for the community
+during a successful transformation process, and Chapin et al.
+(2012) point to the importance of shared place meanings in
+building consensus and collective action for transformation.  
+The preceding paragraphs show that different operationalizations
+of the concept of transformation can produce discrepancy in
+findings. Some of these discrepancies can be explained by
+inconsistent uses of sense of place measures. There is also a need
+to clarify the scale at which attachment to place is studied (e.g.,
+local, regional) and to relate this to the scale at which
+transformation is occurring.
+APPLICATIONS AND FUTURE RESEARCH
+Sense of place research can contribute to SES research in
+fundamental ways: broadly speaking, sense of place can be both
+a driver and an outcome of social-ecological processes. It is a
+social-ecological linkage that can constrain and enable change.
+Sense of place is an emergent property of individuals and places
+that matters for better stewardship and is an indicator of human
+well-being. Our targeted review of sense of place literature, as
+well as how SES scholars have begun to engage with the concept,
+demonstrates that there is considerable potential for bringing
+more rigor to research questions already being asked within SES
+studies and for developing new research questions in this realm.  
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Based on the gaps identified here, we discuss four ways in which
+our approach to sense of place can be applied by scholars studying
+SES. We then identify future research areas where further
+engagement across sense of place scholarship and SES research
+holds potential. We note that scholars have tended to study sense
+of place as motivating stewardship practices or as a cognitive
+influence underpinning human responses to change, i.e., in
+separate themes. However, stewardship of ecosystems requires a
+capacity to deal with uncertainty and complexity and to navigate
+fundamental shifts or transformations (Chapin et al. 2011), so
+there is great potential for combination of the two themes, and
+hence, we discuss these together here.
+Applications of sense of place in social-ecological systems studies
+In the following, we synthesize and discuss areas that could be
+informed by existing sense of place research. In other words, what
+can sense of place do for SES scholarship?
+Identify what underpins protective and restorative actions
+Sense of place literature provides theory and tools for a more
+nuanced understanding of the root of pro-environmental actions.
+First, research on place attachment has shown that place
+attachment can indeed contribute to protective and restorative
+stewardship actions in dynamic SES. For example, disasters that
+trigger human affinity for nature and meaningful places can also
+give rise to actions to rebuild environments and restore ecological
+function (Tidball 2012). Place attachment provides an evaluative
+measure (e.g., Williams and Roggenbuck 1989, Stedman 2002)
+for empirical studies of the role of sense of place in motivating
+or discouraging stewardship actions, which could expand the
+work of, for example, Andersson et al. (2007) and Barthel et al.
+(2010).  
+Second, strong attachment is associated with care and action
+(Vorkinn and Riese 2001), but this does not necessarily predict
+what type of action is supported (Huber and Arnberge 2016).
+Attachment is based on meanings: We become attached to a
+landscape as embodying a certain set of meanings, and it is those
+meanings we seek to preserve (Stedman 2003a, Devine-Wright
+2009). Place meanings and attachment are thus analytically
+distinct: people who are all strongly attached to a place are not
+necessarily attached to the same thing because one setting can
+embody many different sets of meanings, each emphasized by
+different actors. For example, a small rural town may represent a
+place of strong community and familiarity, a place of natural
+beauty with good recreational opportunities, or a “backwards”
+and stifling place with no economic opportunities. As shown in
+studies of hypothetical changes in recreational lakes (Stedman
+2003 a) as well as industrial wind farm development (Jacquet and
+Stedman 2013), opposition or support to change is influenced by
+which meanings are threatened and which are not (Stedman 2008).
+Debates about the future of a place are thus rarely between people
+who are attached vs. people who are not, but are rather between
+holders of different or even oppositional meanings.  
+Third, because meanings frame what it is that people see as worthy
+of protection or enhancement, it follows that place meanings
+underpin individual and collective behavior in stewardship and
+in responding to change. For example, recruiting volunteers for a
+wetland nature reserve may be more or less successful depending
+on whether nearby residents see the area as a birdwatching site or
+as a place to do water sports.
+Map and assess patterns of variation
+Another application for SES research comes from the realization
+that place-related actions and responses are not random (refer to
+the assumptions set out earlier in this paper). Place attachment
+and place meanings vary systematically across a population, and
+this variability can be measured through a range of standardized
+quantitative tools (e.g., Stedman 2003b) as well as innovative
+qualitative and mixed methods such as visual methods (e.g.,
+Beckley et al. 2007), mapping (Brown and Raymond 2007), or
+narrative interviews (Russ et al. 2015). As we noted previously,
+synthetic understandings of place emerge through conjoining
+multiple methods, both quantitative and qualitative. For example,
+community change could be analyzed by exploring how meanings
+and attachment differ between long-term residents and
+newcomers and how their responses to social-ecological change
+may vary (i.e., How do different kinds of people interpret and
+respond to different kinds of changes such as increased
+population or pollution?). Analysis can also compare across
+different types of environments or different political regimes.
+Researchers can also conduct longitudinal analysis (e.g., Have
+dominant meanings changed over time?) and analyze the
+relationships between changes in attachment and meanings to
+patterns of environmental change (e.g., What sorts of
+environmental phenomena are perceived and acted toward in
+what kinds of ways by what kinds of people?). For example, there
+are indications that local ecological knowledge may be linked to
+higher place attachment (Andersson et al. 2007, Eakin et al. 2016).
+Conceptual tools such as place meanings and measures of
+attachment can be engaged to understand in more detail how
+senses of place covary with various types of knowledge and
+practice, for example.
+Evaluate how sense of place patterns influence the resilience of a
+system
+Knowledge about the patterns of how people relate to place can
+be applied to understand opportunities for collaboration as well
+as adaptive and transformative capacity as different aspects of
+social-ecological resilience. For example, place attachment can
+work as a motivation for farmers to adapt when conditions make
+earlier activities untenable. However, it can also impede action
+when more fundamental transformation is required (Marshall et
+al. 2012) that threatens place identities (Fresque-Baxter and
+Armitage 2012). Thus, there is great potential for more research
+to tease out how different types of attachment, including place
+identity and dependence, matter for capacity to deal with change,
+further expanding the work of, for example, Marshall et al. (2012,
+2014) and Eakin et al. (2016). Additionally, this research will
+benefit from engaging place meanings. Assessing how external
+changes (or lack thereof) threaten specific place meanings may
+generate a deeper understanding of people’s attitudes toward a
+change and their willingness to act (Stedman 2002, Devine-Wright
+and Howes 2010).  
+Another application relates to successful collaboration:
+coexistence of multiple different place meanings may create
+conflict and disrupt community cohesion and stewardship (Yung
+et al. 2003, Chapin et al. 2012, Chapin and Knapp 2015). For
+example, in rural development interventions, rural communities
+and state actors or nongovernmental organizations may hold
+different meanings for a particular landscape (e.g., a forest as a
+threatened and biodiverse wilderness to be protected from human
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+use vs. a sacred site for traditional rituals), as shown in a case
+study in the Eastern Cape, South Africa (Masterson 2016). Failure
+to understand these differences might disrupt communication
+between actors or even cause conflict if the meanings are made
+explicit but not accepted by the other party. Sense of place
+research offers methods to evaluate the diversity of place
+meanings that can be associated with the same place by a group
+of individuals (Stedman 2006, Jacquet and Stedman 2013, Milcu
+et al. 2014). In contrast, societies that are able to allow and engage
+multiple place meanings or make use of shared place meanings
+may be more resilient (Stedman 1999). The meanings can provide
+different understandings of emerging problems and thereby
+diversify the knowledge and range of options available for dealing
+with change; similarly, this diversity can be a source of innovation
+for transformation toward more desirable pathways of
+development in SES.
+Assess stewardship outcomes and priorities
+Lastly, the tools afforded by this approach to sense of place offer
+a way to study subjective, cultural, and relational dimensions of
+ecosystem services and the benefits they create, and to capture the
+fine-grained variations of ecosystem service delivery and access.
+These measures of sense of place can serve as indicators of
+changes in ecosystem service production as a result of stewardship
+interventions as well as social-ecological change.  
+Assessing outcomes also requires measures of how ecosystems
+affect human well-being (Smith et al. 2013), which should include
+both objective and subjective measures (Breslow et al. 2016).
+Sense of place offers measures that may be used as indicators of
+well-being at an individual and community level (Theodori 2001,
+Beckley et al. 2002, Lewicka 2011) or to quantify subjective well-
+being. For example, sense of place may be used to assess how
+ecosystem services contribute to well-being of different groups or
+to assess outcomes of a flood, market collapse, or rapid energy
+development (e.g., Jacquet and Stedman 2013, 2014). Our
+approach is grounded in an understanding of this well-being as
+both produced in a social context as well as rooted in a biophysical
+environment. Sense of place is thereby compatible with the SES
+understanding of ecosystems services as coproduced, i.e., that
+they emerge out of social-ecological interactions (Reyers et al.
+2013, Anderson et al. 2015).  
+In addition to assessing change, sense of place is also useful for
+identifying priorities and cues for stewardship engagement in SES,
+for example, using tools such as described by Raymond et al.
+(2009). When combined with qualitative enquiries into place
+meanings, measures of place attachment can be particularly
+useful for assessing competing values and preferences and how
+they inform ecosystem management (Davenport and Anderson
+2005) to guide how to move toward stewardship-based
+management.
+Stewardship and transformation in a changing world: future
+research questions
+Future integration of sense of place and SES will benefit from
+consideration of the broader interests of both fields. This includes
+strengths of sense of place such as the consideration of political
+influence as well as SES interests such as dynamic ecology, the
+interactions between temporal and spatial scales, and the
+interplay of rapid and incremental change. Engagement between
+these two research fields can open up or invigorate areas of inquiry
+in which the interests of both fields may be served.  
+The influence of chronic versus acute changes on sense of place: 
+Social-ecological changes can vary in intensity and speed, which
+matters for how they are experienced and how people respond
+(Gunderson 2003). Research on transformation emphasizes rapid
+change and crisis as a window of opportunity and potential
+trigger for collective action (Folke et al. 2005). Gradual threats
+may allow for meanings and identities to be maintained through
+mitigative, incremental actions, which can impede the recognition
+of the need for radical change, or they can also result in slowly
+emerging conflicts over meanings and associated actions. In
+contrast, sudden threats may immediately challenge the viability
+of meanings and identity and may potentially trigger a reaction.
+Following disasters, the personal need to engage with the natural
+environment and to act to restore important place meanings may
+both create engagements with biophysical places (Tidball 2012,
+Stedman and Ingalls 2014) and rally a community to
+transformative action (Folke et al. 2005, Tidball and Krasny
+2014). This can contribute to the understanding of what catalyzes
+and frames constructive collective action for transformation.  
+The contribution of place meanings to systems inertia or
+transformative change: Sense of place research emphasizes that
+meaning and attachment are dynamic and are in a constant state
+of creation and recreation (Stokowski 2002, Heise 2008). Moving
+beyond the effect of a static sense of place on individual behavior,
+future research should focus on mechanisms that link dynamic
+sense of place to the state or condition of an SES (and by
+implication, the resilience of the SES). In times of environmental
+or social change, place meanings often change slower than
+economic or environmental realities and can remain vital to local
+identity (Stedman 2002, Kyle et al. 2004, Lyon 2014). Meanings
+thereby may act as “slow” variables in the system, which can create
+a time lag that prevents timely action to respond to or prepare for
+changes. Simultaneously, relatively rapid biophysical change can
+make place meanings seem constant even when they are slowly
+changing (Keilty et al. 2016), extending the “shifting baseline”
+argument of Pauly (1995). This may lead to a social-ecological
+trap if meanings and attachments obfuscate ecological cues and
+people are not able to respond and adapt adequately or fast
+enough (Stedman 2016). In other situations, particularly in times
+of high social mobility and change, place meanings may act as a
+fast variable in a system as new actors precipitate a shift in
+meanings that has implications for ecosystem management.  
+Whose meanings are included and favored and why, and implications
+for SES: The academic traditions from which sense of place arose
+are concerned with understanding the power landscapes through
+which sense of place emerges. As places are partially socially
+constructed, their meanings can be socially contested and
+renegotiated (Pred 1984, Zukin 1991, Lyon 2014, Ingalls and
+Stedman 2016). Therefore, sense of place brings potential new
+tools and language for SES and resilience research to engage
+further with issues of “power to and power over” (Boonstra 2016)
+in collective action and negotiations of stewardship in SES. It is
+important that future research considers how and why certain
+place meanings and interests are promoted and reproduced
+through guided transformations toward sustainability (Leach et
+al. 2012) as well as in international decision making on
+sustainability issues such as climate change (Adger et al. 2011).
+Examining different place meanings provides one way to
+acknowledge and analyze the values and attitudes of multiple
+stakeholders and how their relative positions may influence the
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+outcome of interventions in SES (Masterson 2016). Sense of place
+offers an approach to exploring power relationships for stewardship
+by analyzing top-down influences on people’s place-based attitudes
+(e.g., Stokowski 2002, Bell and Y ork 2010).  
+Ecologically informed meanings or “the ecology of sense of place”: 
+There is a need to go beyond a simplified and static view of nature
+or environmental problems that is displayed in much of the sense
+of place literature. A more coherent engagement with insights from
+resilience thinking, regarding, for example, cross-scale dynamics,
+functional diversity, and threshold effects (Folke 2006), would
+contribute to a fuller understanding of the biophysical elements of
+place. What are the roles of ecosystem qualities such as biodiversity
+and ecological integrity in forming and nurturing “sense of nature-
+in-place” (Stedman and Ingalls 2014)? How does ecosystem change,
+incremental and rapid, affect sense of place (e.g., Tidball and
+Stedman 2013)? How do changing patterns of interactions with
+nature in places (e.g., through urbanization) alter meanings and
+attachment that may underpin stewardship? SES research also
+emphasizes the importance of learning in building resilience of
+SES. Can particular place meanings be associated with a deeper
+understanding of ecological dynamics and thereby provide a source
+of learning about how to manage that particular ecosystem or
+restore it from a degraded state (e.g., Enqvist et al. 2016)?  
+Scaling up stewardship behavior from individual to global: Sense of
+place literature is dominated by research occurring at relatively
+small scales (Lewicka 2011) and, as a consequence, proximity, direct
+experiences, and the length of exposure to the same physical space
+are factors that are often correlated with a strong sense of place.
+However, how do sense of place and sustainable behavior scale up?
+Can attachment to a local place promote stewardship at a more
+general level, in a kind of “rooted cosmopolitanism” (Chapin and
+Knapp 2015)? It has been suggested that “care may be a way to
+engage people in planetary stewardship by connecting their
+responses to what they notice in everyday life with their effect on
+larger environmental systems” (Nassauer 2011:321). When a
+personal experience of the whole biosphere is inaccessible,
+mediated experiences of the global ecological system may have a
+crucial role in defining a sense of the biosphere. The panarchy model
+in resilience thinking (Gunderson and Holling 2002) could provide
+a source of hypotheses about cross-scale dynamics of sense of place,
+which could be integrated with, e.g., studies of how attachment to
+neighborhood, state, country, and the globe are correlated with
+environmental attitudes (Devine-Wright et al. 2015).
+CONCLUSION
+Setting normative goals for the future and assessing their
+sustainability and the pathways that may lead toward them requires
+serious engagement with how values, behaviors, and emotions
+emerge from relationships with nature and ecosystem dynamics. To
+contribute to this work, we have investigated the connections
+between two complementary intellectual territories. It is a meeting
+of two pluralistic research domains. We do not present a
+symmetrical connection; rather, our effort has been to examine the
+extent to which sense of place insights from several decades of
+research can contribute to SES research and resilience thinking. In
+particular, we focus on an approach that views sense of place as
+created through social and ecological interactions.  
+Our approach clarifies sense of place constructs to deepen the
+understanding of the human variables that constrain or enable
+stewardship and transformative capacity. Specifically, these
+human value domains include the effect of cognition, emotion,
+and attitude on behavior. We show that for research on
+stewardship, sense of place literature can offer a language and
+robust conceptual building blocks that help unpack a person’s
+relation to their physical and natural environment, explain the
+emergence of stewardship, and build a theoretical and
+methodological framework that better incorporates competing
+values and preferences in ecosystem governance and assessments.
+We also see promising engagement with sense of place concepts
+in studies of how people respond to change. A more systematic
+engagement with the subdimensions of attachment (identity and
+dependence) and meaning, as well as the use of instruments to
+assess these, will continue to improve the clarity, increase
+comparability, and further resolve discrepancies in findings.
+Crucially, we also propose that these tools may be usefully engaged
+in other research topics within SES: We offer these topics as a
+starting point where initial thinking has already occurred.  
+Our approach emphasizes place meanings as a key element of
+sense of place, complementing place attachment in predicting
+behavioral intent. By focusing on the meanings to which people
+are attached, we move beyond a normative view of sense of place
+as always positive for sustainability outcomes. We show that
+although values and cognitions are subjectively held and vary
+within a population and among characteristics of a place, this
+variation is systematic and can therefore be measured. With tools
+to identify how sense of place covaries with other system variables,
+our approach provides a way to assess how relation to place
+influences adaptive capacity, collaboration, and priorities for
+stewardship of SES.  
+Sustainability is about defining and working toward creating a
+tenable place for humanity to live. Whether place refers to one’s
+backyard or the planet as a whole, understanding how people
+relate to places is key for sustainable development. One of the
+major challenges and opportunities is to develop integrated
+methods and indicators that could make these phenomena more
+tangible and measurable without neglecting the subjective,
+qualitative nature of sense of place. This, in turn, has direct
+implications for management of both small and vast SES that
+provide our home as humankind.
+Responses to this article can be read online at: 
+http://www.ecologyandsociety.org/issues/responses.
+php/8872
+Acknowledgments:
+We thank additional participants in the PhD course in Sense of
+place and resilience in social-ecological systems led by Richard
+Stedman at the Stockholm Resilience Centre during autumn 2013
+(Emma Björkvik, Julie Goodness, Jamila Haider, Britt Stikvoort,
+and Viveca Mellegård) for assisting in the development of these
+ideas. We acknowledge a research grant from the Swedish Research
+Council (VR 2014-3394) and a core grant from MISTRA to the
+Stockholm Resilience Centre. Additionally, we acknowledge the
+following for supporting the collaboration: Cornell University
+College of Agriculture and Life Sciences supporting sabbatical
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+leave, and Stockholm University, the Sweden-America Foundation,
+and a C.F. Liljevachl J:or travel grant for supporting research visits
+to Cornell University. We also express our gratitude to Thomas
+Elmqvist for facilitating the collaboration and to Keith Tidball,
+Simon West, Erik Andersson, and three anonymous reviewers for
+helpful comments.
+LITERATURE CITED
+Adger, W . N., J. Barnett, K. Brown, N. Marshall, and K. O’Brien.
+2013. Cultural dimensions of climate change impacts and
+adaptation. Nature Climate Change 3:112-117. http://dx.doi.
+org/10.1038/nclimate1666  
+Adger, W . N., J. Barnett, F . S. Chapin III, and H. Ellemor. 2011.
+This must be the place: underrepresentation of identity and
+meaning in climate change decision-making. Global Environmental
+Politics 11(2):1-25. http://dx.doi.org/10.1162/GLEP_a_00051  
+Adger, W . N., S. Dessai, M. Goulden, M. Hulme, I. Lorenzoni,
+D. R. Nelson, L. O. Naess, J. Wolf, and A. Wreford. 2009. Are
+there social limits to adaptation to climate change? Climatic
+Change 93(3):335-354. http://dx.doi.org/10.1007/s10584-008-9520-
+z  
+Albrecht, G., G.-M. Sartore, L. Connor, N. Higginbotham, S.
+Freeman, B. Kelly, H. Stain, A. Tonna, and G. Pollard. 2007.
+Solastalgia: the distress caused by environmental change.
+Australasian Psychiatry 15(S1):S95-S98. http://dx.doi.
+org/10.1080/10398560701701288  
+Altman, I., and S. M. Low, editors. 1992. Place attachment. 
+Springer, New Y ork, New Y ork, USA. http://dx.doi.
+org/10.1007/978-1-4684-8753-4  
+Amundsen, H. 2013. Place attachment as a driver of adaptation
+in coastal communities in northern Norway. Local Environment 
+20(3):257-276. http://dx.doi.org/10.1080/13549839.2013.838751  
+Andersson, E., S. Barthel, and K. Ahrné. 2007. Measuring social-
+ecological dynamics behind the generation of ecosystem services.
+Ecological Applications 17(5):1267-1278. http://dx.doi.
+org/10.1890/06-1116.1  
+Andersson, E., M. Tengö, T. McPhearson, and P . Kremer. 2015.
+Cultural ecosystem services as a gateway for improving urban
+sustainability. Ecosystem Services 12:165-168. http://dx.doi.
+org/10.1016/j.ecoser.2014.08.002  
+Barthel, S., C. Crumley, and U. Svedin. 2013. Bio-cultural refugia
+—safeguarding diversity of practices for food security and
+biodiversity. Global Environmental Change 23(5):1142-1152.
+http://dx.doi.org/10.1016/j.gloenvcha.2013.05.001  
+Barthel, S., C. Folke, and J. Colding. 2010. Social-ecological
+memory in urban gardens—retaining the capacity for
+management of ecosystem services. Global Environmental Change 
+20(2):255-265. http://dx.doi.org/10.1016/j.gloenvcha.2010.01.001  
+Beckley, T., J. Parkins, and R. Stedman. 2002. Indicators of forest-
+dependent community sustainability: the evolution of research.
+Forestry Chronicle 78(5):626-636. http://dx.doi.org/10.5558/
+tfc78626-5  
+Beckley, T. M., R. C. Stedman, S. M. Wallace, and M. Ambard.
+2007. Snapshots of what matters most: using resident-employed
+photography to articulate attachment to place. Society and
+Natural Resources 20(10):913-929. http://dx.doi.org/10.1080/08­
+941920701537007  
+Bell, S. E., and R. Y ork. 2010. Community economic identity: the
+coal industry and ideology construction in West Virginia. Rural
+Sociology 75(1):111-143. http://dx.doi.org/10.1111/j.1549-0831.2009.00004.
+x  
+Berkes, F ., J. Colding, and C. Folke. 2000. Rediscovery of
+traditional ecological knowledge as adaptive management.
+Ecological Applications 10(5):1251-1262. http://dx.doi.
+org/10.1890/1051-0761(2000)010[1251:ROTEKA]2.0.CO;2  
+Berkes, F ., J. Colding, and C. Folke, editors. 2003. Navigating
+social-ecological systems: building resilience for complexity and
+change. Cambridge University Press, Cambridge, UK. http://dx.
+doi.org/10.1017/cbo9780511541957  
+Berkes, F ., and C. Folke, editors. 1998. Linking social and
+ecological systems: management practices and social mechanisms
+for building resilience. Cambridge University Press, Cambridge,
+UK.  
+Berkes, F ., and H. Ross. 2013. Community resilience: toward an
+integrated approach. Society and Natural Resources 26(1):5-20.
+http://dx.doi.org/10.1080/08941920.2012.736605  
+Bonaiuto, M., G. Carrus, H. Martorella, and M. Bonnes. 2002.
+Local identity processes and environmental attitudes in land use
+changes: the case of natural protected areas. Journal of Economic
+Psychology 23(5):631-653. http://dx.doi.org/10.1016/S0167-4870
+(02)00121-6  
+Boonstra, W . J. 2016. Conceptualizing power to study social-
+ecological interactions. Ecology and Society 21(1):21. http://dx.
+doi.org/10.5751/es-07966-210121  
+Brehm, J. M., B. W . Eisenhauer, and R. C. Stedman. 2013.
+Environmental concern: examining the role of place meaning and
+place attachment. Society and Natural Resources 26(5):522-538.
+http://dx.doi.org/10.1080/08941920.2012.715726  
+Breslow, S. J., B. Sojka, R. Barnea, X. Basurto, C. Carothers, S.
+Charnley, S. Coulthard, N. Dolšak, J. Donatuto, C. García-
+Quijano, C. C. Hicks, A. Levine, M. B. Mascia, K. Norman, M.
+Poe, T. Satterfield, K. St. Martin, and P . S. Levin. 2016.
+Conceptualizing and operationalizing human wellbeing for
+ecosystem assessment and management. Environmental Science
+and Policy 66:250-259. http://dx.doi.org/10.1016/j.envsci.2016.06.023  
+Brown, G., and C. Raymond. 2007. The relationship between
+place attachment and landscape values: toward mapping place
+attachment. Applied Geography 27(2):89-111. http://dx.doi.
+org/10.1016/j.apgeog.2006.11.002  
+Brown, K., S. O’Neill, and C. Fabricius. 2013. Social science
+understandings of transformation. Pages 100-106 in World social
+science report 2013: changing global environments. ISSC and
+UNESCO, Paris, France. http://dx.doi.org/10.1787/9789264203419-13-
+en  
+Butler, C. D., and W . Oluoch-Kosura. 2006. Linking future
+ecosystem services and future human well-being. Ecology and
+Society 11(1):30. http://dx.doi.org/10.5751/es-01602-110130  
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Carpenter, S. R., H. A. Mooney, J. Agard, D. Capistrano, R. S.
+DeFries, S. Díaz, T. Dietz, A. K. Duraiappah, A. Oteng-Y eboah,
+H. M. Pereira, C. Perrings, W . V . Reid, J. Sarukhan, R. J. Scholes,
+and A. Whyte. 2009. Science for managing ecosystem services:
+beyond the Millennium Ecosystem Assessment. Proceedings of
+the National Academy of Sciences 106(5):1305-1312. http://dx.
+doi.org/10.1073/pnas.0808772106  
+Chan, K. M. A., P . Balvanera, K. Benessaiah, M. Chapman, S.
+Díaz, E. Gómez-Baggethun, R. Gould, N. Hannahs, K. Jax, S.
+Klain, G. W . Luck, B. Martín-López, B. Muraca, B. Norton, K.
+Ott, U. Pascual, T. Satterfield, M. Tadaki, J. Taggart, and N.
+Turner. 2016. Opinion: Why protect nature? Rethinking values
+and the environment. Proceedings of the National Academy of
+Sciences 113(6):1462-1465. http://dx.doi.org/10.1073/pnas.1525002113  
+Chan, K. M. A., A. D. Guerry, P . Balvanera, S. Klain, T.
+Satterfield, X. Basurto, A. Bostrom, R. Chuenpagdee, R. Gould,
+B. S. Halpern, N. Hannahs, J. Levine, B. Norton, M. Ruckelshaus,
+R. Russell, J. Tam, and U. Woodside. 2012. Where are cultural 
+and social in ecosystem services? A framework for constructive
+engagement. BioScience 62(8):744-756. http://dx.doi.org/10.1525/
+bio.2012.62.8.7  
+Chapin, F . S. III, S. R. Carpenter, G. P . Kofinas, C. Folke, N. Abel,
+W . C. Clark, P . Olsson, D. M. Stafford Smith, B. Walker, O. R.
+Y oung, F . Berkes, R. Biggs, J. M. Grove, R. L. Naylor, E.
+Pinkerton, W . Steffen, and F . J. Swanson. 2010. Ecosystem
+stewardship: sustainability strategies for a rapidly changing
+planet. Trends in Ecology and Evolution 25(4):241-249. http://dx.
+doi.org/10.1016/j.tree.2009.10.008  
+Chapin, F . S. III, and C. N. Knapp. 2015. Sense of place: a process
+for identifying and negotiating potentially contested visions of
+sustainability. Environmental Science and Policy 53(A):38-46.
+http://dx.doi.org/10.1016/j.envsci.2015.04.012  
+Chapin, F . S. III, A. F . Mark, R. A. Mitchell, and K. J. M.
+Dickinson. 2012. Design principles for social-ecological
+transformation toward sustainability: lessons from New Zealand
+sense of place. Ecosphere 3(5):1-22. http://dx.doi.org/10.1890/
+es12-00009.1  
+Chapin, F . S. III, S. T. A. Pickett, M. E. Power, R. B. Jackson, D.
+M. Carter, and C. Duke. 2011. Earth stewardship: a strategy for
+social-ecological transformation to reverse planetary degradation.
+Journal of Environmental Studies and Sciences 1(1):44-53. http://
+dx.doi.org/10.1007/s13412-011-0010-7  
+Clayton, S., P . Devine-Wright, P . C. Stern, L. Whitmarsh, A.
+Carrico, L. Steg, J. Swim, and M. Bonnes. 2015. Psychological
+research and global climate change. Nature Climate Change 
+5:640-646. http://dx.doi.org/10.1038/nclimate2622  
+Daniel, T. C., A. Muhar, A. Arnberger, O. Aznar, J. W . Boyd, K.
+M. A. Chan, R. Costanza, T. Elmqvist, C. G. Flint, P . H. Gobster,
+A. Grêt-Regamey, R. Lave, S. Muhar, M. Penker, R. G. Ribe, T.
+Schauppenlehner, T. Sikor, I. Soloviy, M. Spierenburg, K.
+Taczanowska, J. Tam, and A. von der Dunk. 2012. Contributions
+of cultural services to the ecosystem services agenda. Proceedings
+of the National Academy of Sciences 109(23):8812-8819. http://
+dx.doi.org/10.1073/pnas.1114773109  
+Davenport, M. A., and D. H. Anderson. 2005. Getting from sense
+of place to place-based management: an interpretive investigation
+of place meanings and perceptions of landscape change. Society
+and Natural Resources 18(7):625-641. http://dx.doi.
+org/10.1080/08941920590959613  
+Davidson-Hunt, I. J., and F . Berkes. 2003. Nature and society
+through the lens of resilience: toward a human-in-ecosystem
+perspective. Pages 53-82 in F . Berkes, J. Colding, and C. Folke,
+editors. Navigating social-ecological systems: building resilience
+for complexity and change. Cambridge University Press,
+Cambridge, UK. https://doi.org/10.1017/CBO9780511541957.006  
+Daw, T., K. Brown, S. Rosendo, and R. Pomeroy. 2011. Applying
+the ecosystem services concept to poverty alleviation: the need to
+disaggregate human well-being. Environmental Conservation 38
+(4):370-379. https://doi.org/10.1017/S0376892911000506  
+Devine-Wright, P . 2009. Rethinking NIMBYism: the role of place
+attachment and place identity in explaining place-protective
+action. Journal of Community and Applied Social Psychology 19
+(6):426-441. http://dx.doi.org/10.1002/casp.1004  
+Devine-Wright, P ., and Y . Howes. 2010. Disruption to place
+attachment and the protection of restorative environments: a
+wind energy case study. Journal of Environmental Psychology 30
+(3):271-280. http://dx.doi.org/10.1016/j.jenvp.2010.01.008  
+Devine-Wright, P ., J. Price, and Z. Leviston. 2015. My country or
+my planet? Exploring the influence of multiple place attachments
+and ideological beliefs upon climate change attitudes and
+opinions. Global Environmental Change 30:68-79. http://dx.doi.
+org/10.1016/j.gloenvcha.2014.10.012  
+Eakin, H., A. Y ork, R. Aggarwal, S. Waters, J. Welch, C. Rubiños,
+S. Smith-Heisters, C. Bausch, and J. M. Anderies. 2016. Cognitive
+and institutional influences on farmers’ adaptive capacity:
+insights into barriers and opportunities for transformative change
+in central Arizona. Regional Environmental Change 16
+(3):801-814. http://dx.doi.org/10.1007/s10113-015-0789-y  
+Enqvist, J., M. Tengö, and Ö. Bodin. 2014. Citizen networks in
+the Garden City: protecting urban ecosystems in rapid
+urbanization. Landscape and Urban Planning 130:24-35. http://
+dx.doi.org/10.1016/j.landurbplan.2014.06.007  
+Enqvist, J., M. Tengö, and W . J. Boonstra. 2016. Against the
+current: rewiring rigidity trap dynamics in urban water
+governance through civic engagement. Sustainability Science 11
+(6):919-933. http://dx.doi.org/10.1007/s11625-016-0377-1  
+Ernstson, H., and S. Sörlin. 2009. Weaving protective stories:
+connective practices to articulate holistic values in the Stockholm
+National Urban Park. Environment and Planning 41
+(6):1460-1479. http://dx.doi.org/10.1068/a40349  
+Farmer, J. R., D. Knapp, V . J. Meretsky, C. Chancellor, and B. C.
+Fischer. 2011. Motivations influencing the adoption of
+conservation easements. Conservation Biology 25(4):827-834.
+http://dx.doi.org/10.1111/j.1523-1739.2011.01686.x  
+Folke, C. 2006. Resilience: the emergence of a perspective for
+social-ecological systems analyses. Global Environmental Change 
+16(3):253-267. http://dx.doi.org/10.1016/j.gloenvcha.2006.04.002  
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Folke, C., S. R. Carpenter, B. Walker, M. Scheffer, T. Chapin, and
+J. Rockström. 2010. Resilience thinking: integrating resilience,
+adaptability and transformability. Ecology and Society 15(4):20.
+[online] URL: http://www.ecologyandsociety.org/vol15/iss4/
+art20/  
+Folke, C., J. Colding, and F . Berkes. 2003. Synthesis: building
+resilience and adaptive capacity in social-ecolgocial systems.
+Pages 352-387 in F . Berkes, J. Colding, and C. Folke, editors.
+Navigating social-ecological systems: building resilience for
+complexity and change. Cambridge University Press, Cambridge,
+UK. https://doi.org/10.1017/CBO9780511541957.020  
+Folke, C., T. Hahn, P . Olsson, and J. Norberg. 2005. Adaptive
+governance of social-ecological systems. Annual Review of
+Environment and Resources 30:441-473. http://dx.doi.org/10.1146/
+annurev.energy.30.050504.144511   
+Folke, C., Å. Jansson, J. Rockström, P . Olsson, S. R. Carpenter,
+F . S. Chapin III, A.-S. Crépin, G. Daily, K. Danell, J. Ebbesson,
+T. Elmqvist, V . Galaz, F . Moberg, M. Nilsson, H. Österblom, E.
+Ostrom, Å. Persson, G. Peterson, S. Polasky, W . Steffen, B. Walker,
+and F . Westley. 2011. Reconnecting to the biosphere. Ambio 
+40:719-738. http://dx.doi.org/10.1007/s13280-011-0184-y  
+Fresque-Baxter, J. A., and D. Armitage. 2012. Place identity and
+climate change adaptation: a synthesis and framework for
+understanding. Wiley Interdisciplinary Reviews: Climate Change 
+3(3):251-266. http://dx.doi.org/10.1002/wcc.164  
+Freudenburg, W . R., S. Frickel, and R. Gramling. 1995. Beyond
+the nature/society divide: learning to think about a mountain.
+Sociological Forum 10(3):361-392. http://dx.doi.org/10.1007/
+BF02095827  
+Gifford, R. 2014. Environmental psychology matters. Annual
+Review of Psychology 65:541-579. http://dx.doi.org/10.1146/
+annurev-psych-010213-115048  
+Greider, T., and L. Garkovich. 1994. Landscapes: the social
+construction of nature and the environment. Rural Sociology 59
+(1):1-24. http://dx.doi.org/10.1111/j.1549-0831.1994.tb00519.x  
+Gunderson, L. H. 2003. Adaptive dancing: interactions between
+social resilience and ecological crises. Pages 33-52 in F . Berkes, J.
+Colding, and C. Folke, editors. Navigating social-ecological
+systems: building resilience for complexity and change. Cambridge
+University Press, Cambridge, UK. https://doi.org/10.1017/
+CBO9780511541957.005  
+Gunderson, L. H., and C. S. Holling, editors. 2002. Panarchy:
+understanding transformations in human and natural systems. 
+Island Press, Washington, D.C., USA.  
+Hausmann, A., R. Slotow, J. K. Burns, and E. Di Minin. 2016.
+The ecosystem service of sense of place: benefits for human well-
+being and biodiversity conservation. Environmental Conservation 
+43(2):117-127. http://dx.doi.org/10.1017/s0376892915000314  
+Heise, U. K. 2008. Sense of place and sense of planet: the
+environmental imagination of the global. Oxford University Press,
+Oxford, UK. http://dx.doi.org/10.1093/acprof:oso/97801953356­
+37.001.0001   
+Hernández-Morcillo, M., T. Plieninger, and C. Bieling. 2013. An
+empirical review of cultural ecosystem service indicators.
+Ecological Indicators 29:434-444. http://dx.doi.org/10.1016/j.
+ecolind.2013.01.013  
+Hidalgo, M. C., and B. Hernández. 2001. Place attachment:
+conceptual and empirical questions. Journal of Environmental
+Psychology 21(3):273-281. http://dx.doi.org/10.1006/jevp.2001.0221  
+Huber, M., and A. Arnberger. 2016. Opponents, waverers or
+supporters: the influence of place-attachment dimensions on
+local residents’ acceptance of a planned biosphere reserve in
+Austria. Journal of Environmental Planning and Management 59
+(9):1610-1628. http://dx.doi.org/10.1080/09640568.2015.1083415  
+Ingalls, M. L., and R. C. Stedman. 2016. The power problematic:
+exploring the uncertain terrains of political ecology and the
+resilience framework. Ecology and Society 21(1):6. http://dx.doi.
+org/10.5751/es-08124-210106  
+Jacquet, J. B., and R. C. Stedman. 2013. Perceived impacts from
+wind farm and natural gas development in northern
+Pennsylvania. Rural Sociology 78(4):450-472. http://dx.doi.
+org/10.1111/ruso.12022  
+Jacquet, J. B., and R. C. Stedman. 2014. The risk of social-
+psychological disruption as an impact of energy development and
+environmental change. Journal of Environmental Planning and
+Management 57(9):1285-1304. http://dx.doi.org/10.1080/096405­
+68.2013.820174  
+Jones, N. A., S. Shaw, H. Ross, K. Witt, and B. Pinner. 2016. The
+study of human values in understanding and managing social-
+ecological systems. Ecology and Society 21(1):15. http://dx.doi.
+org/10.5751/es-07977-210115  
+Jorgensen, B. S., and R. C. Stedman. 2001. Sense of place as an
+attitude: lakeshore owners attitudes toward their properties.
+Journal of Environmental Psychology 21(3):233-248. http://dx.doi.
+org/10.1006/jevp.2001.0226  
+Kaltenborn, B. P . 1998. Effects of sense of place on responses to
+environmental impacts: a study among residents in Svalbard in
+the Norwegian high Arctic. Applied Geography 18(2):169-189.
+http://dx.doi.org/10.1016/s0143-6228(98)00002-2  
+Keilty, K., T. M. Beckley, and K. Sherren. 2016. Baselines of
+acceptability and generational change on the Mactaquac
+hydroelectric dam headpond (New Brunswick, Canada).
+Geoforum 75:234-248. http://dx.doi.org/10.1016/j.geoforum.2016.08.001  
+Kudryavtsev, A., R. C. Stedman, and M. E. Krasny. 2012. Sense
+of place in environmental education. Environmental Education
+Research 18(2):229-250. http://dx.doi.org/10.1080/13504622.2011.609615  
+Kyle, G., A. Graefe, R. Manning, and J. Bacon. 2004. Effects of
+place attachment on users’ perceptions of social and
+environmental conditions in a natural setting. Journal of
+Environmental Psychology 24(2):213-225. http://dx.doi.org/10.1016/
+j.jenvp.2003.12.006  
+Lalli, M. 1992. Urban-related identity: theory, measurement, and
+empirical findings. Journal of Environmental Psychology 12
+(4):285-303. http://dx.doi.org/10.1016/S0272-4944(05)80078-7  
+Larson, S., D. M. De Freitas, and C. C. Hicks. 2013. Sense of
+place as a determinant of people’s attitudes towards the
+environment: implications for natural resources management and
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+planning in the Great Barrier Reef, Australia. Journal of
+Environmental Management 117:226-234. http://dx.doi.org/10.1016/
+j.jenvman.2012.11.035  
+Leach, M., J. Rockström, P . Raskin, I. Scoones, A. C. Stirling, A.
+Smith, J. Thompson, E. Millstone, A. Ely, E. Arond, C. Folke,
+and P . Olsson. 2012. Transforming innovation for sustainability.
+Ecology and Society 17(2):11. http://dx.doi.org/10.5751/
+es-04933-170211  
+Lewicka, M. 2011. Place attachment: How far have we come in
+the last 40 years? Journal of Environmental Psychology 31
+(3):207-230. http://dx.doi.org/10.1016/j.jenvp.2010.10.001  
+Liu, J., T. Dietz, S. R. Carpenter, M. Alberti, C. Folke, E. Moran,
+A. N. Pell, P . Deadman, T. Kratz, J. Lubchenco, E. Ostrom, Z.
+Ouyang, W . Provencher, C. L. Redman, S. H. Schneider, and W .
+W . Taylor. 2007. Complexity of coupled human and natural
+systems. Science 317(5844):1513-1516. http://dx.doi.org/10.1126/
+science.1144004  
+Lyon, C. 2014. Place systems and social resilience: a framework
+for understanding place in social adaptation, resilience, and
+transformation. Society and Natural Resources 27(10):1009-1023.
+http://dx.doi.org/10.1080/08941920.2014.918228  
+Manzo, L. C. 2005. For better or worse: exploring multiple
+dimensions of place meaning. Journal of Environmental
+Psychology 25(1):67-86. http://dx.doi.org/10.1016/j.jenvp.2005.01.002  
+Marshall, N. A., S. Crimp, M. Curnock, M. Greenhill, G. Kuehne,
+Z. Leviston, and J. Ouzman. 2016. Some primary producers are
+more likely to transform their agricultural practices in response
+to climate change than others. Agriculture, Ecosystems and
+Environment 222:38-47. http://dx.doi.org/10.1016/j.agee.2016.02.004  
+Marshall, N. A., S. E. Park, W . N. Adger, K. Brown, and S. M.
+Howden. 2012. Transformational capacity and the influence of
+place and identity. Environmental Research Letters 7(3):034022.
+http://dx.doi.org/10.1088/1748-9326/7/3/034022  
+Marshall, N., and C. J. Stokes. 2014. Identifying thresholds and
+barriers to adaptation through measuring climate sensitivity and
+capacity to change in an Australian primary industry. Climatic
+Change 126(3):399-411. http://dx.doi.org/10.1007/s10584-014-1233-
+x  
+Martín-López, B., I. Iniesta-Arandia, M. García-Llorente, I.
+Palomo, I. Casado-Arzuaga, D. García Del Amo, E. Gómez-
+Baggethun, E. Oteros-Rozas, I. Palacios-Agundez, B. Willaarts,
+J. A. González, F . Santos-Martín, M. Onaindia, C. López-
+Santiago, and C. Montes. 2012. Uncovering ecosystem service
+bundles through social preferences. Plos One 7(6):e38970. http://
+dx.doi.org/10.1371/journal.pone.0038970  
+Masterson, V . A. 2016. Sense of place and culture in the landscape
+of home: understanding social-ecological dynamics on the Wild
+Coast, South Africa. Dissertation. Stockholm Resilience Centre,
+Stockholm University, Sweden. [online] URL: http://su.diva-
+portal.org/smash/record.jsf?pid=diva2%3A1044090&dswid=-5802  
+Meyfroidt, P . 2013. Environmental cognitions, land change, and
+social-ecological feedbacks: an overview. Journal of Land Use
+Science 8(3):341-367. http://dx.doi.org/10.1080/1747423x.2012.667452  
+Milcu, A. I., J. Hanspach, D. Abson, and J. Fischer. 2013. Cultural
+ecosystem services: a literature review and prospects for future
+research. Ecology and Society 18(3):44. http://dx.doi.org/10.5751/
+es-05790-180344  
+Milcu, A. I., K. Sherren, J. Hanspach, D. Abson, and J. Fischer.
+2014. Navigating conflicting landscape aspirations: application
+of a photo-based Q-method in Transylvania (central Romania).
+Land Use Policy 41:408-422. http://dx.doi.org/10.1016/j.
+landusepol.2014.06.019  
+Millennium Ecosystem Assessment. 2005. Ecosystems and human
+well-being: synthesis. Island Press, Washington, D.C., USA.
+[online] URL: http://www.millenniumassessment.org/documents/
+document.356.aspx.pdf  
+Moore, R. L., and A. R. Graefe. 1994. Attachments to recreation
+settings: the case of rail-trail users. Leisure Sciences 16(1):17-31.
+http://dx.doi.org/10.1080/01490409409513214  
+Nassauer, J. I. 2011. Care and stewardship: from home to planet.
+Landscape and Urban Planning 100(4):321-323. http://dx.doi.
+org/10.1016/j.landurbplan.2011.02.022  
+Olsson, P ., and C. Folke. 2001. Local ecological knowledge and
+institutional dynamics for ecosystem management: a study of
+Lake Racken watershed, Sweden. Ecosystems 4(2):85-104. http://
+dx.doi.org/10.1007/s100210000061   
+Pauly, D. 1995. Anecdotes and the shifting baseline syndrome of
+fisheries. Trends in Ecology and Evolution 10(10):430. http://dx.
+doi.org/10.1016/s0169-5347(00)89171-5  
+Plieninger, T., S. Dijks, E. Oteros-Rozas, and C. Bieling. 2013.
+Assessing, mapping, and quantifying cultural ecosystem services
+at community level. Land Use Policy 33:118-129. http://dx.doi.
+org/10.1016/j.landusepol.2012.12.013  
+Potschin, M., and R. Haines-Y oung. 2013. Landscapes,
+sustainability and the place-based analysis of ecosystem services.
+Landscape Ecology 28(6):1053-1065. http://dx.doi.org/10.1007/
+s10980-012-9756-x  
+Pred, A. 1984. Place as historically contingent process:
+structuration and the time-geography of becoming places. Annals
+of the Association of American Geographers 74(2):279-297. http://
+dx.doi.org/10.1111/j.1467-8306.1984.tb01453.x  
+Pretty, G. H., H. M. Chipuer, and P . Bramston 2003. Sense of
+place amongst adolescents and adults in two rural Australian
+towns: the discriminating features of place attachment, sense of
+community and place dependence in relation to place identity.
+Journal of Environmental Psychology 23(3):273-287. http://dx.doi.
+org/10.1016/s0272-4944(02)00079-8  
+Pröpper, M., and F . Haupts. 2014. The culturality of ecosystem
+services. Emphasizing process and transformation. Ecological
+Economics 108:28-35. http://dx.doi.org/10.1016/j.ecolecon.2014.09.023  
+Proshansky, H. M. 1978. The city and self-identity. Environment
+and Behavior 10(2):147-169. http://dx.doi.org/10.1177/0013916578102002  
+Quinn, T. 2014. The role of place attachment in proactive and
+reactive adaptation to flood risk. Dissertation. University of East
+Anglia, Norwich, UK. [online] URL: https://ueaeprints.uea.ac.
+uk/49467/  
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Raudsepp-Hearne, C., G. D. Peterson, M. Tengö, E. M. Bennett,
+T. Holland, K. Benessaiah, G. K. MacDonald, and L. Pfeifer.
+2010. Untangling the environmentalist’s paradox: Why is human
+well-being increasing as ecosystem services degrade? BioScience 
+60(8):576-589. http://dx.doi.org/10.1525/bio.2010.60.8.4  
+Raymond, C. M., G. Brown, and G. M. Robinson. 2011. The
+influence of place attachment, and moral and normative concerns
+on the conservation of native vegetation: a test of two behavioural
+models. Journal of Environmental Psychology 31(4):323-335.
+http://dx.doi.org/10.1016/j.jenvp.2011.08.006  
+Raymond, C. M., B. A. Bryan, D. Hatton MacDonald, A. Cast,
+S. Strathearn, A. Grandgirard, and T. Kalivas. 2009. Mapping
+community values for natural capital and ecosystem services.
+Ecological Economics 68(5):1301-1315. http://dx.doi.org/10.1016/
+j.ecolecon.2008.12.006  
+Raymond, C. M., G. G. Singh, K. Benessaiah, J. R. Bernhardt, J.
+Levine, H. Nelson, N. J. Turner, B. Norton, J. Tam, and K. M. A.
+Chan. 2013. Ecosystem services and beyond: using multiple
+metaphors to understand human-environment relationships.
+BioScience 63(7):536-546.  
+Relph, E. 1976. Place and placelessness. Pion, London, UK.  
+Reyers, B., R. Biggs, G. S. Cumming, T. Elmqvist, A. P . Hejnowicz,
+and S. Polasky. 2013. Getting the measure of ecosystem services:
+a social-ecological approach. Frontiers in Ecology and the
+Environment 11(5):268-273. http://dx.doi.org/10.1890/120144  
+Rickard, L. N., and R. C. Stedman. 2015. From ranger talks to
+radio stations: the role of communication in sense of place.
+Journal of Leisure Research 47(1):15-33.  
+Russ, A., S. J. Peters, M. E. Krasny, and R. C. Stedman. 2015.
+Development of ecological place meaning in New Y ork City.
+Journal of Environmental Education 46(2):73-93. http://dx.doi.
+org/10.1080/00958964.2014.999743  
+Russell, R., A. D. Guerry, P . Balvanera, R. K. Gould, X. Basurto,
+K. M. A. Chan, S. Klain, J. Levine, and J. Tam. 2013. Humans
+and nature: how knowing and experiencing nature affect well-
+being. Annual Review of Environment and Resources 38
+(1):473-502. http://dx.doi.org/10.1146/annurev-environ-012312-110838  
+Sack, R. D. 1997. Homo geographicus: a framework for action,
+awareness, and moral concern. Johns Hopkins University Press,
+Baltimore, Maryland, USA.  
+Sampson, K., and C. Goodrich. 2005. “We’re coasters, why should
+we move?”: community identity, place attachment and forestry
+closure in rural New Zealand. Sites 2(1):24-49. http://dx.doi.
+org/10.11157/sites-vol2iss1id55  
+Scannell, L., and R. Gifford. 2010. The relations between natural
+and civic place attachment and pro-environmental behavior.
+Journal of Environmental Psychology 30(3):289-297. http://dx.doi.
+org/10.1016/j.jenvp.2010.01.010  
+Seamon, D. 2000. A way of seeing people and place:
+phenomenology in envrionment-behavior research. Page 157-178
+in S. Wapner, J. Demick, C. T. Yamamoto, and H. Minami, editors.
+Theoretical perspectives in environment-behavior research. 
+Springer, New Y ork, New Y ork, USA. http://dx.doi.
+org/10.1007/978-1-4615-4701-3_13  
+Shamai, S. 1991. Sense of place: an empirical measurement.
+Geoforum 22(3):347-358. http://dx.doi.org/10.1016/0016-7185
+(91)90017-k  
+Smith, L. M., J. L. Case, H. M. Smith, L. C. Harwell, and J. K.
+Summers. 2013. Relating ecoystem services to domains of human
+well-being: foundation for a U.S. index. Ecological Indicators 
+28:79-90. http://dx.doi.org/10.1016/j.ecolind.2012.02.032  
+Stedman, R. C. 1999. Sense of place as indicator of community
+sustainability. Forestry Chronicle 75(5):765-770. http://dx.doi.
+org/10.5558/tfc75765-5  
+Stedman, R. C. 2002. Toward a psychology of place: predicting
+behavior from place-based cognitions, attitude, and identity.
+Environment and Behavior 34(5):561-581. http://dx.doi.
+org/10.1177/0013916502034005001  
+Stedman, R. C. 2003 a. Is it really just a social construction?: The
+contribution of the physical environment to sense of place.
+Society and Natural Resources 16(8):671-685.  
+Stedman, R. C. 2003 b. Sense of place and forest science: toward
+a program of quantitative research. Forest Science 49(6):822-829.  
+Stedman, R. C. 2006. Understanding place attachment among
+second home owners. American Behavioral Scientist 50
+(2):187-205. http://dx.doi.org/10.1177/0002764206290633  
+Stedman, R. C. 2008. What do we “mean” by place meanings?
+Implications of place meanings for managers and practitioners.
+Pages 71-82 in L. E. Kruger, T. E. Hall, and M. C. Stiefel, editors.
+Understanding concepts of place in recreation research and
+management. General Technical Report PNW-GTR-744. U.S.
+Department of Agriculture Forest Service Pacific Northwest
+Research Station, Portland, Oregon, USA. [online] URL: https://
+www.treesearch.fs.fed.us/pubs/29924  
+Stedman, R. C. 2016. Subjectivity and social-ecological systems:
+a rigidity trap (and sense of place as a way out). Sustainability
+Science 11(6):891-901. http://dx.doi.org/10.1007/s11625-016-0388-
+y  
+Stedman, R. C., and T. M. Beckley. 2007. “If we knew what it was
+we were doing, it would not be called research, would it?” Society
+and Natural Resources 20(10):939-943.  
+Stedman, R. C., and R. B. Hammer. 2006. Environmental
+perception in a rapidly growing, amenity-rich region: the effects
+of lakeshore development on perceived water quality in Vilas
+County, Wisconsin. Society and Natural Resources 19(2):137-151.
+http://dx.doi.org/10.1080/08941920500394733  
+Stedman, R. C., and M. Ingalls. 2014. Topophilia, biophilia and
+greening in the red zone. Pages 129-144 in K. G. Tidball and M.
+E. Krasny, editors. Greening in the red zon: disaster, resilience and
+community greening. Springer, Dordrecht, The Netherlands.
+http://dx.doi.org/10.1007/978-90-481-9947-1_10  
+Stokols, D., and S. A. Shumaker. 1981. People in places: a
+transactional view of settings. Pages 441-488 in J. H. Harvey,
+editor. Cognition, social behavior, and the environment. Lawrence
+Erlbaum, Hillsdale, New Jersey, USA.  
+Stokowski, P . A. 2002. Languages of place and discourses of
+power: constructing new senses of place. Journal of Leisure
+Research 34(4):368-382.  
+Ecology and Society 22(1): 49
+https://www.ecologyandsociety.org/vol22/iss1/art49/
+Summers, J. K., L. M. Smith, J. L. Case, and R. A. Linthurst.
+2012. A review of the elements of human well-being with an
+emphasis on the contribution of ecosystem services. Ambio 41
+(4):327-340. http://dx.doi.org/10.1007/s13280-012-0256-7  
+Tengö, M., and J. von Heland. 2011. Adaptive capacity of local
+indigenous institutions: the case of the taboo forests of southern
+Madagascar. Pages 37-74 in E. Boyd and C. Folke, editors.
+Adapting institutions: governance, complexity and social-
+ecological resilience. Cambridge University Press, Cambridge,
+UK. https://doi.org/10.1017/CBO9781139017237.006  
+Theodori, G. L. 2001. Examining the effects of community
+satisfaction and attachment on individual well-being. Rural
+Sociology 66(4):618-628. http://dx.doi.org/10.1111/j.1549-0831.2001.
+tb00087.x   
+Tidball, K. G. 2012. Urgent biophilia: human-nature interactions
+and biological attractions in disaster resilience. Ecology and
+Society 17(2):5. http://dx.doi.org/10.5751/es-04596-170205  
+Tidball, K. G., and M. Krasny. 2014. Greening in the red zone:
+disaster, resilience, and community greening. Springer, Dordrecht,
+The Netherlands. http://dx.doi.org/10.1007/978-90-481-9947-1  
+Tidball, K., and R. Stedman. 2013. Positive dependency and
+virtuous cycles: from resource dependence to resilience in urban
+social-ecological systems. Ecological Economics 86:292-299.
+http://dx.doi.org/10.1016/j.ecolecon.2012.10.004  
+Trentelman, C. K. 2009. Place attachment and community
+attachment: a primer grounded in the lived experience of a
+community sociologist. Society and Natural Resources 22
+(3):191-210. http://dx.doi.org/10.1080/08941920802191712  
+Tuan, Y .-F . 1977. Space and place: the perspective of experience. 
+University of Minnesota Press, Minneapolis, Minnesota, USA.  
+United Nations. 2014. Open Working Group proposal for
+sustainable development goals. A/68/970. Open Working Group
+of the General Assembly on Sustainable Development Goals,
+United Nations, New Y ork, New Y ork, USA. [online] URL:
+https://sustainabledevelopment.un.org/content/documents/1579SDGs%
+20Proposal.pdf  
+von Heland, J., and C. Folke. 2014. A social contract with the
+ancestors—culture and ecosystem services in southern
+Madagascar. Global Environmental Change 24:251-264. http://dx.
+doi.org/10.1016/j.gloenvcha.2013.11.003  
+Vorkinn, M., and H. Riese. 2001. Environmental concern in a
+local context: the significance of place attachment. Environment
+and Behavior 33(2):249-263. http://dx.doi.org/10.1177/00139160­
+121972972  
+Walker, B., C. S. Holling, S. R. Carpenter, and A. Kinzig. 2004.
+Resilience, adaptability and transformability in social-ecological
+systems. Ecology and Society 9(2):5. http://dx.doi.org/10.5751/
+es-00650-090205  
+Westley, F ., P . Olsson, C. Folke, T. Homer-Dixon, H. Vredenburg,
+D. Loorbach, J. Thompson, M. Nilsson, E. Lambin, J. Sendzimir,
+B. Banerjee, V . Galaz, and S. van der Leeuw. 2011. Tipping toward
+sustainability: emerging pathways of transformation. Ambio 40
+(7):762-780. http://dx.doi.org/10.1007/s13280-011-0186-9  
+Wilbanks, T. J. 2015. Putting “place” in a multiscale context:
+perspectives from the sustainability sciences. Environmental
+Science and Policy 53(A):70-79. http://dx.doi.org/10.1016/j.
+envsci.2015.04.009  
+Williams, D. R., and M. E. Patterson. 2007. Snapshots of what,
+exactly? A comment on methodological experimentation and
+conceptual foundations in place research. Society and Natural
+Resources 20(10):931-937. http://dx.doi.org/10.1080/08941920701537015  
+Williams, D. R., and J. W . Roggenbuck. 1989. Measuring place
+attachment: some preliminary results. Page 32 in L. H. McAvoy
+and D. Howard, editors. Abstracts of the 1989 Leisure Research
+Symposium. National Recreation and Park Association,
+Arlington, Virginia, USA.  
+Yung, L., W . A. Freimund, and J. M. Belsky. 2003. The politics
+of place: understanding meaning, common ground, and political
+difference on the Rocky Mountain front. Forest Science 49
+(6):855-866.  
+Zukin, S. 1991. Landscapes of power: from Detroit to Disney World. 
+University of California Press, Berkeley, California, USA.  
+Zylstra, M. J., A. T. Knight, K. J. Esler, and L. L. L. Le Grange.
+2014. Connectedness as a core conservation concern: an
+interdisciplinary review of theory and a call for practice. Springer
+Science Reviews 2(1):119-143. http://dx.doi.org/10.1007/s40362-014-0021-3

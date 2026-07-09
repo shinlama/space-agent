@@ -1,0 +1,99 @@
+===== PrvText =====
+< * 교신저자(Corresponding Author); leejinkook@yonsei.ac.kr ** 이 논문은 2023년도 정부(교육부)의 재원으로 한국연구재단 기초연구사업의 지원을 받아 수행된 연구임(No. NRF-2023S1A5A2A01081659)><https://doi.org/10.14774/JKIID.0000.00.00.000><Journal of the Korean Institute of Interior Design Vol.00 No.0 Serial No.000 _ 0000.00>
+<>
+<공간 리뷰 텍스트 기반 장소성 정량화 접근 방법** - 서울시 휴게음식점 중 커피전문점 사용자 리뷰를 활용하여 - An Approach to Quantifying Placeness Using Spatial Review Text Data - Using User Reviews of Caf s in Seoul ->
+<Author><신지원 Shin, Ji-Won / 정회원, 연세대학교 실내건축학과 석사과정 이진국 Lee, Jin-Kook / 정회원, 연세대학교 실내건축학과 교수, 공학박사*>
+<><>
+<Abstract><This study proposes a method for quantifying placeness, a qualitative and subjective concept, using user-generated text review data. Based on prior studies, placeness was structured into three dimensions: physical characteristics, activity-related characteristics, and meaning-related characteristics, and was further reorganized into ten sub-factors: aesthetics, openness, sensory experience, accessibility, comfort, activity, interaction, >
+
+===== Section0 =====
+* 교신저자(Corresponding Author); leejinkook@yonsei.ac.kr
+** 이 논문은 2023년도 정부(교육부)의 재원으로 한국연구재단 기초연구사업의 지원을
+받아 수행된 연구임(No. NRF-2023S1A5A2A01081659)
+https://doi.org/10.14774/JKIID.0000.00.00.000
+Journal of the Korean Institute of Interior Design
+Vol.00 No.0 Serial No.000 _ 0000.00
+An Approach to Quantifying Placeness Using Spatial Review Text Data
+- Using User Reviews of Caf s in Seoul -
+Author
+신지원 Shin, Ji-Won / 정회원, 연세대학교 실내건축학과 석사과정
+이진국 Lee, Jin-Kook / 정회원, 연세대학교 실내건축학과 교수, 공학박사*
+Abstract
+This study proposes a method for quantifying placeness, a qualitative and subjective concept, using user-generated text review data. Based on prior studies, placeness was structured into three dimensions: physical characteristics, activity-related characteristics, and meaning-related characteristics, and was further reorganized into ten sub-factors: aesthetics, openness, sensory experience, accessibility, comfort, activity, interaction, symbolism, memory and preference, and local identity. For empirical analysis, public commercial district data and Google Maps review data were collected for coffee shops in Seoul. Among the collected places, approximately 17,641 reviews from 1,786 locations with available reviews were selected for analysis. As an analytical approach, a large language model was used to map placeness factors from review sentences or phrases and to classify the evaluative direction of each supporting phrase as positive, neutral or mixed, or negative. The evaluative directions were then converted into values of +1, 0, and -1, respectively, and the mention frequency of each factor was used as a weight to calculate factor-level placeness scores and an overall placeness score. This study contributes by proposing an automated method for spatial quantification that complements conventional placeness evaluation methods based on site visits and surveys, which are often constrained by time and cost. Furthermore, the quantified placeness results suggest the potential for practical use as a decision-support tool for place comparison, recommendation, and spatial selection.
+Keywords
+Placeness, Quantification, Text Review Analysis, Natural Language Processing
+한국실내디자인학회논문집 제00권 00호 통권000호 _ 2000.00
+한국실내디자인학회논문집 제00권 00호 통권000호 _ 0000.00
+글자크기 10.5pt, 줄간격 150%
+KoPubWorld돋움체_Pro Medium
+글자크기 11.7pt, 줄간격 150%
+KoPubWorld돋움체_Pro Medium
+1.1. 연구의 배경과 목적
+공간은 물리적 환경에서 이용자의 경험과 활동, 그리고 공간에 부여되는 의미가 결합될 때 장소(place) 로 인식되며(Relph, 1976), 장소성은 이러한 경험과 의미 형성의 축적을 통해 형성되는 다차원적 개념이다(Tuan, 1977; 홍성희, 2011). 기존의 장소성 연구는 주로 설문조사와 인터뷰를 통한 정성적 접근에 의존해 왔으나, 이러한 방식은 표본 규모와 시간 및 비용의 한계, 분석 과정에서의 주관성으로 인해 다수 공간의 비교 및 분석과 자동화된 활용에 제약이 있다. 한편, 최근 온라인 플랫폼에 축적된 사용자 텍스트 리뷰는 일반 이용자의 관점에서 공간에 대한 인식을 담고 있으며, 자연어처리와 딥러닝 기술의 발전은 이를 정량 지표로 변환할 가능성을 제시한다.
+1.2. 연구 방법 및 범위
+본 연구는 장소성을 정량적으로 평가하기 위한 접근 방법을 제안하고, 이를 사용자 리뷰 데이터에 적용한다. 이를 위해 장소성을 물리적 특성, 활동적 특성, 의미적 특성의 세 차원으로 구조화하고, 심미성, 개방성, 감각적 경험, 접근성, 쾌적성, 활동성, 상호작용성, 상징성, 기억 및 선호, 지역 정체성의 총 10 개 요인으로 세분화하여 분석 기준으로 설정한다(Relph, 1976; 홍성희, 2011; 곽풍명, 2025; 이지혜, 2025). 이후 지도 기반 웹 서비스에서 사용자 리뷰 텍스트를 수집하고, 자연어처리 기반 분석을 통해 각 리뷰 문장을 장소성 요인과 대응시켜 공간별 장소성 특성을 정량화한다. 연구의 실증 대상은 상업공간 중 식품접객업을 행하는 시설로 하며, 그중 서울시 휴게음식점의 사례로서 커피전문점을 분석 단위로 설정한다. 다만 커피전문점은 특정 업종의 소규모 상업공간에 해당하므로, 이를 대상으로 한 분석만으로 장소성 전반을 일반화하는 데에는 한계가 있다. 이러한 한계를 전제로 하여 커피전문점을 장소성 정량화 접근 방법의 실증적 사례로 설정한다.
+2.1. 장소성 이론 및 구성 요소
+글자크기 9.3pt, 줄간격 150%
+KoPubWorld돋움체_Pro Light
+장소성은 공간이 인간의 경험과 의미 부여를 통해 특정한 장소로 인식되는 과정과 그 성격을 설명하는 개념이다. Norberg-Schulz(1971)는 장소를 물질, 형상, 색채 등 구체적 환경 요소의 총체성으로 설명하였고, Tuan(1977)은 인간의 경험과 감정이 공간에 의미를 부여함으로써 공간이 장소가 된다고 보았다. Relph(1976)는 장소의 정체성이 물리적 환경, 활동, 의미의 상호작용을 통해 형성된다고 설명하였다.
+2.2. 상업공간의 장소성 요인 도출
+선행연구에서는 공간 유형과 연구 목적에 따라 장소성을 구성하는 요인을 다양하게 제시해 왔다. 특히 상업시설과 카페 공간에서는 이용자가 소비 행위뿐만 아니라 체류, 휴식, 업무, 만남, 감각적 경험 등 다양한 활동을 수행한다. 따라서 이러한 공간의 장소성 요인은 공간디자인 특성과 이용 행태를 함께 반영할 필요가 있다. 본 연구는 상업공간의 맥락에 맞추어 선행연구에서 제시된 유사 요인을 통합하고, 리뷰 텍스트에서 언어 표현으로 관찰 가능한 10개 장소성 요인을 설정하였다(<표 1> 참고).
+2.3. 대형언어모델 활용 텍스트 감성 분석
+글자크기 7.8pt, 줄간격 150%
+KoPubWorld돋움체_Pro Light
+최근 연구에서는 대형 언어 모델이 감성 분석 및 텍스트 주석 과제에서 기존 전이학습 모델 또는 사람 주석자와 대등하거나, 일부 과제에서는 더 높은 성능을 보일 수 있음이 보고되었다(Wang et al., 2023; Gilardi et al., 2023; Pangakis & Wolken, 2024). 이에 본 연구는 별도의 임베딩 유사도 모델이나 감성 분석 모델을 추가로 학습하지 않고, GPT-4o-mini API를 활용하여 리뷰 구절의 장소성 요인과 평가 방향을 판정하였다. 즉, 대형 언어 모델은 선행연구 기반 장소성 평가 체계를 실제 리뷰 텍스트에 적용하기 위한 문맥 해석 도구로 활용된다.
+3.1. 장소성 구성 요소별 정량화 접근
+본 연구는 상업공간 이용자가 작성한 리뷰 텍스트를 입력으로 받아, 이를 장소성 요인별 정량 지표로 변환하는 장소성 정량화 시스템을 제안한다(<그림 1> 참조). 장소성은 공간 이용자의 경험과 인식에 기반한 정성적이고 질적인 개념이지만, 본 연구에서는 선행연구를 바탕으로 장소성을 3개 차원과 10개 세부 요인으로 구조화하고, 리뷰 텍스트에 나타난 장소성 관련 표현을 요인별 점수와 언급 비중으로 산출하였다.
+제안한 시스템은 크게 장소성 요인 매핑 모듈과 장소성 요인별 점수화 모듈로 구성된다. 장소성 요인 매핑 모듈은 리뷰 텍스트에서 장소성 판단의 근거가 되는 문장 또는 구절을 식별하고, 이를 10개 장소성 요인 중 하나에 연결한다. 이 과정에서는 선행연구를 기반으로 정의한 장소성 요인의 개념, 매핑 기준, 관련 표현 예시를 활용하여 리뷰 내 표현이 어떤 장소성 요인과 관련되는지를 판단한다.
+장소성 요인별 점수화 모듈은 매핑된 근거 구절의 평가 방향을 판별하고, 이를 요인별 점수로 변환한다. 각 구절은 긍정, 중립/혼합, 부정 중 하나로 분류되며, 각각 +1, 0, -1의 값으로 점수화된다. 이후 특정 요인에 매핑된 전체 근거 구절을 기준으로 장소성 요인 점수를 산출하고, 해당 요인이 전체 장소성 근거 구절에서 차지하는 비율을 언급 비중으로 계산한다.
+3.2. 장소성 요인 정량화 알고리즘
+장소성 요인 매핑 모듈은 입력된 리뷰 텍스트에서 장소성 판단의 근거가 되는 표현을 식별하고, 이를 장소성 요인에 연결하는 역할을 한다. 이 모듈에서는 먼저 리뷰 데이터의 형식을 정리하고, 공간 경험과 관련성이 낮은 리뷰를 제외한다. 이후 정제된 리뷰를 문장 또는 구와 절 단위로 분리하여, 각 단위를 장소성 요인 매핑의 분석 단위로 설정한다. 분리된 리뷰 단위는 선행연구를 통해 도출한 3개 차원과 10개 세부 요인 체계에 따라 해당 장소성 요인에 매핑된다.
+본 연구에서는 GPT-4o-mini 모델을 활용하여 리뷰 문장 또는 구절과 장소성 요인 간의 의미적 관련성을 판단하였다. 이를 위해 모델에는 장소성 요인별 정의, 매핑 기준 키워드, 긍정 및 부정 리뷰 예시를 포함한 Instruction을 제공하였다. 예를 들어 창이 커서 개방감이 좋다 는 개방성과 관련된 근거 구절로, 주차가 불편했다 는 접근성과 관련된 부정 근거 구절로 매핑된다. 따라서 장소성 요인 매핑 모듈의 목적은 단순한 키워드 일치가 아니라, 리뷰 텍스트의 맥락을 바탕으로 장소성 요인과 관련된 근거 구절을 추출하는 데 있다.
+장소성 요인별 점수화 모듈은 매핑된 근거 구절의 평가 방향을 판단하고, 이를 요인별 점수로 변환한다. 각 근거 구절은 긍정, 중립/혼합, 부정 중 하나로 분류되며, 각각 +1, 0, -1의 구절별 점수로 환산된다. 특정 장소에서의 요인 점수는 해당 요인에 매핑된 전체 근거 구절 수 대비 긍정 구절 수와 부정 구절 수의 차이로 산출한다. 이에 따라 요인 점수는 -1에서 +1 사이의 값을 가지며, -1에 가까울수록 부정적 평가가 우세하고 +1에 가까울수록 긍정적 평가가 우세함을 의미한다.
+4.1. 데이터셋 구축
+실증 분석을 위해 공공데이터포털에서 제공하는 소상공인시장진흥공단 상가정보 데이터를 활용하여 서울시 내 커피전문점 및 제과점 관련 업종을 추출하였다. 이 중 행정구별 분포가 균형 있게 반영되도록 서울시 25개 자치구에서 각각 100개소씩, 총 2,500개소를 무작위 표본으로 선정하였다. 이후 Google Maps에서 장소별 리뷰를 수집하였으며, 리뷰가 존재하지 않는 장소를 제외한 1,786개소를 최종 분석 대상으로 설정하였다. 최종 수집된 리뷰는 총 34,671건이며, 장소별 최대 100개, 평균 약 19.3개의 리뷰가 포함되었다.
+4.2. 리뷰 데이터 활용 장소성 정량화 구현
+장소성 정량화 과정과 분석 결과를 검토하기 위해 Streamlit 기반의 데모를 구현하였다. 데모는 실제 리뷰에서 도출된 장소성 요인 매핑 결과, 매핑된 근거 구절의 평가 방향, 요인별 점수 계산 결과를 단계적으로 제시한다. 이를 통해 개별 리뷰 구절이 어떤 장소성 요인으로 해석되었는지, 그리고 해당 구절이 어떤 평가 방향으로 점수화되었는지를 확인할 수 있도록 하였다.
+본 연구는 공간 이용자가 작성한 리뷰 데이터를 활용하여 주관적이고 질적인 개념인 장소성을 정량화하는 접근 방법을 제안하였다. 이를 위해 선행연구를 바탕으로 장소성을 3개 차원과 10개 세부 요인으로 구조화하고, 리뷰 텍스트에서 장소성 요인과 관련된 근거 구절을 추출하였다. 이후 각 구절의 평가 방향을 긍정, 중립/혼합, 부정으로 판단하고, 이를 각각 +1, 0, -1의 값으로 변환하여 요인별 장소성 점수와 언급 비중을 산출하였다.
+글자크기 7pt, 줄간격 130%
+KoPubWorld돋움체_Pro Light
+
+===== Section1 =====
+
+
+===== Section2 =====
+References
+Relph, E. (1976). Place and placelessness. Pion.
+Tuan, Y. F. (1977). Space and place: The perspective of experience. University of Minnesota Press.
+Norberg-Schulz, C. (1971). Existence, space and architecture. Praeger.
+Lukermann, F. (1964). Geography as a formal intellectual discipline and the way in which it contributes to human knowledge. The Canadian Geographer, 8(4), 167 172.
+Trancik, R. (1986). Finding lost space: Theories of urban design. Van Nostrand Reinhold.
+Canter, David. (1977). The Psychology of Place.
+Oldenburg, R. (1989). The great good place: Caf s, coffee shops, community centers, beauty parlors, general stores, bars, hangouts, and how they get you through the day. Paragon House.
+Yoo, Y., & Lee, J.-K. (2025). Quantification and analysis methods of architectural styles using image-text AI models. Journal of the Architectural Institute of Korea, 41(5), 93 101.
+Na, H., Lee, D., & Lee, S. (2025). Analysis of placeness of major places in Seoul, Korea using text mining and large language models. Journal of Korea Planning Association, 60(5), 21 42.
+Lee, J., & Son, Y. (2021). Perception and appraisal of urban park users using text mining of Google Maps reviews: Cases of Seoul Forest, Boramae Park, and Olympic Park. Journal of the Korean Institute of Landscape Architecture, 49(4), 15 29.
+Hwang, H., Lee, J., & Son, Y. (2025). User perception and spatial attractiveness of Hangang parks using Google Maps reviews: Focused on Mangwon Hangang Park, Banpo Hangang Park, Yeouido Hangang Park, and Jamsil Hangang Park. Journal of the Korean Institute of Landscape Architecture, 53(3), 16 30.
+Sun, S., & Yu, Y. (2021). Dimension and formation of placeness of commercial public space in city center: A case study of Deji Plaza in Nanjing. Frontiers of Architectural Research, 10(2), 229 239.
+Lyu, H. (1996). A study on the embodiment factors of the sense of place in interior space focused on residential environment. Journal of the Korean Institute of Interior Design, (7), 56 63.
+Guo, F., Hwang, Y., & Lee, J. (2025). User perception analysis of museum spatial design based on place characteristics. Journal of the Korea Institute of Spatial Design, 20(5), 181 190.
+Hwang, Y., & Hwang, Y. (2025). A case study of culturally regenerated idle spaces applying the formative factors of placeness. Proceedings of the Korean Institute of Interior Design Conference, 27(1), 363 366.
+Choi, S., & Lee, K. (2023). A study on the user perception of the place of space expression. Journal of the Architectural Institute of Korea, 39(6), 3 14.
+Hong, S., Park, J., & Lim, S. (2011). Study on the definition and concept for sense of place. Journal of the Korea Landscape Council, 2011(1), 39 52.
+Kwon, Y., & Im, S. (2014). A Type Classification of Representative Places Sense of Place in Seoul through the Adjective Indexs for Measuring the Sense of Place. Journal of the Urban Design Institute of Korea Urban Design, 15(3), 135-150.
+Lee, Jihye and Kim Jihyun. (2025). A Study on Spatial Design Strategies for Large-Scale Cafes from the Perspective of Complex Cultural Spaces. Journal of Korea Intitute of Spatial Design, 20(8), 415-428.
+Waxman, L. (2006). The coffee shop: Social and physical factors influencing place attachment. Journal of Interior Design, 31(3), 35 53.
+Steele, F. (1981). The sense of place. CBI Publishing Company.
+Shamai, S. (1991). Sense of place: An empirical measurement. Geoforum, 22(3), 347 358. https://doi.org/10.1016/0016-7185(91)90017-K h
+Stedman, R. C. (2003). Is it really just a social construction? The contribution of the physical environment to sense of place. Society & Natural Resources, 16(8), 671 685. https://doi.org/10.1080/08941920309189 h
+Zhang, F., Zhou, B., Liu, L., Fung, H. H., Lin, H., & Ratti, C. (2018). Measuring human perceptions of a large-scale urban region using machine learning. Landscape and Urban Planning, 180, 148 160. https://doi.org/10.1016/j.landurbplan.2018.08.020 h
+Kwon, Y. K., Jeung, Y. H., & Im, S. B. (2011). A study on the structural equation modeling of Insa-dong street s sense of place. Journal of Korea Planning Association, 46(2), 139 151.
+Im, S. B., Jeong, Y. H., Hue, Y. S., Kwon, Y. K., Byeon, J.-S., & Choi, H. S. (2011). A study on the types of experiences related to sense of place in cities. Journal of the Korean Institute of Landscape Architecture, 39(6), 46 56.
+Gilardi, F., Alizadeh, M., & Kubli, M. (2023). ChatGPT outperforms crowd workers for text-annotation tasks. Proceedings of the National Academy of Sciences, 120(30), e2305016120. https://doi.org/10.1073/pnas.2305016120 h
+Pangakis, N., & Wolken, S. (2024). Knowledge distillation in automated annotation: Supervised text classification with LLM-generated training labels. Proceedings of the Sixth Workshop on Natural Language Processing and Computational Social Science. https://doi.org/10.48550/arXiv.2406.17633 h
+Wang, Z., Xie, Q., Feng, Y., Ding, Z., Yang, Z., & Xia, R. (2023). Is ChatGPT a good sentiment analyzer? A preliminary study. arXiv. https://doi.org/10.48550/arXiv.2304.04339 h
+소상공인시장진흥공단. (n.d.). 상권정보데이터[데이터셋]. 공공데이터포털. https://www.data.go.kr/data/15083033/fileData.do h
+[논문접수 : 0000. 00. 00]
+[1차 심사 : 0000. 00. 00]
+[2차 심사 : 0000. 00. 00]
+[게재확정 : 0000. 00. 00]
