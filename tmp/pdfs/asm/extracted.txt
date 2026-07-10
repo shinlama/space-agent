@@ -1,0 +1,1278 @@
+
+
+===== PAGE 1 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+Available online at www.sciencedirect.com
+ScienceDirect
+journal homepage: www.keaipublishing.com/foar
+RESEARCH ARTICLE
+Definition of the architectural style metric:
+An approach to quantitative analysis of
+design using language-image model
+Youngjin Yoo a , Seung Wan Hong b , Jin-Kook Lee a,*
+a Department of Interior Architecture and Built Environment, Yonsei University, Seoul, Republic of
+Korea
+b Department of Architecture, Inha University, Incheon, Republic of Korea
+Received 2 April 2025; received in revised form 29 July 2025; accepted 7 August 2025
+KEYWORDS Abstract This study proposes Architectural Style Metrics (ASM), a CLIP (Contrastive
+Architectural style Language-Image Pre-training)-based methodology for quantification of architectural design’s
+metrics; visual characteristics. To address the subjectivity and inefficiency of traditional architectural
+Quantitative analysis; design analysis methods, ASM quantifies four visual features―curvature, saturation, transpar-
+Language-image ency, and symmetry―by their relative positions between opposing states, generating compre-
+model; hensive metrics including means, standard deviations, and feature outliers. The effectiveness
+Fa¸cade design; of the methodology was validated through single/multi-image quantification and clustering
+Visual features analysis. The quantification consistently reflected perceptual visual characteristics, while clus-
+tering―based on a quantitative database of approximately 9000 images constructed in this
+study―yielded meaningful groupings with an average silhouette score above 0.5. The study
+further explores potential applications through the demonstration of ASM-based evaluation ap-
+proaches for systematic analysis of architectural designs, among which classification achieved
+an accuracy of 87.2%. ASM offers interpretable and objective results without additional
+training or strict image constraints, enabling broad applicability. These results demonstrate
+ASM’s potential as a consistent and scalable methodology for data-driven design analysis.
+ª 2025 The Authors. Publishing services by Elsevier B.V. on behalf of KeAi Communications Co.
+Ltd. This is an open access article under the CC BY license (http://creativecommons.org/
+licenses/by/4.0/).
+* Corresponding author.
+E-mail address: leejinkook@yonsei.ac.kr (J.-K. Lee).
+Peer review under the responsibility of Southeast University.
+https://doi.org/10.1016/j.foar.2025.08.002
+2095-2635/ª 2025 The Authors. Publishing services by Elsevier B.V. on behalf of KeAi Communications Co. Ltd. This is an open access article
+under the CC BY license (http://creativecommons.org/licenses/by/4.0/).
+
+===== PAGE 2 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+1. Introduction experimental validation through quantitative analysis and
+classification (Section 5). Section 6 concludes with a dis-
+Architectural design style serves as a mode of expression cussion of the framework’s potential and limitations.
+for the aesthetic ideals and cultural narratives of specific
+periods and societies (Chan, 1992). Scholars study the 2. Literature review
+change, formation, and history of style to trace relation-
+ships among works and understand their cultural and his- 2.1. Conventional approaches to architectural style
+torical contexts (Schapiro, 1961). Such research typically
+analysis
+begins with visual observation of as building
+elements―form, spatial composition, and material
+Architectural design style analysis has traditionally relied
+use―which collectively define the stylistic composition of a
+on descriptive and qualitative approaches, analyzing visual
+work (Bafna, 2008; Krause, 2001). Then these stylistic el-
+characteristics through buildings, photographs, drawings,
+ements are interpreted through lenses shaped by individual
+and 3D models (Groat and Wang, 2013). These approaches
+perception and disciplinary perspectives (Frampton, 1995;
+interpret architectural features based on researchers’
+Giedion, 2009), which naturally leads to diverse un-
+expertise, contributing to the understanding of architec-
+derstandings and interpretations even of the same work.
+ture’s complex nature (Venturi, 1966). They have been
+While such observation- and interpretation-based qualita-
+widely applied to distinguish and analyze various architec-
+tive studies enrich stylistic discourse, their selective
+tural styles.
+emphasis on features and evaluative criteria often makes
+Using this approach, numerous research studies and
+their findings difficult to synthesize or compare across
+theoretical works (Calloway and Cromley, 1996; Fletcher
+different works, limiting their reuse in broader comparative
+and Polley, 2020; Hopkins, 2014) have analyzed and classi-
+analyses (Jahanian, 2016; Nasar, 1994; Rho et al., 2020).
+fied architectural styles by region, period, and movement.
+Against this backdrop, the escalating complexity and
+For example, Calloway and Cromley (1996) established
+variety of contemporary architectural production under-
+style-distinction criteria by analyzing architectural ele-
+score the value of objective, quantifiable analysis methods
+ments such as doors, windows, walls, ceilings, floors, and
+(Groat and Wang, 2013; Fross et al., 2015; Shin and Lee,
+lighting. They describe British Victorian style doors as
+2019). Previous efforts to classify architectural styles
+“Front doors are panelled and sometimes arched in the
+quantitatively have demonstrated potential (Demir et al.,
+gothic style. They were often green or woodgrained”
+2021; Yoshimura et al., 2019). However, the techniques
+(Calloway and Cromley, 1996, p. 236), illustrating how
+employed often require extensive task-specific training,
+styles are identified through observable features including
+which makes them heavily dependent on dataset-specific
+form, materials, color, and arrangement.
+conditions and limits their broader applicability (Queiro´s
+However, these human-driven approaches extend
+et al., 2017; Lee and Han, 2023). Recent advances in
+beyond fixed visual features, as they are shaped by per-
+computer vision and multimodal AI have begun to mitigate
+ceptions formed through experience, cultural context, and
+these constraints by moving beyond single-modal models. In
+aesthetic frames―sensory impressions and personal or
+this context, language-image models leverage pre-trained
+collective notions of what feels appealing―which in-
+knowledge and flexible frameworks, offering potential for
+troduces subjectivity (Frampton, 1995; Norberg-Schulz,
+more comprehensive analysis that can more effectively
+1980). From a phenomenological perspective, architecture
+distinguish visual characteristics (Radford et al., 2021; Yang
+is perceived through changing sensory and environmental
+et al., 2023).
+conditions, so that even the same building may be experi-
+Building on these needs and opportunities, this study
+enced differently depending on time, circumstance, or the
+proposes Architectural Style Metrics (ASM), a set of quan-
+observer (Rasmussen, 1964; Zumthor, 2006). From a semi-
+titative indicators designed to capture the visual charac-
+otic perspective, architectural forms are understood within
+teristics of architectural design style. The purpose of this
+cultural and social codes, with their meanings interpreted
+study is to provide a consistent foundation for analyzing
+differently according to the observer’s cultural background
+and comparing stylistic tendencies in architecture,
+(Eco, 1986). Filtered through these experiential and cul-
+enabling scalable and comparative analyses across diverse
+tural lenses, such an approach can yield divergent in-
+datasets and design contexts. To validate ASM, the research
+terpretations even of identical visual characteristics,
+focuses on building exteriors as observed in visual mate-
+making style analysis inherently subjective.
+rials, examining works of internationally renowned archi-
+In addition to this perceptual and interpretive subjec-
+tects to demonstrate how the proposed metrics can support
+tivity, the conventional analysis approach is time-intensive
+broader applications in style analysis and comparative
+and requires extensive expertise (Queiro´s et al., 2017). In
+architectural studies.
+architectural research, analytical criteria and metrics have
+To this end, the research proceeds as follows: (1) theo-
+often been devised for individual studies, tailored to spe-
+retical investigation through literature review on existing AI
+cific objectives and datasets. While this enables each study
+and architectural style analysis methods (Section 2); (2)
+to address its scope effectively, the absence of shared
+identification of key visual features from architectural
+standards has resulted in fragmented and localized in-
+theory and development of the ASM conceptual framework
+vestigations, making it difficult to compare findings across
+based on these features (Section 3); (3) development
+studies or build cumulative knowledge bases (Chan, 1992;
+of a quantification algorithm and its implementation
+Groat and Wang, 2013; Grierson and Moultrie, 2011).
+through the Language-Image model (Section 4); and (4)
+These limitations indicate the need for standardized
+807
+
+===== PAGE 3 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+analytical methods capable of supporting large-scale, 2015; Krizhevsky et al., 2012). While effective for basic
+consistent style analysis, particularly as architectural pro- image classification and object detection, these ap-
+duction continues to expand in the digital age (Lee et al., proaches were limited in understanding semantic relation-
+2024; Qian et al., 2023; Yang and Qian, 2025; Zhao et al., ships between different types of data.
+2024). The development of multimodal AI models marked a
+significant advancement in data processing capabilities
+2.2. Early AI-based approaches to quantitative style (Ngiam et al., 2011). CLIP (Contrastive Language-Image
+analysis Pre-training) represented a key innovation by mapping
+text and images into a shared embedding space using large-
+Quantitative analysis of architectural design styles trans-
+scale datasets (Radford et al., 2021), improving upon
+forms visual characteristics into measurable data, aiming to
+earlier models, such as DeViSE, VSE, and Show and Tell,
+ensure objectivity, consistency, and comparability (Groat
+that processed different data types separately (Frome
+and Wang, 2013). Accordingly, quantitative methods have
+et al., 2013; Karpathy and Fei-Fei, 2015).
+been explored in architectural style research to comple-
+Advances in language models and the Transformer ar-
+ment qualitative approaches. Early quantitative analysis
+chitecture (Brown et al., 2020; Vaswani et al., 2017) further
+originated with Birkhoff’s (1933) research, which attemp-
+enhanced these capabilities, leading to sophisticated
+ted to quantify aesthetic value through mathematical for-
+multimodal systems that combine visual and textual pro-
+mulas based on the ratio between order and complexity.
+cessing (DeepSeek-AI et al., 2025; Google et al., 2023; Wu
+Subsequently, Chan (1994) defined architectural design
+et al., 2024; Yang et al., 2023). These developments pro-
+style as a set of characteristics and explored their
+vide new tools for analyzing relationships between visual
+measurability. His research decomposed architectural vi-
+characteristics and qualitative descriptions in architectural
+sual characteristics into multiple variables and analyzed
+design. These advancements in multimodal AI technology
+both the minimum number of features required to recog-
+offer new approaches to quantitative analysis (Jia et al.,
+nize a style and each feature’s influence on style recogni-
+2021; Ramesh et al., 2022), enabling systematic analysis
+tion. The study extracted and statistically analyzed visual
+of design aspects traditionally investigated through quali-
+features from representative buildings of renowned archi-
+tative methods. However, research applying these tech-
+tects to quantify patterns between styles. These early
+niques to quantitative style analysis remains scarce, as
+quantitative analyses were limited by manual data analysis
+most current studies focus on captioning and image gen-
+processes and application scope.
+eration (Crowson et al., 2022; Hong et al., 2024; Yoo and
+The emergence of CNN models introduced new ap-
+Lee, 2025).
+proaches to architectural style analysis. Yoshimura et al.
+(2019) developed methods for classifying interior spaces
+2.4. Directions for advancing architectural style
+and building facade images by learning styles of 34 archi- analysis
+tects, while Kim and Lee (2020) created a spatial image
+classification system through learning interior design styles. Existing studies on architectural style analysis―ranging
+Demir et al. (2021) detected visual design principles in from human-driven approaches to CNN-based approach-
+artworks and architecture using deep convolutional neural es―face persistent limitations. Human-driven approaches
+networks. rely on subjective interpretation, while CNN-based
+However, CNN’s black-box nature makes identification of methods, though numerical, function as opaque systems
+decision-making criteria in the classification process un- dependent on task-specific training sets and predefined
+clear (Lee and Han, 2023). While previous studies estab- labels. As a result, these approaches struggle to deliver
+lished style classification criteria by detailing specific stylistic analyses that are objectively measurable, inter-
+features of target features (Kim and Lee, 2020; Yoshimura pretable, and scalable, particularly when applied to large
+et al., 2019), their application in CNN models remains or diverse architectural datasets.
+challenging as training labels are limited to comprehensive Accordingly, there is a need for a framework that:
+categories like style names. CNN-based analysis is also
+constrained to analyzing learned data (Krizhevsky et al., 1) quantifies perceivable visual attributes as reproducible
+2012), limiting its application to broader architectural measures to enable objective and consistent analysis;
+design analysis. These limitations indicate the potential for 2) delivers results that are interpretable and can be
+alternative approaches in architectural design analysis transparently understood rather than treated as opaque
+using multimodal AI technologies. outputs;
+3) remains applicable across varied datasets, stylistic var-
+2.3. Advancements of AI technologies in computer iations, and evolving contexts without being constrained
+vision by fixed categories or rigid data requirements.
+AI technology in computer vision has evolved from single- The following sections present Architectural Style Met-
+modal to multimodal approaches. Early AI models focused rics (ASM), a metric for quantifying stylistic attributes,
+on single-modal processing, where CNN architectures derived through a multimodal quantification framework to
+enabled visual pattern recognition through hierarchical enable scalable and interpretable analysis of architectural
+feature extraction via convolutional layers (LeCun et al., styles.
+808
+
+===== PAGE 4 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+3. Conceptual modeling for quantification of designs without limitation to specific styles. These features
+architectural styles were identified from architectural design style analysis
+literature, as shown in Table 1 (Calloway and Cromley,
+1996; Fletcher and Polley, 2020; Hopkins, 2014).
+3.1. Architectural style features for quantification
+Chan (1994) suggested that a style may be defined when
+four or more visual traits recur consistently. Building on this
+This section identifies design style components in archi-
+premise, this study focuses on four primary features dis-
+tectural analysis and determines features for quantitative
+cussed in architectural literature―curvature, color satu-
+analysis. For this purpose, the research investigates exist-
+ration, transparency, and symmetry―as a demonstrative
+ing visual analysis structures and establishes quantification
+scope for validating the proposed quantification approach.
+criteria, focusing on design styles observable in visual
+While forming the basis of this initial implementation, this
+materials.
+selection is not intended as a comprehensive definition of
+DS � fvf
+i
+jvf
+i
+is a visual feature g; ð1Þ architectural style. These features are chosen because they
+(1) are widely referenced in descriptive analyses of style,
+DS � fCurvature; Color Saturation; Transparency; (2) are immediately perceivable in visual observation, and
+ð2Þ
+Symmetry; …g: (3) exhibit clear semantic polarity, making them well-suited
+for contrastive prompt-based quantification (Arnheim,
+Ackerman (1963), Schapiro (1961), and Smithies (1981) 1974; Calloway and Cromley, 1996; Ching, 2007; Hopkins,
+defined style as an ensemble of distinguishable features. 2014; Rasmussen, 1964). Other visual features―such as
+Following this definition, design style (DS) comprises visu- proportion, repetition, complexity, texture, and pat-
+ally perceivable features (vf
+i
+) such as form, color, materials tern―are excluded at this stage due to their sensitivity to
+(Eqs. (1) and (2)) where their combinations form distinctive image conditions and their tendency to span multiple styles
+characteristics. Unwin (2009) and Forty (2004) argued that without providing clear distinctions. The framework is
+in actual architectural analysis, these element combina- inherently extensible, and additional or alternative fea-
+tions can systematically explain and understand buildings’ tures can be integrated in future applications once vali-
+unique visual characteristics. This approach provides a dated for definition and computational stability.
+useful framework for analyzing architectural complexity The four selected features can be further categorized
+systematically (Calloway and Cromley, 1996). Based on this into form-related and surface-related attributes, each
+approach, this study develops a quantification method by playing a distinct role in stylistic perception. Form-related
+decomposing architectural design style into measurable features include curvature and symmetry. Curvature refers
+features. to the degree to which lines and surfaces forming a build-
+Style features include “physical form, pattern, or spe- ing’s exterior form are curved or linear (Ching, 2007). His-
+cific distinguishable characteristics of design” (Chan, 1994). torically, curvature has marked key stylistic shifts, from the
+This study focuses on basic features found universally in dynamic, flowing forms of Baroque and Rococo to the
+architectural designs and expressible in degrees of differ- organic geometries of modernism, reflecting departures
+ence, rather than complex design features like “Extended from rectilinear conventions (Ackerman, 1963; Jencks,
+cantilever.” This allows application of uniform evaluation 2002; Schapiro, 1961). Symmetry, denoting the degree of
+criteria across all designs and efficient analysis of various formal balance around a central axis (Wittkower, 1988), has
+Table 1 Common visual features observed in Architectural Style Analysis.
+Features Definition Description
+Curvature The degree to which a building’s exterior exhibits Curvilinear, rectilinear, organic, geometric, etc.
+curved or linear characteristics
+Symmetry The degree of symmetrical arrangement or balance in Symmetric, asymmetric, balanced, dynamic, etc.
+the building’s structure
+Proportion The relative size and relationship between vertical Horizontal, vertical, etc.
+and horizontal elements of the building
+Repetition The degree of regular repetition or irregular Modular, irregular, rhythmic, varied, etc.
+arrangement of architectural elements
+Complexity The degree of complexity or simplicity in the Abstracted, complex, minimal, ornate, etc.
+architectural form
+Transparency The degree of light transmission in architectural Transparent, opaque, translucent, etc.
+materials and visual connection
+Color The intensity and saturation of color use in the Chromatic, achromatic, vibrant, muted, etc.
+building’s exterior
+Texture The tactile and visual characteristics of the building’s Rough, smooth, tactile, polished, etc.
+surface
+Pattern The arrangement and decorative use of architectural Monolith, patterned, tessellated, layered, etc.
+materials
+809
+
+===== PAGE 5 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+long been tied to theories of order and proportion, partic- deviation (σ) reveals how much these different features’
+ularly in Classical and Renaissance traditions, while scores vary from this average, with larger values indicating
+continuing to serve as a reference point for visual stability greater variation between features within the design. fo
+�
+despite the rise of asymmetry in contemporary design then marks features that lie notably above or below the
+(Ackerman, 1963; Venturi, 1966). design’s average scores, allowing comparison of relative
+Surface-related features comprise color saturation and presence between different features.
+transparency. Color saturation, measuring the purity and
+intensity of hues on a building’s exterior (McLachlan and
+ASM � ½ μðvfs
+i
+Þ � σðvfs
+i
+Þ j þ fo
+þ
+; � fo
+�
+�: ð6Þ
+McLachlan, 2014), often reflects material expression and
+For example, when considering features like curvature
+visual identity, from the vivid ceramic cladding of post-
+and color saturation, a high mean indicates that features
+modern fa¸cades to the muted, monochromatic palettes
+generally show high values―meaning the design tends to-
+common in minimalist architecture (Porter and Mikellides,
+ward defined states such as being both curvilinear and
+2008). Transparency, referring to light transmission
+highly saturated. A high standard deviation would suggest
+through building envelopes (Frampton, 1995), has played a
+significant differences between feature values, such as
+defining role in modern and contemporary architecture,
+when a curvilinear design shows relatively low color satu-
+where extensive glazing and lightweight materials are used
+ration, or vice versa. In terms of feature outliers, if cur-
+to reveal structure and visually dissolve the boundary be-
+tween interior and exterior (Rowe and Slutzky, 1963).
+vature is marked as fo
+þ
+, this reveals that the design is
+distinctly more curvilinear compared to its other charac-
+These four features have been repeatedly employed across
+periods and by different architects as recognizable visual
+teristics, while if marked as fo
+�
+, it indicates a notably
+rectilinear nature. When no feature outliers are present, it
+signatures, making them effective axes for distinguishing
+suggests that all features maintain similar levels of pres-
+stylistic tendencies in this study.
+ence in the design. Through these measures, ASM summa-
+rizes the overall stylistic profile in a consistent format,
+3.2. Conceptual modeling of Architectural Style
+regardless of the number of features considered.
+Metrics
+While ASM provides a basis for objective evaluation as an
+indicator of a design’s visual properties, it does not assess
+The Architectural Style Metric (ASM) proposed in this study design quality or appropriateness. The metric solely quan-
+is a quantitative indicator that represents the visual aspects tifies the extent to which certain visual characteristics are
+of architectural design style. This metric aims to transform present; additional criteria are required to determine
+complex design visual features into objective and measur- whether these characteristics are desirable within a spe-
+able forms and quantify building’s design style. By quanti- cific context. For example, a high presence of curvature
+fying various visual features (vf i ) composing architectural merely indicates that the design has more curved proper-
+design style independently, ASM provides a comprehensive ties, not that it is superior design. ASM’s primary value lies
+framework for understanding design characteristics. in relative comparison between designs, where designs with
+ASM is formally defined as a quantitative indicator of DS: significantly different ASM profiles likely possess very
+different visual characteristics.
+ScoreðDSÞ � fvfs
+i
+jvfs
+i
+is a visual feature scoreg; ð3Þ
+Metric ðScoreðDSÞÞ � ASM: ð4Þ
+3.3. Extension of Architectural Style Metrics for
+multiple image analysis
+Each visual feature score (vfs
+i
+) transforms qualitative
+characteristics into measurable values by determining their While ASM can be applied to single architectural images,
+relative position between opposing extreme states. For style is rarely defined by a single instance. As Ackerman
+example, curvature is measured on a spectrum between (1963) noted, multiple works from specific periods, re-
+completely curvilinear and completely rectilinear states, gions, or individual designers often share recurring visual
+with higher scores indicating closer alignment with the patterns within acceptable ranges, which together form the
+defined state (Eq. (5)). This approach allows for nuanced distinctive identity of a style. Capturing these patterns
+understanding of how different features contribute to the requires extending the ASM framework beyond isolated
+overall design style. images to encompass image sets that represent a project or
+8 architect. This section formalizes the extension of ASM to
+<1; if the feature is in its fully defined state; multiple image scenarios and defines methods for aggre-
+vfs i � : 0; if the feature is in its fully opposite state; gating and analyzing stylistic consistency and variation
+x; if the feature is in a partial state; where 0 < x < 1: across related designs.
+ð5Þ In this extended formulation, architectural style is rep-
+resented not by a single image but by a set of K images
+ASM is derived from vfs
+i
+, expressing their statistical (DS multi ) that collectively interpreted as a stylistic type. For
+distribution (μ, σ) and identifying feature outliers (fo
+�
+) that each image, indexed by k˛f1; 2; …; Kg, the same visual
+significantly differ from the average properties (Eq. (6)). features (vf
+i
+) are quantified, resulting in a set of individual
+The mean value (μ) indicates the overall state of all feature feature scores (vfsðkÞ ). These individual scores are averaged
+i
+values, with higher means suggesting stronger alignment across all images to produce representative feature scores
+with defined states across different features. The standard (vfsðkÞ ) for the style:
+i
+810
+
+===== PAGE 6 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+� � �� n �
+Mean Score DS multi � vfsðkÞ � �vfs ðkÞ is the representative 4. Development of Architectural Style Metrics
+o
+i i
+vfsð i kÞ across all DS ðkÞ : 4.1. Algorithm structure of Architectural Style
+ð7Þ Metrics
+These representative feature scores capture the domi- The quantification framework for Architectural Style Met-
+nant characteristics of the style across multiple instances. rics (ASM) proceeds through three main stages―input,
+These scores are then used to compute a multiple image- quantification, and output―as shown in Fig. 1. Within the
+based ASM (ASM multi ), following the same statistical struc- Quantification stage, the process is further divided into
+ture as the single-image case: three computational steps: Score, Aggregate, and Metric.
+The input consists of an architectural fa¸cade image (DS)
+h � � � � i and a set of textual prompts representing opposing visual
+ASM multi � μ vfsð i kÞ � σ vfsð i kÞ j þ fo þ ; � fo � : ð8Þ states (vs i , ∼vs i ) for each feature (vf i ). These prompts
+remain fixed across all evaluations to ensure semantic
+consistency. Image inputs include photographs, rendering,
+In this structure, μ denotes the overall stylistic tendency, σ or drawings of fa¸cades, with optional preprocessing (e.g.,
+measures the internal contrast between features, and the cropping, color correction) applied when necessary to
+e
+fe
+s
+a
+p
+t
+e
+u
+c
+r
+i
+e
+a ll
+o
+y
+u
+e
+t
+m
+lie
+p
+r
+h
+s
+a s
+(
+i
+f
+z
+o
+e
+þ
+d
+;
+o
+f
+r
+o
+�
+s u
+)
+p
+h
+p
+i
+r
+g
+e
+h
+s
+l
+s
+i
+e
+gh
+d
+t
+w
+a
+it
+t
+h
+tr
+in
+ib
+t
+u
+h
+t
+e
+e s
+s t
+t
+y
+h
+le
+a
+.
+t are pre
+I
+s
+n
+e r
+S
+v
+c
+e
+o r
+v
+e
+is u
+s
+a
+te
+l
+p
+c
+,
+l a
+t
+r
+h
+it
+e
+y .
+inputs are processed by Language-
+Beyond the ASM multi , the system also evaluates intra- Image model―specially, CLIP (Contrastive Language-
+style variability by measuring how much each visual Image Pretraining; Radford et al., 2021)―in order to pro-
+feature fluctuates across the K images: duce feature scores (vfs i ). CLIP is selected for its (1)
+computationally reproducible output under identical input
+� � n � �� � � conditions, a property critical for ensuring consistent and
+Variability DS multi � σ vfsðkÞ � �σ vfsðkÞ unbiased quantification across large-scale datasets, (2)
+i i
+o ð9Þ zero-shot capacity that allows for prompt-based analysis
+is the standard deviation of vfsðkÞ across all DS ðkÞ : without fine-tuning, and (3) high computational efficiency
+i
+and accessibility compared to heavier models such as BLIP
+Low variability indicates consistent feature presence (Li et al., 2022) or LLM-based models (OpenAI, 2023).
+across all instances, while high variability reflects variation Technically, the image (DSÞ is embedded by vision trans-
+within the style, potentially due to experimental design former, and each prompt (vs i ; ∼vs i ) by language transformer
+approaches or stylistic evolution. Through these measures, of CLIP in a shared vector space. The image vector (V DS ) is
+ASM multi provides a comprehensive framework for analyzing then compared with each prompt vector (V v si ; V ∼vsi ) using
+how architectural styles develop and sustain distinct char- cos ine similarity (Hessel et al., 2021) to compute alignment
+acteristics across related works. scores for opposing feature states (vss i ; ∼vss i ):
+Fig. 1 Quantification algorithm for architectural style metrics.
+811
+
+===== PAGE 7 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+vss � V DS · � V vsi �; ∼vss � V DS · � V ∼vs i � : ð10Þ (fo þ ; fo � ), and are marked with þ or � signs for intuitive
+i kV
+DS
+k�V
+vsi
+� i kV
+DS
+k�V
+∼vs i
+� understanding:
+These scores are then normalized using the Softmax fo
+þ
+� fvf
+i
+j vfs
+i
+> μðvfs
+i
+Þ þ σðvfs
+i
+Þg; ð12Þ
+function to produce a single feature score (vfs
+i
+), repre-
+senting the relative presence of the feature as a probabi- fo � � fvf i jvfs i < μðvfs i Þ � σðvfs i Þg: ð13Þ
+listic value scaled between 0 and 1:
+The resulting ASM and feature scores consistently yield
+vfs
+i
+�
+e vss i
+e
+þ
+v s
+e
+s i
+∼vss i
+: ð11Þ
+i
+a
+l
+d
+i
+b
+z
+e
+e
+le
+n
+d
+t i
+q
+c
+u
+a
+a
+f
+l
+o
+n
+v
+r
+t
+a
+it
+lu
+a
+e
+t
+s
+i
+y
+s
+v
+s
+e
+u
+t e
+n
+c
+m
+d
+o
+e
+a
+m
+r
+t
+p
+i
+t
+c
+a
+h
+r
+e
+is
+s
+o
+a
+a
+n
+n
+m
+.
+a l
+e
+T
+y s
+h
+c
+i
+e
+s
+o
+s
+n
+e
+d i
+o
+m
+ti
+f
+o
+e
+n
+tr
+s
+i
+,
+d
+c
+e
+s
+e
+s
+n
+i
+c
+g
+a
+a
+n
+b
+n
+l in
+b
+g
+e
+v i
+r
+s
+u
+e
+u
+t
+l
+a
+i
+i
+-
+-
+l
+This score (vfs
+i
+) quantifies the degree to which the characteristics, with graphical visualization enabling more
+image expresses the defined visual state (vs
+i
+) over its intuitive evaluation.
+opposite (∼vs
+i
+). The Score step thus encompasses both the
+semantic embedding process and the conversion of raw 4.2. Representation of Architectural Style Metrics
+similarities into normalized, comparable feature values
+suitable for statistical evaluation. Architectural Style Metrics (ASM) and feature scores (vfs
+i
+)
+In the Aggregate step, the system handles multiple can be visualized using any method that maps multiple
+image inputs (K > 1). In this case, each image is processed design features to independent axes, with parallel co-
+individually in the Score step, resulting in K sets of feature ordinates and radar charts being prominent examples
+scores. Then, in the Aggregate step, these feature scores (Fig. 3). Parallel coordinates provide an effective method
+are averaged per feature using the mean to derive repre- for visualizing multidimensional data on a 2D plane,
+sentative feature scores (vfsðkÞ ) and the standard deviation allowing simultaneous observation of relationships between
+i
+to measure variability (Fig. 2). For single image cases (K � multiple variables. While radar charts offer intuitive
+1), this step is naturally omitted and variability remains pattern recognition through radial arrangement of fea-
+undefined. tures, they may become less readable when displaying
+In the Metric step, representative feature scores are numerous features. Both methods effectively visualize the
+summarized into an ASM. The system first calculates the distribution and relationships of design characteristics,
+mean (μ) and standard deviation (σ) across all feature though the appropriate choice depends on data charac-
+scores. At this step, features could be weighted differently teristics and analysis objectives.
+to reflect their varying prominence in different architec- This study primarily employs parallel coordinates due to
+tural styles (Chan, 1994). However, as default, equal their flexibility in handling varying numbers of features. As
+weights are assigned to maintain consistent interpretation. shown in Fig. 3, this graph maps feature types to the hor-
+This approach provides consistent representation regard- izontal axis and feature value scales to the vertical axis,
+less of the number of features. Alternative methods―such with feature scores mapped and connected sequentially
+as octal or hexadecimal packaging (Salomon and Motta, along their respective axes. The connected feature scores
+2009)―may also achieve similar consistency, though they can be interpreted as the design’s unique “frequency,”
+are less intuitive for interpreting design characteristics. where similar line patterns indicate similar design charac-
+During this step, features that fall outside the mean dis- teristics. ASM’s mean and standard deviation are repre-
+tribution range (μ � σ) are also identified as feature outliers sented by solid and dashed lines in different colors, while
+Fig. 2 Representative feature score derivation process.
+812
+
+===== PAGE 8 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+Fig. 3 Examples of Representation Methods for Architectural Style Metrics. (a) Parallel coordinates; (b) radar chart.
+for multiple image-based ASM (ASM multi ), the variability of clarity. As summarized in Table 2, each visual featur-
+each feature within the DS multi is also visualized, enabling e―curvature, saturation, transparency, and symmetry―is
+intuitive understanding of style consistency. defined through a pair of opposing state prompts. These
+prompts were applied consistently across all images to
+5. Demonstration
+ensure uniform quantification.
+The Example 1 (Fig. 4(a)) exhibits rectilinear forms, low
+saturation, high transparency, and overall symmetry while
+5.1. Quantification of architectural style in a single the image in Example 2 (Fig. 4(c)) displays curvilinear
+design forms, low saturation, slightly lower transparency, and an
+asymmetric shape. The corresponding feature scores align
+This section demonstrates the application of Architectural closely with these perceptual attributes, demonstrating
+Style Metrics (ASM) to quantify design style in individual that ASM accurately captures distinct architectural char-
+buildings. Building on the previously developed framework, acteristics at the individual image level. Moreover, images
+a quantification system utilizing the ViT-L/32 CLIP model captured under nighttime conditions produced feature
+was implemented to derive feature scores and calculate scores comparable to those of daytime images (Fig. 4), as
+ASM scores. Text prompts were carefully constructed by the system contrasts visual content with textual meaning,
+extracting relevant keywords from architectural theory allowing the architectural attributes to remain consistently
+(Burden, 1995; Ching, 2007) and optimized for semantic interpreted even when lighting or environmental conditions
+Table 2 Feature state prompts for architectural style metrics calculation.
+Features (vf
+i
+) States (vs
+i
+) Definition Used textual prompt
+Curvature (vf
+1
+) Curvilinear (vs
+1
+) Architectural forms characterized by “A building with completely curvilinear
+continuous, flowing lines and surfaces forms, wavy shapes, rounded contours,
+that deviate from straight or angular …”
+geometries
+Rectilinear (∼vs
+1
+) Architectural composition based on “A building with completely rectilinear
+straight lines and right angles, forming shapes, linear design elements, straight
+regular geometric shapes lines, angular forms, …”
+Color saturation Chromatic (vs
+2
+) The use of vivid, intense colors in “A color photograph of a building in vivid
+(vf
+2
+) architecture. and highly saturated hues, …”
+Achromatic (∼vs
+2
+) The use of black, white, and grayscale in “A color photograph of a building in
+architectural design. grayscale tones, black, white, …”
+Transparency Transparent (vs
+3
+) The quality of architectural elements or “A see-through and transparent building
+(vf
+3
+) spaces that allows visual penetration, with a glazed fa¸cade, penetrable to
+often through punctual structures and light, …”
+transparent materials.
+Opaque (∼vs
+3
+) The quality of architectural elements or “A solid and opaque building with an
+spaces that obstruct vision and create enclosed structure, impenetrable to
+solid boundaries. light, …”
+Symmetry (vf
+4
+) Symmetric (vs
+4
+) The balanced distribution of equivalent “A building with perfect symmetry,
+forms and spaces across a central axis or precisely balanced and repeated on both
+around a center point. sides of a central axis, …”
+Asymmetric (∼vs
+4
+) The intentional imbalance or irregular “A building with asymmetrical design
+arrangement of architectural elements. and unbalanced structure, irregular
+shape and composition, …”
+813
+
+===== PAGE 9 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Fig. 4 Examples of architectural style metrics results. (a) Daytime view of example 1; (b) nighttime view of example 1; (c)
+daytime view of example 2; (d) nighttime view of example 2.
+change (Hentschel et al., 2022). This result indicates that annotated with corresponding feature scores and ASM
+the system can reliably interpret architectural features values (Fig. 5).
+across varying environments. Images used in this section were collected through
+To examine the generalizability, objectivity and consis- stratified sampling to ensure both stylistic diversity and
+tency of this system, further validation was conducted contextual coverage. Thirty architects―mostly Pritzker
+using two sets of images totaling 110 samples. These laureates―were selected based on professional standing,
+included feature modification sets, where individual fea- stylistic diversity, and the availability of documented
+tures of building images were systematically altered, and works. From architects’ official websites and curated online
+comparison sets of buildings photographed from similar image repositories, at least ten projects per architect were
+angles to enable comprehensive analysis. Results are pre- collected, with each project represented by a minimum of
+sented in Tables 3 and 4. The analysis revealed that while ten images (Fig. 6). Each image captures frontal, lateral, or
+modified features showed significant value changes, un- corner fa¸cades, documented from one- or two-point per-
+modified features maintained stability within �0.05 on the spectives under varied seasonal and lighting conditions,
+normalized scale. These findings confirm ASM’s utility as an ensuring a broad and representative coverage of visual
+objective metric for architectural style analysis across contexts. After collection, all images underwent filtering
+diverse visual conditions within defined parameters. and preprocessing: those with significant visual occlusion or
+excessive digital alterations―distorting the building’s
+5.2. Quantitative style definition from multiple original form or color―were excluded, while images with
+designs multiple buildings were cropped to isolate the primary
+structure. Finally, all curated images were manually
+This section examines whether consistent stylistic charac-
+labeled by corresponding project name for subsequent
+teristics can be quantitatively defined by applying the
+analysis. Statistically, this curated dataset maintains a
+Architectural Style Metrics (ASM) framework. For this, we
+balanced and near-normal distribution, with most archi-
+computed feature scores from 9601 images across 453
+tects represented by 12—18 projects and 250—400 images.
+projects by 30 architects using the proposed quantification
+Project-level feature scores were computed by aver-
+framework. These scores were aggregated at the project
+aging values from fa¸cade images. Figure 7 presents image-
+and architect level, resulting in a structured database
+level scores and the aggregated ASM for Frank Gehry’s Dr.
+814
+
+===== PAGE 10 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+Table 3 Feature modification test results.
+Case Input Image Output Graph Feature score set ASM
+vf vf vf vf μ σ fo fo
+1 2 3 4 þ �
+Original 0.14 0.06 0.67 0.83 0.43 0.33 vf vf
+4 2
+vf
+1
+modified 0.77 0.08 0.69 0.88 0.61 0.31 — vf
+2
+vf
+2
+modified 0.16 0.95 0.65 0.79 0.64 0.30 vf
+2
+vf
+1
+vf
+3
+modified 0.09 0.10 0.12 0.84 0.29 0.32 vf
+4
+—
+vf
+4
+modified 0.15 0.04 0.72 0.16 0.27 0.27 vf
+3
+—
+vf
+1
+� Curvature/vf
+2
+� Saturation/vf
+3
+� Transparency/vf
+4
+� Symmetry.
+Chau Chuk Wing Building. The project combines curved archiving and studying Luis Barraga´n’s work, notes that the
+brick fa¸cades with planar curtain walls―contrasting sharply “Construction differs from Barraga´n’s design” in reference
+in form, saturation, and transparency. These visual con- to Calvario Chapel.
+trasts are quantitatively captured: brick sections produce In contrast, SANAA’s work exhibits consistently low
+relatively higher saturation and curvature, while curtain saturation scores while featuring varying degrees of cur-
+walls yield high transparency and rectilinearity. And the vature and high transparency through glass curtain walls
+overall metrics are shaped by dominant features, moder- and translucent double-wall systems. Their stylistic evolu-
+ated by less frequent ones. This demonstrates how uniform tion is quantitatively captured in the ASM (Fig. 9), from the
+or heterogeneous fa¸cade compositions influence the rectilinear New Contemporary Art Museum (Project 9) to
+aggregated stylistic profile, supporting ASM’s ability to the organically curved Grace Farms (Project 11). Notably,
+capture nuanced stylistic identities within a single project. their acclaimed Serpentine Gallery Pavilion (Project 13)
+Architect-level scores were obtained by averaging demonstrates ASM scores closely aligned with their overall
+feature values across each architect’s projects. As shown in style average. These observations show that ASM allows the
+Fig. 8, Barraga´n’s work consistently demonstrates recti- identification of stylistic coherence or diversity across an
+linear forms, high color saturation, low transparency, and architect’s work―revealing consistent tendencies in some
+moderate symmetry, reflected in stable score distributions. and varied strategies in others.
+This consistency is particularly evident in the high satura- The ASM framework reliably captures stylistic consis-
+tion scores across most projects, exemplified by the vibrant tency and variation at both the project and architect
+colors in Gilardi House (Project 12) with only Calvario levels. It shows how repeated design strategies produce
+Chapel (Project 1) showing notably different features coherent stylistic profiles, while diverse elements
+through its predominantly white palette. Indeed, the contribute to measurable variation. These results support
+Barragan Foundation (1996), an institution dedicated to ASM as a valid basis for quantitative style analysis and
+815
+
+===== PAGE 11 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Table 4 Comparative analysis of similar-angle building samples.
+Case Input Image Output Graph Feature score set ASM
+vf vf vf vf μ σ fo fo
+1 2 3 4 þ �
+Difference F. Gehry 0.78 0.10 0.07 0.09 0.26 0.30 vf —
+1
+in vf
+1
+D. Libeskind 0.27 0.12 0.08 0.23 0.18 0.08 vf vf
+1 3
+Difference L. Barragan 0.02 1.00 0.08 0.09 0.30 0.41 vf —
+2
+in vf
+2
+A. Tadao 0.05 0.01 0.17 0.16 0.10 0.07 vf vf
+3 2
+Difference Van der rohe 0.11 0.17 0.71 0.74 0.43 0.29 vf vf
+4 1
+in vf
+3
+A. Aalto 0.04 0.20 0.18 0.60 0.26 0.21 vf vf
+4 1
+Difference Z. Hadid 0.94 0.19 0.36 0.33 0.46 0.29 vf —
+1
+in vf
+4
+O. Niemeyer 0.97 0.18 0.37 0.75 0.57 0.31 vf vf
+1 2
+vf
+1
+� Curvature/vf
+2
+� Saturation/vf
+3
+� Transparency/vf
+4
+� Symmetry.
+816
+
+===== PAGE 12 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+Fig. 5 Example of Images and Quantitative Database Structure. (a) Example of image data structure; (b) example of quantified
+database structure.
+Fig. 6 Distribution of projects and images per architect.
+classification. The method can also be extended to broader highlights ASM’s potential for scalable, consistent analysis
+groups―such as regional, historical, or cultural styles―by across large and diverse architectural datasets. By enabling
+aggregating fa¸cade image-based feature scores. For standardized style profiling, ASM provides a quantitative
+instance, Gothic buildings may show high transparency foundation for further analytical and design-oriented
+from stained glass, while Baroque examples may exhibit research, including comparative analysis, clustering, and
+stronger saturation due to ornamentation. This adaptability classification.
+817
+
+===== PAGE 13 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Fig. 7 ASM graph of Dr. Chau Chuck Wing Building.
+Fig. 8 Visualization of Luis Barraga´n’s architectural style metrics.
+Fig. 9 Visualization of SANAA’s architectural style metrics.
+5.3. Style classification through Architectural Style scales: detailed style classification within individual archi-
+Metrics-based clustering tects’ works (intra-architect) and style classification among
+different architects (inter-architect). The ASM data consist
+This section validates ASM’s potential for systematic and
+of normalized, continuous vectors that can be represented
+quantitative architectural style analysis through multi-scale as coordinates in a multidimensional space. This structure
+cluster analysis. Using the previously established ASM allows clustering using Euclidean distance and summarizing
+database, clustering analyses were performed at two
+each cluster through centroids, which aligns with the
+818
+
+===== PAGE 14 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+operation of K-means. Based on this, K-means clustering showing high consistency with qualitative classifications by
+was applied for the analysis, and the optimal number of architectural theorists. Simultaneously, silhouette scores
+clusters (k) was determined through silhouette analysis computed from the actual clustering results (Fig. 13)
+prior to clustering. further supported this validity. The average silhouette
+Examining SANAA’s works as a case study of intra- scores for the two analyses were 0.56 (intra-architect
+architect analysis, silhouette analysis indicated three analysis) and 0.54 (inter-architect analysis), indicating that
+optimal clusters (Fig. 10(a)). K-means clustering results data within each cluster shared coherent visual character-
+(Fig. 11) classified SANAA’s works into three distinct groups: istics, while data across clusters were distinct. These
+relatively opaque and rectilinear facades (cluster 9), findings suggest ASM’s effectiveness as a tool for systematic
+transparent and curvilinear facades (cluster 1), and trans- and objective architectural style analysis, offering various
+parent and rectilinear facades (cluster 2). This classifica- applications from analyzing new architectural works to
+tion aligns with the study by Martinez and Ramos (2022), identifying relationships with existing architectural styles.
+which similarly identified distinct groupings based on the
+combination of transparency and curvature, quantitatively 5.4. Future applications of Architectural Style
+demonstrating these as key features of their architectural Metrics
+expression.
+For the inter-architect analysis of thirty architects’
+This section demonstrates the potential of Architectural
+styles, silhouette analysis yielded nine optimal clusters
+Style Metrics (ASM) as a tool for quantitative design evalu-
+(Fig. 10(b)). K-means clustering results (Fig. 12) grouped
+ation. Two primary applications are explored: style classi-
+architects with visually similar characteristics together
+fication through database comparison and comparative
+(Curtis, 1996; Trachtenberg and Hyman, 1986), such as
+analysis of multiple designs against specified criteria.
+minimalist designers Richard Meier and SANAA (cluster 0),
+The first application enables style classification by
+organic form practitioners Zaha Hadid and Frank Gehry
+comparing an input image’s ASM with a pre-established ASM
+(cluster 4), and high-saturation rectilinear designers Luis
+database. The system identifies the most similar style by
+Barraga´n and Aldo Rossi (cluster 6).
+measuring feature similarity scores, with additional
+The clustering analysis results demonstrate ASM’s capa-
+consideration of whether the input image’s ASM falls within
+bility to consistently and objectively capture unique fea-
+the style’s variability range. Figure 14 illustrates result of
+tures of architectural styles. The system successfully
+the evaluation through parallel coordinates, where the blue
+quantified both style evolution within individual architects’
+line represents the input image’s ASM against the gray lines
+works and stylistic similarities among different architects,
+Fig. 10 Silhouette Analysis for Determining Optimal Cluster Numbers. (a) SANAA’s projects styles; (b) Renown architect styles.
+Fig. 11 K-means clustering analysis of SANAA’s project styles (k � 3).
+819
+
+===== PAGE 15 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Fig. 12 Example of K-means clustering results for renown architects’ styles (k � 9).
+Fig. 13 Silhouette Analysis for Validating Clustering Results. (a) SANAA’s projects styles (k � 3); (b) Renown architect styles
+(k � 9).
+showing the ASM and consistency of the most similar ar- are presented through parallel coordinates visualization,
+chitect’s style. where gray lines represent the reference ASM’s feature
+The second application enables quantitative ranking of scores and variability.
+multiple architectural images according to specified visual Validation was conducted using 10 test sets, each con-
+criteria. The system derives ASM scores simultaneously for taining 30 images (one per architect). The first application
+all images and ranks them based on their similarity to either (style classification) required an average of 20 s to analyze
+a database-sourced ASM or user-defined criteria. Results each individual image, and the second application (ranking)
+820
+
+===== PAGE 16 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+Fig. 14 Example of architectural style metrics-based design analysis and classification.
+completed analysis of entire 30-image sets in 1—2 min and interpretable basis for architectural style studies,
+each. The system achieved 87.2% accuracy in the first extending beyond the scope of the present demonstrations.
+application. For the second application, images were
+evaluated against specific style criteria, with the original
+architect’s works consistently achieving the highest rank-
+6. Discussions and conclusions
+ings. The top-ranked results predominantly featured works
+from architects previously identified within similar style This research developed Architectural Style Metrics (ASM),
+clusters, confirming alignment with prior architectural a methodology for the quantitative analysis of visual char-
+design clustering analyses (Fig. 15). acteristics in architectural design. Using multimodal AI,
+The demonstrated applications show ASM’s potential for specifically CLIP, ASM quantifies visual features along
+quantitative architectural design analysis. By enabling sys- defined axes and synthesizes them into metrics―means,
+tematic comparison with established styles and evaluation standard deviations, and feature outliers―that consis-
+against specific criteria, this framework provides objective tently represent stylistic tendencies. By aggregating mul-
+measures that complement traditional qualitative assess- tiple images, ASM captures both individual design
+ments. Building on this capability, ASM can support a wide tendencies and broader stylistic patterns.
+range of academic and practical uses, including heritage Building on these capabilities, the framework provides a
+assessments through stylistic profiling, regulatory and computationally reproducible and scalable bases for style
+design reviews with quantifiable benchmarks, and urban analysis. The accompanying database of 9601 images vali-
+planning that requires large-scale comparative analysis of dates its use in profiling, clustering, and classification,
+building exteriors. These roles position ASM as a scalable achieving an average silhouette score above 0.5 and 87.2%
+821
+
+===== PAGE 17 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Fig. 15 Example of architectural style metrics-based design evaluation.
+classification accuracy. These results confirm ASM’s reli- models could help improve reliability. Finally, integration
+ability as a foundation for downstream tasks such as anal- with architectural design tools and workflows is essential
+ysis and classification. for practical deployment.
+In comparison to existing approaches, ASM addresses Beyond technical considerations, it is important to
+limitations in objectivity, scalability, and adaptability. acknowledge that quantification can oversimplify the
+Human-driven analyses remain rich in interpretive depth layered and context-dependent nature of architectural
+but require considerable time and subjective judgment style. When styles are reduced to numerical traits, there is
+(Queiro´s et al., 2017), while CNN-based methods (Demir a risk of distorting cultural or historical contexts, intro-
+et al., 2021) produce fast results but often depend on ducing biases from AI models and unbalanced datasets, or
+narrowly defined training data and categories. ASM, by encouraging misuse if stylistic scores are prioritized over
+contrast, requiring no task-specific retraining and operating interpretive analysis. Recognizing these risks highlights the
+through text prompts, generates consistent outputs across need for ASM to serve as a complementary frame-
+diverse datasets, serving as a supporting framework for work―enhancing scalability and consistency―while
+automated and consistent analysis where conventional remaining integrated with qualitative and theoretical ap-
+methods face constraints. proaches to preserve interpretive depth and contextual
+Nonetheless, several limitations define the framework’s understanding.
+current scope. First, it measures only four visual attrib- Despite these considerations, ASM offers substantial
+utes―curvature, saturation, transparency, and symme- academic and practical potential. Its standardized metrics
+try―which simplifies the multifaceted nature of and database enable reproducible analyses of stylistic
+architectural style; expanding the feature set would tendencies, supporting comparative studies, style libraries,
+enhance representational accuracy. Second, the current and investigations into how design approaches evolve
+focus on individual architects should be extended to his- across architects and periods. In practice, ASM can provide
+torical, cultural, and regional categories to assess gener- consistent, data-driven references for design evaluation,
+alizability. Third, standardized protocols for image regulatory review, and urban planning, while also informing
+acquisition and processing, together with large-scale heritage assessments and the curation of stylistic resources
+quantified databases, are required to stabilize feature for professional use.
+scores against contextual or photographic variations.
+Fourth, ASM relies on the CLIP model, which is sensitive to Data availability statements
+text prompts and may carry biases from its pre-training
+data, particularly for underrepresented forms, suggesting
+The first author (project PI) can provide most of the data
+that ongoing adoption of more advanced or domain-specific
+used in this study upon a reasonable request, as well as the
+822
+
+===== PAGE 18 =====
+Frontiers of Architectural Research 15 (2026) 806—824
+links in references and the technical resource section. Forty, A., 2004. Words and Buildings: a Vocabulary of Modern Ar-
+Additionally, the paper includes references to the archives chitecture. Thames & Hudson.
+provided by the project PI (leejinkook@yonsei.ac.kr). Frampton, K., 1995. Studies in Tectonic Culture: the Poetics of
+Construction in Nineteenth and Twentieth Century Architec-
+ture. The MIT Press.
+Declaration of competing interest
+Frome, A., Corrado, G.S., Shlens, J., Bengio, S., Dean, J.,
+Ranzato, M.A., Mikolov, T., 2013. Devise: a deep visual-
+The authors declare that they have no known competing semantic embedding model. Adv. Neural Inf. Process. Syst. 26.
+financial interests or personal relationships that could have Fross, K., Winnicka-Jasłowska, D., Gumin� ska, A., Masły, D.,
+appeared to influence the work reported in this paper.
+Sitek, M., 2015. Use of qualitative research in architectural
+design and evaluation of the built environment. Procedia
+Manuf. 3, 1625—1632.
+Acknowledgements Giedion, S., 2009. Space, Time and Architecture: the Growth of a
+New Tradition. Harvard University Press.
+Google, Anil, R., Borgeaud, S., Wu, Y., Alayrac, J.B., Yu, J., et al.,
+This work was supported by the Korea Agency for Infra-
+2023. Gemini: a family of highly capable multimodal models.
+structure Technology Advancement (KAIA) grant funded by
+arXiv preprint arXiv:2312.11805.
+the Ministry of Land, Infrastructure and Transport (Grant Grierson, D., Moultrie, C.M., 2011. Architectural Design Principles
+RS-2021-KA163269). This work was also supported by the and Processes for Sustainability: towards a Typology of Sus-
+Yonsei Quantum Computing Supporting Program (Grant tainable Building Design. Design Principles and Practices,
+2024-12-0259). pp. 623—634.
+Groat, L., Wang, D., 2013. Architectural Research Methods, second
+ed. John Wiley & Sons.
+References
+Hentschel, S., Kobs, K., Hotho, A., 2022. CLIP knows image aes-
+thetics. Frontiers in Artificial Intelligence 5, 976235.
+Ackerman, J.S., 1963. Style. In: Ackerman, J.S., Carpenter, R. Hessel, J., Holtzman, A., Forbes, M., Le Bras, R., Choi, Y., 2021.
+(Eds.), Art and Archaeology. Prentice-Hall, pp. 174—186. CLIPScore: a reference-free evaluation metric for image
+Arnheim, R., 1974. Art and Visual Perception: a Psychology of the captioning. ArXiv, abs/2104.08718.
+Creative Eye. University of California Press. Hong, C., Gochuico, Y.A., Shin, J., Ha, C., Marquez, L., Yoo, Y.,
+Bafna, S., 2008. How architectural drawings work―and what that Lee, J.K., 2024. Improving architect-specific building image
+implies for the role of representation in architecture. J. Ar- generation using reinforced data processing. October. In: 2024
+chitect. 13 (5), 535—564. IEEE MIT Undergraduate Research Technology Conference
+Barragan Foundation, 1996. List of Works. (URTC), pp. 1—5 (IEEE).
+Birkhoff, G., 1933. Aesthetic Measure. Harvard University Press. Hopkins, O., 2014. Architectural Styles: a Visual Guide. Laurence
+Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J.D., Kin Publishing.
+Dhariwal, P., Neelakantan, A., Amodei, D., 2020. Language Jahanian, A., 2016. Quantifying Aesthetics of Visual Design Applied
+models are few-shot learners. Adv. Neural Inf. Process. Syst. 33, to Automatic Design. Springer.
+1877—1901. Jencks, C., 2002. The New Paradigm in Architecture: the Language
+Burden, E., 1995. Elements of Architectural Design: a Visual of Post-modernism, first ed.s. Yale University Press.
+Resource. Van Nostrand Reinhold. Jia, C., Yang, Y., Xia, Y., Chen, Y.T., Parekh, Z., Pham, H., et al.,
+Calloway, S., Cromley, E., 1996. The Elements of Style: an Practical 2021. Scaling up visual and vision-language representation
+Encyclopedia of Interior Architectural Details from 1485 to the learning with noisy text supervision. July. In: International
+Present, Revised ed. Simon & Schuster, Inc. Conference on Machine Learning. PMLR, pp. 4904—4916.
+Ching, F.D.K., 2007. Architecture: Form, Space, and Order, third Karpathy, A., Fei-Fei, L., 2015. Deep visual-semantic alignments
+ed. John Wiley & Sons. for generating image descriptions. In: Proceedings of the IEEE
+Chan, C.S., 1992. Exploring individual style in design. Environ. Conference on Computer Vision and Pattern Recognition,
+Plann. Plann. Des. 19 (5), 503—523. pp. 3128—3137.
+Chan, C.S., 1994. Operational definitions of style. Environ. Plann. Kim, J., Lee, J.K., 2020. Stochastic detection of interior design
+Plann. Des. 21, 223—246. styles using a deep learning model for reference images. Appl.
+Crowson, K., Biderman, S., Kornis, D., Stander, D., Hallahan, E., Sci. 10 (20), 7299.
+Castricato, L., Raff, E., 2022. VQGAN-CLIP: open domain image Krause, C., 2001. Our visual landscape: managing the landscape
+generation and editing with natural language guidance. In: Eu- under special consideration of visual aspects. Landsc. Urban
+ropean Conference on Computer Vision. Springer Nature Plann. 54 (1—4), 239—254.
+Switzerland, Cham, pp. 88—105. Krizhevsky, A., Sutskever, I., Hinton, G.E., 2012. ImageNet classi-
+Curtis, W., 1996. Modern Architecture Since 1900, third ed.s. fication with deep convolutional neural networks. Adv. Neural
+Phaidon Press. Inf. Process. Syst. 25, 1097—1105.
+Deepseek-AI, Guo, D., Yang, D., Zhang, H., Song, J., Zhang, R., LeCun, Y., Bengio, Y., Hinton, G., 2015. Deep learning. Nature 521
+Xu, R., et al., 2025. Deepseek-r1: incentivizing reasoning (7553), 436—444.
+capability in llms via reinforcement learning. arXiv preprint Lee, J.K., Yoo, Y., Cha, S.H., 2024. Generative early architectural
+arXiv:2501.12948. visualizations: incorporating architect’s style-trained models. J.
+Demir, G., C¸ekmis‚, A., Yesilkaynak, V., Unal, G., 2021. Detecting Comput. Des. Eng. 11 (5), 40—59.
+visual design principles in art and architecture through deep Lee, S., Han, J., 2023. Analysis of architectural design style using
+convolutional neural networks. Autom. ConStruct. 130, 103826. CNN output layer values. J. Architect. Institute Korea 39 (3),
+Eco, U., 1986. Function and sign: semiotics of architecture. In: The 23—30.
+City and the Sign: an Introduction to Urban Semiotics. Columbia Li, J., Li, D., Xiong, C., Hoi, S., 2022. BLIP: bootstrapping language-
+University Press, pp. 55—86. image pre-training for unified vision-language understanding
+Fletcher, M., Polley, R., 2020. Architectural Styles: a Visual Guide. and generation. In: International Conference on Machine
+Princeton University Press. Learning. PMLR, pp. 12888—12900.
+823
+
+===== PAGE 19 =====
+Y. Yoo, S.W. Hong and J.-K. Lee
+Martinez, P., Ramos, F., 2022. Emerging patterns in the construc- Shin, J., Lee, J., 2019. Indoor walkability index: BIM-enabled
+tion of Sejima’s, Sanaa’s and Nishizawa’s domestic spaces, from approach to quantifying building circulation. Autom.
+1987 to 2010. Front. Architect. Res. 11 (3), 375—401. ConStruct. 106, 102845.
+McLachlan, F., McLachlan, E., 2014. Colour and contingency: the- Smithies, K.W., 1981. Principles of Design in Architecture. Van
+ory into practice. Archit. Theor. Rev. 19 (2), 243—258. Nostrand Reinhold.
+Nasar, J., 1994. Urban design aesthetics: the evaluative qualities of Trachtenberg, I., Hyman, M., 1986. Architecture: from Prehistory
+building exteriors. Environ. Behav. 26 (3), 377—401. to Post-modernism, first ed.s. H.N. Abrams.
+Ngiam, J., Khosla, A., Kim, M., Nam, J., Lee, H., Ng, A.Y., 2011. Unwin, S., 2009. Analysing Architecture, third ed.s. Routledge.
+Multimodal deep learning. In: Proceedings of the 28th Interna- Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L.,
+tional Conference on Machine Learning (ICML-11), pp. 689—696. Gomez, A.N., Kaiser, Ł., Polosukhin, I., 2017. Attention is all
+Norberg-Schulz, C., 1980. Genius Loci. Towards a Phenomenology you need. Adv. Neural Inf. Process. Syst. 30, 1—11.
+of Architecture. Rizzoli, New York. Venturi, R., 1966. Complexity and Contradiction in Architecture.
+OpenAI, 2023. Gpt-4 Technical Report. arXiv preprint arXiv: Doubleday & Company.
+2303.08774. Wittkower, R., 1988. Architectural Principles in the Age of Hu-
+Porter, T., Mikellides, B., 2008. Colour for Architecture Today, manism, fourth ed.s. Wiley.
+second ed.s. Taylor & Francis. Wu, Y., Hu, X., Fu, Z., Zhou, S., Li, J., 2024. GPT-4o: visual
+Qian, W., Yang, F., Mei, H., Li, H., 2023. Artificial intelligence- perception performance of multimodal large language models
+designer for high-rise building sketches with user preferences. in piglet activity understanding. arXiv preprint arXiv:
+Eng. Struct. 275, 115171. 2406.09781.
+Queiro´s, A., Faria, D., Almeida, F., 2017. Strengths and limitations Yang, F., Qian, W., 2025. Generative architectural design from
+of qualitative and quantitative research methods. Eur. J. Educ. textual prompts: enhancing high-rise building concepts for
+Stud. 3 (9), 369—389. assisting architects. Appl. Sci. 15 (6), 3000.
+Radford, A., Kim, J., Hallacy, C., Ramesh, A., Goh, A., Agarwal, S., Yang, Z., Li, L., Lin, K., Wang, J., Lin, C.C., Liu, Z., Wang, L., 2023.
+Sastry, G., Askell, A., Mishkin, P., Clark, J., Krueger, G., The dawn of lmms: preliminary explorations with gpt-4v (ision).
+Sutskever, I., 2021. Learning transferable visual models from arXiv preprint arXiv:2309.17421 9 (1), 1.
+natural language supervision. In: International Conference on Yoo, Y., Lee, J., 2025. Development of an automated building
+Machine Learning. PmLR, pp. 8748—8763. visualization tool based on a fine-tuned model using LLM-
+Ramesh, A., Dhariwal, P., Nichol, A., Chu, C., Chen, M., 2022. Hi- Reinforced data. J. Korea Institute Spatial Des. 20 (1), 115—126.
+erarchical text-conditional image generation with clip latents. Yoshimura, Y., Cai, B., Wang, Z., Ratti, C., 2019. Deep learning
+arXiv preprint arXiv:2204.06125 1 (2), 3. architect: classification for architectural design through the eye
+Rasmussen, S.E., 1964. Experiencing Architecture. MIT Press. of artificial intelligence. In: Geertman, S., Zhan, Q., Allan, A.,
+Rho, J., Park, M., Lee, H., 2020. Automated construction progress Pettit, C. (Eds.), Computational Urban Planning and Manage-
+management using computer vision-based CNN model and BIM. ment for Smart Cities. Springer, pp. 249—265.
+Korean J. Constr. Eng. Manag. 21 (5), 11—19. Zhao, L., Song, D., Chen, W., Kang, Q., 2024. Coloring and fusing
+Rowe, C., Slutzky, R., 1963. Transparency: literal and phenomenal. architectural sketches by combining a y-shaped generative
+Perspecta 8, 45—54. adversarial network and a denoising diffusion implicit model.
+Salomon, D., Motta, G., 2009. Handbook of Data Compression. Comput. Aided Civ. Infrastruct. Eng. 39 (7), 1003—1018.
+Springer. Zumthor, P., 2006. Atmospheres: architectural environments. sur-
+Schapiro, M., 1961. Style. In: Philipson, M. (Ed.), Aesthetics Today. rounding objects. In: Atmospheres. Birkha¨user.
+World Publishing Company, pp. 81—113.
+824

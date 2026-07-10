@@ -325,6 +325,80 @@ def inject_css() -> None:
             font-size: 0.82rem;
             margin-top: -0.65rem;
         }
+        .sidebar-focus {
+            border: 1px solid #d8e3ee;
+            border-radius: 12px;
+            padding: 0.95rem 0.9rem 0.85rem;
+            margin: 0.8rem 0 1rem;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+        .sidebar-focus-title {
+            margin: 0 0 0.65rem;
+            color: #1f2937;
+            font-weight: 800;
+            font-size: 0.98rem;
+            letter-spacing: 0;
+        }
+        .sidebar-focus-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.72rem;
+        }
+        .sidebar-focus-label {
+            color: #667085;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 0.12rem;
+        }
+        .sidebar-focus-value {
+            color: #111827;
+            font-size: 1.72rem;
+            font-weight: 600;
+            line-height: 1.05;
+        }
+        .sidebar-focus-value .unit {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 0.08rem;
+            color: #344054;
+        }
+        .sidebar-flow-note {
+            color: #667085;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            margin: 0.35rem 0 0.75rem;
+        }
+        .sidebar-step-title {
+            color: #1f2937;
+            font-size: 0.88rem;
+            font-weight: 800;
+            margin: 0.95rem 0 0.45rem;
+        }
+        .sidebar-secondary-list {
+            display: grid;
+            gap: 0.42rem;
+            margin-bottom: 0.3rem;
+        }
+        .sidebar-secondary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.65rem;
+            align-items: baseline;
+            border-bottom: 1px solid #e9eef5;
+            padding-bottom: 0.36rem;
+        }
+        .sidebar-secondary-label {
+            color: #667085;
+            font-size: 0.78rem;
+            line-height: 1.3;
+        }
+        .sidebar-secondary-value {
+            color: #344054;
+            font-size: 0.92rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
         .factor-card {
             border: 1px solid #d8e3ee;
             border-radius: 8px;
@@ -1099,21 +1173,73 @@ def main() -> None:
     source_summary = load_source_data_summary()
 
     with st.sidebar:
+        analysis_review_count = scored_evidence["review_index"].nunique()
+        analysis_place_count = place_scores["cafe_name"].nunique()
+        evidence_count = len(scored_evidence)
+
         st.header("데이터 흐름")
         st.caption("공공 상권정보 표본에서 카페를 선정하고, Google Maps 리뷰에서 장소성 관련 구절을 매핑했습니다.")
-        st.caption("계산 기준: 긍정 +1, 중립/혼합 0, 부정 -1 (정규화 없음)")
+        st.markdown(
+            f"""
+            <div class="sidebar-focus">
+                <p class="sidebar-focus-title">분석 대상</p>
+                <div class="sidebar-focus-grid">
+                    <div>
+                        <div class="sidebar-focus-label">장소</div>
+                        <div class="sidebar-focus-value">{format_count(analysis_place_count)}<span class="unit">곳</span></div>
+                    </div>
+                    <div>
+                        <div class="sidebar-focus-label">장소성 관련 리뷰</div>
+                        <div class="sidebar-focus-value">{format_count(analysis_review_count)}<span class="unit">건</span></div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <p class="sidebar-flow-note">
+            계산 기준: 긍정 +1, 중립/혼합 0, 부정 -1<br>
+            요인 점수는 정규화하지 않고 -1에서 +1 범위로 산출합니다.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("**1. 분석 대상 표본**")
-        st.metric("서울시 카페 표본", format_count_unit(source_summary["sample_place_count"], "개"))
+        st.markdown('<p class="sidebar-step-title">1. 표본 및 리뷰 수집</p>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="sidebar-secondary-list">
+                <div class="sidebar-secondary-row">
+                    <span class="sidebar-secondary-label">서울시 카페 표본</span>
+                    <span class="sidebar-secondary-value">{format_count_unit(source_summary["sample_place_count"], "개")}</span>
+                </div>
+                <div class="sidebar-secondary-row">
+                    <span class="sidebar-secondary-label">수집 리뷰</span>
+                    <span class="sidebar-secondary-value">{format_count_unit(source_summary["collected_review_count"], "건")}</span>
+                </div>
+                <div class="sidebar-secondary-row">
+                    <span class="sidebar-secondary-label">리뷰 보유 장소</span>
+                    <span class="sidebar-secondary-value">{format_count_unit(source_summary["collected_place_count"], "개")}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("**2. 리뷰 데이터**")
-        st.metric("수집 리뷰", format_count_unit(source_summary["collected_review_count"], "건"))
-        st.caption(f"리뷰 보유 장소: {format_count_unit(source_summary['collected_place_count'], '개')}")
-
-        st.markdown("**3. 장소성 매핑 데이터**")
-        st.metric("장소성 관련 리뷰", format_count_unit(scored_evidence["review_index"].nunique(), "건"))
-        st.metric("매핑 근거 구절", format_count_unit(len(scored_evidence), "개"))
-        st.caption(f"분석 가능 장소: {format_count_unit(place_scores['cafe_name'].nunique(), '개')}")
+        st.markdown('<p class="sidebar-step-title">2. 장소성 매핑 데이터</p>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="sidebar-secondary-list">
+                <div class="sidebar-secondary-row">
+                    <span class="sidebar-secondary-label">매핑 근거 구절</span>
+                    <span class="sidebar-secondary-value">{format_count_unit(evidence_count, "개")}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.divider()
         st.header("장소 선택")
