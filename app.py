@@ -892,7 +892,7 @@ def render_validation_analysis(
 
     with case_tab:
         st.markdown("##### 요인별 상·하위 사례 비교")
-        st.caption("언급비중 반영 점수를 기준으로 요인별 상위/하위 장소를 추출하고, 실제 매핑 근거 구절을 함께 확인합니다.")
+        st.caption("장소성 요인 점수를 기준으로 요인별 상위/하위 장소를 추출하고, 언급 비중과 실제 매핑 근거 구절을 함께 확인합니다.")
 
         c1, c2, c3, c4 = st.columns([1.4, 1, 1, 1])
         with c1:
@@ -943,9 +943,9 @@ def render_validation_analysis(
                 [
                     "case_type",
                     "cafe_name",
-                    "weighted_score",
                     "factor_score",
                     "mention_share",
+                    "weighted_score",
                     "mention_count",
                     "mapped_evidence_count",
                     "positive_count",
@@ -959,9 +959,9 @@ def render_validation_analysis(
                 columns={
                     "case_type": "구분",
                     "cafe_name": "장소명",
-                    "weighted_score": "언급비중 반영 점수",
                     "factor_score": "장소성 요인 점수",
                     "mention_share": "언급 비중",
+                    "weighted_score": "언급비중 반영 점수",
                     "mention_count": "요인 근거 수",
                     "mapped_evidence_count": "전체 근거 수",
                     "positive_count": "긍정",
@@ -971,9 +971,9 @@ def render_validation_analysis(
                     "representative_evidence": "대표 근거 구절",
                 }
             )
-            display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(format_signed_decimal)
             display["장소성 요인 점수"] = display["장소성 요인 점수"].map(format_signed_decimal)
             display["언급 비중"] = display["언급 비중"].map(format_percent)
+            display["언급비중 반영 점수"] = display["언급비중 반영 점수"].map(format_signed_decimal)
             st.dataframe(display, use_container_width=True, hide_index=True)
 
             st.markdown("##### 사례별 근거 구절 확인")

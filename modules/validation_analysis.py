@@ -56,7 +56,7 @@ def get_factor_extreme_cases(
     min_factor_mentions: int = 3,
     n_cases: int = 5,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return top and bottom places for a factor using mention-weighted score."""
+    """Return top and bottom places for a factor using the factor score."""
     if factor_scores.empty:
         return pd.DataFrame(), pd.DataFrame()
 
@@ -81,9 +81,9 @@ def get_factor_extreme_cases(
     if rows.empty:
         return pd.DataFrame(), pd.DataFrame()
 
-    sort_cols = ["weighted_score", "mention_count", "mapped_evidence_count"]
-    top = rows.sort_values(sort_cols, ascending=[False, False, False]).head(n_cases).copy()
-    bottom = rows.sort_values(sort_cols, ascending=[True, False, False]).head(n_cases).copy()
+    sort_cols = ["factor_score", "mention_count", "weighted_score", "mapped_evidence_count"]
+    top = rows.sort_values(sort_cols, ascending=[False, False, False, False]).head(n_cases).copy()
+    bottom = rows.sort_values(sort_cols, ascending=[True, False, True, False]).head(n_cases).copy()
 
     top["case_type"] = "상위"
     bottom["case_type"] = "하위"
