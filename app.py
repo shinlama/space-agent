@@ -724,7 +724,7 @@ def render_personalized_recommendation(
     factor_scores: pd.DataFrame,
     place_scores: pd.DataFrame,
 ) -> None:
-    st.subheader("5. 개인화 추천")
+    st.subheader("4. 개인화 추천")
     st.markdown(
         """
         <div class="formula-box">
@@ -876,7 +876,7 @@ def render_validation_analysis(
     factor_scores: pd.DataFrame,
     place_scores: pd.DataFrame,
 ) -> None:
-    st.subheader("6. 검증 분석")
+    st.subheader("5. 검증 분석")
     st.markdown(
         """
         <div class="formula-box">
@@ -1250,12 +1250,11 @@ def main() -> None:
         )
         cafe_name = st.selectbox("장소 선택", cafe_options)
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    tab1, tab2, tab3, tab4, tab6 = st.tabs(
         [
             "평가 체계",
             "리뷰 매핑",
             "점수 계산",
-            "장소 비교",
             "개인화 추천",
             "검증 분석",
         ]
@@ -1267,8 +1266,6 @@ def main() -> None:
     with tab3:
         render_score_results(scored_evidence, factor_scores, place_scores, cafe_name)
     with tab4:
-        render_place_comparison(place_scores)
-    with tab5:
         render_personalized_recommendation(scored_evidence, factor_scores, place_scores)
     with tab6:
         render_validation_analysis(scored_evidence, factor_scores, place_scores)
