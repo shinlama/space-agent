@@ -3,8 +3,10 @@ from __future__ import annotations
 import argparse
 import os
 import random
+import re
 import sys
 import time
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List
 
@@ -22,6 +24,24 @@ DEFAULT_SLEEP = (0.8, 1.6)
 NAME_COL = "상호명"
 DISTRICT_COL = "시군구명"
 EUPMYEON_COL = "행정동명"
+ROAD_ADDRESS_COL = "도로명주소"
+
+
+def normalize_place_name(value: str) -> str:
+    normalized = str(value or "").lower()
+    normalized = normalized.replace("café", "카페").replace("cafe", "카페")
+    normalized = normalized.replace("coffee", "커피")
+    return re.sub(r"[^0-9a-z가-힣]", "", normalized)
+
+
+def place_name_similarity(expected: str, candidate: str) -> float:
+    left = normalize_place_name(expected)
+    right = normalize_place_name(candidate)
+    if not left or not right:
+        return 0.0
+    if left in right or right in left:
+        return 1.0
+    return SequenceMatcher(None, left, right).ratio()
 
 
 def parse_args() -> argparse.Namespace:
@@ -85,11 +105,15 @@ def get_google_reviews(
     district: str,
     eupmyeon: str,
     max_reviews: int,
+    road_address: str = "",
 ) -> List[Dict[str, str]]:
-    query_parts = [district]
-    if eupmyeon:
-        query_parts.append(eupmyeon)
-    query_parts.append(name)
+    query_parts = [name]
+    if road_address:
+        query_parts.append(road_address)
+    else:
+        if eupmyeon:
+            query_parts.append(eupmyeon)
+        query_parts.append(district)
     query = " ".join(query_parts)
 
     reviews: List[Dict[str, str]] = []
@@ -107,7 +131,21 @@ def get_google_reviews(
     if not results:
         return reviews
 
-    place_id = results[0].get("place_id")
+    ranked_results = sorted(
+        results,
+        key=lambda result: place_name_similarity(name, result.get("name", "")),
+        reverse=True,
+    )
+    selected_result = ranked_results[0]
+    selected_score = place_name_similarity(name, selected_result.get("name", ""))
+    if selected_score < 0.55:
+        print(
+            f"[검색 불일치] {name} ({district}) → "
+            f"{selected_result.get('name', '')} ({selected_score:.2f})"
+        )
+        return reviews
+
+    place_id = selected_result.get("place_id")
     if not place_id:
         return reviews
 
@@ -125,7 +163,7 @@ def get_google_reviews(
     lat = geometry.get("lat")
     lng = geometry.get("lng")
     if lat is None or lng is None:
-        search_geom = (results[0].get("geometry") or {}).get("location", {})
+        search_geom = (selected_result.get("geometry") or {}).get("location", {})
         lat = search_geom.get("lat", lat)
         lng = search_geom.get("lng", lng)
 
@@ -177,6 +215,7 @@ def main() -> int:
         name = str(row[NAME_COL]).strip()
         district = str(row[DISTRICT_COL]).strip()
         eupmyeon = str(row.get(EUPMYEON_COL, "") or "").strip()
+        road_address = str(row.get(ROAD_ADDRESS_COL, "") or "").strip()
         key = (name, district)
 
         if key in processed_keys:
@@ -188,6 +227,7 @@ def main() -> int:
             district=district,
             eupmyeon=eupmyeon,
             max_reviews=args.max_reviews,
+            road_address=road_address,
         )
 
         if reviews:

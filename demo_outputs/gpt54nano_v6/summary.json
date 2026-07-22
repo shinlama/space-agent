@@ -1,0 +1,41 @@
+{
+  "input": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6\\placeness_mapping_sentences.csv",
+  "output_dir": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6",
+  "model": "gpt-5.4-nano",
+  "mapping_rows": 676614,
+  "mapped_reviews": 276248,
+  "mapped_places": 11003,
+  "factor_score_rows": 66000,
+  "place_score_rows": 11003,
+  "factor_score_min": -1.0,
+  "factor_score_max": 1.0,
+  "placeness_score_min": -1.0,
+  "placeness_score_max": 1.0,
+  "mention_share_sum_min": 0.9999999999999999,
+  "mention_share_sum_max": 1.0,
+  "factor_counts": {
+    "심미성": 124977,
+    "기억 및 선호": 102571,
+    "상호작용성": 92602,
+    "활동성": 84330,
+    "쾌적성": 70268,
+    "접근성": 55251,
+    "개방성": 54764,
+    "상징성": 38271,
+    "감각적 경험": 33266,
+    "지역 정체성": 20314
+  },
+  "sentiment_counts": {
+    "positive": 485325,
+    "negative": 108842,
+    "neutral": 70132,
+    "mixed": 12315
+  },
+  "outputs": {
+    "scored_evidence_parquet": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6\\scored_evidence.parquet",
+    "factor_scores_parquet": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6\\factor_scores.parquet",
+    "place_scores_parquet": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6\\place_scores.parquet",
+    "factor_scores_csv": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6\\factor_scores.csv",
+    "place_scores_csv": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\demo_outputs\\gpt54nano_v6\\place_scores.csv"
+  }
+}

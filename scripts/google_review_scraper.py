@@ -5,9 +5,10 @@ import random
 import re
 import sys
 import time
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Optional
-from urllib.parse import quote
+from urllib.parse import quote, unquote_plus
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -34,6 +35,7 @@ DEFAULT_HEADLESS = True
 NAME_COL = "상호명"
 DISTRICT_COL = "시군구명"
 EUPMYEON_COL = "행정동명"
+ROAD_ADDRESS_COL = "도로명주소"
 
 
 def parse_args() -> argparse.Namespace:
@@ -235,13 +237,127 @@ def handle_new_windows(driver: webdriver.Chrome) -> None:
         pass
 
 
-def build_search_query(name: str, district: str, eupmyeon: str = "") -> str:
+def build_search_query(
+    name: str,
+    district: str,
+    eupmyeon: str = "",
+    road_address: str = "",
+) -> str:
     """검색 쿼리 생성"""
     parts = [name]
-    if eupmyeon:
-        parts.append(eupmyeon)
-    parts.append(district)
+    if road_address:
+        parts.append(road_address)
+    else:
+        if eupmyeon:
+            parts.append(eupmyeon)
+        parts.append(district)
     return " ".join(parts)
+
+
+def normalize_place_name(value: str) -> str:
+    normalized = unquote_plus(str(value or "")).lower()
+    normalized = normalized.replace("café", "카페").replace("cafe", "카페")
+    normalized = normalized.replace("coffee", "커피")
+    return re.sub(r"[^0-9a-z가-힣]", "", normalized)
+
+
+def place_name_similarity(expected: str, candidate: str) -> float:
+    left = normalize_place_name(expected)
+    right = normalize_place_name(candidate)
+    if not left or not right:
+        return 0.0
+    if left in right or right in left:
+        return 1.0
+    return SequenceMatcher(None, left, right).ratio()
+
+
+def search_result_name(element) -> str:
+    for attribute in ("aria-label", "title"):
+        value = (element.get_attribute(attribute) or "").strip()
+        if value:
+            return value
+
+    href = element.get_attribute("href") or ""
+    match = re.search(r"/place/([^/?]+)", href)
+    if match:
+        return unquote_plus(match.group(1)).replace("+", " ").strip()
+
+    try:
+        card = element.find_element(By.XPATH, "./ancestor::div[@role='article'][1]")
+        lines = [line.strip() for line in card.text.splitlines() if line.strip()]
+        for line in lines:
+            if line.lower() not in {"스폰서", "sponsored"}:
+                return line
+    except NoSuchElementException:
+        pass
+    return ""
+
+
+def is_sponsored_result(element) -> bool:
+    try:
+        card = element.find_element(
+            By.XPATH,
+            "./ancestor::div[@role='article' or contains(@class,'Nv2PK')][1]",
+        )
+        text = card.text.lower()
+    except NoSuchElementException:
+        text = (element.text or "").lower()
+    return any(label in text for label in ("스폰서", "sponsored", "광고"))
+
+
+def select_matching_search_result(driver: webdriver.Chrome, expected_name: str):
+    selectors = [
+        "div[role='article'] a[href*='/place/']",
+        "div.Nv2PK a[href*='/place/']",
+        "div.m6QErb a[href*='/place/']",
+    ]
+    candidates = []
+    seen_hrefs = set()
+    for selector in selectors:
+        for element in driver.find_elements(By.CSS_SELECTOR, selector):
+            href = element.get_attribute("href") or ""
+            if not href or href in seen_hrefs or is_sponsored_result(element):
+                continue
+            seen_hrefs.add(href)
+            candidate_name = search_result_name(element)
+            score = place_name_similarity(expected_name, candidate_name)
+            candidates.append((score, candidate_name, element))
+
+    if not candidates:
+        return None
+    score, candidate_name, element = max(candidates, key=lambda item: item[0])
+    if score < 0.55:
+        print(
+            f"[경고] 일치하는 검색 결과 없음: {expected_name} / "
+            f"최고 후보 {candidate_name} ({score:.2f})"
+        )
+        return None
+    print(f"[정보] 검색 결과 선택: {expected_name} → {candidate_name} ({score:.2f})")
+    return element
+
+
+def loaded_place_name(driver: webdriver.Chrome) -> str:
+    for selector in ("h1.DUwDvf", "h1"):
+        for element in driver.find_elements(By.CSS_SELECTOR, selector):
+            value = (element.text or element.get_attribute("textContent") or "").strip()
+            if value:
+                return value
+    match = re.search(r"/place/([^/?]+)", driver.current_url)
+    return unquote_plus(match.group(1)).replace("+", " ").strip() if match else ""
+
+
+def loaded_place_matches(driver: webdriver.Chrome, expected_name: str) -> bool:
+    candidate_name = loaded_place_name(driver)
+    if not candidate_name:
+        return False
+    score = place_name_similarity(expected_name, candidate_name)
+    if score < 0.55:
+        print(
+            f"[경고] 열린 장소 불일치: {expected_name} / "
+            f"{candidate_name} ({score:.2f})"
+        )
+        return False
+    return True
 
 
 def click_more_reviews_button(driver: webdriver.Chrome) -> bool:
@@ -949,12 +1065,13 @@ def get_google_reviews_scraped(
     max_reviews: int,
     timeout: int,
     scroll_pause: float,
+    road_address: str = "",
 ) -> List[Dict[str, str]]:
     """Google Maps에서 리뷰 스크래핑"""
     reviews = []
     
     # 검색 쿼리 생성
-    query = build_search_query(name, district, eupmyeon)
+    query = build_search_query(name, district, eupmyeon, road_address)
     search_url = f"https://www.google.com/maps/search/{quote(query)}"
     
     try:
@@ -968,32 +1085,14 @@ def get_google_reviews_scraped(
         close_login_dialog(driver)
         handle_new_windows(driver)
         
-        # 첫 번째 검색 결과 클릭
+        # 정확한 검색은 결과 목록 없이 장소 상세로 바로 열릴 수 있습니다.
+        direct_place = "/place/" in driver.current_url
+        if direct_place and not loaded_place_matches(driver, name):
+            return reviews
+
+        # 결과 목록에서는 광고를 제외하고 상호명이 가장 잘 일치하는 항목 클릭
         try:
-            # 여러 선택자 시도
-            first_result = None
-            selectors = [
-                "div[role='article'] a",
-                "div.Nv2PK a",
-                "a[data-value='Directions']",  # 방향 버튼 근처의 링크
-                "div.m6QErb a",
-            ]
-            
-            for selector in selectors:
-                try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    if elements:
-                        first_result = elements[0]
-                        break
-                except NoSuchElementException:
-                    continue
-            
-            if not first_result:
-                # XPath로 시도
-                try:
-                    first_result = driver.find_element(By.XPATH, "//a[contains(@href, '/place/')]")
-                except NoSuchElementException:
-                    pass
+            first_result = None if direct_place else select_matching_search_result(driver, name)
             
             if first_result:
                 driver.execute_script("arguments[0].scrollIntoView(true);", first_result)
@@ -1004,8 +1103,13 @@ def get_google_reviews_scraped(
                 # 로그인 다이얼로그 닫기 및 새 창 처리
                 close_login_dialog(driver)
                 handle_new_windows(driver)
-            else:
-                print(f"[오류] {name} ({district}) - 검색 결과를 찾을 수 없습니다.")
+                if not loaded_place_matches(driver, name):
+                    return reviews
+            elif not direct_place:
+                print(
+                    f"[오류] {name} ({district}) - "
+                    "스폰서를 제외한 일치 검색 결과를 찾을 수 없습니다."
+                )
                 return reviews
         except Exception as e:
             print(f"[오류] {name} ({district}) - 검색 결과 클릭 실패: {e}")
@@ -1386,6 +1490,7 @@ def main() -> int:
             name = str(row[NAME_COL]).strip()
             district = str(row[DISTRICT_COL]).strip()
             eupmyeon = str(row.get(EUPMYEON_COL, "") or "").strip()
+            road_address = str(row.get(ROAD_ADDRESS_COL, "") or "").strip()
             
             reviews = get_google_reviews_scraped(
                 driver,
@@ -1395,6 +1500,7 @@ def main() -> int:
                 max_reviews=args.max_reviews,
                 timeout=args.timeout,
                 scroll_pause=args.scroll_pause,
+                road_address=road_address,
             )
             
             if reviews:

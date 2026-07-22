@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import html
+import json
 import re
 import sys
 from difflib import SequenceMatcher
@@ -15,19 +16,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-RAW_REVIEW_CSV = PROJECT_ROOT / "google_reviews_scraped_cleaned.csv"
-SAMPLE_PLACE_CSV = PROJECT_ROOT / "서울시_상권_카페빵_표본.csv"
-SCORING_CACHE_VERSION = "signed_score_v2"
+FULL_REVIEW_SUMMARY_JSON = PROJECT_ROOT / "data" / "google_reviews_clear_mismatch_v6.summary.json"
+CANDIDATE_SUMMARY_JSON = PROJECT_ROOT / "data" / "spatial_review_candidates_v6.summary.json"
+SCORING_CACHE_VERSION = "gpt54nano_signed_score_v6_district_selector"
 
 from modules.research_scoring import (
-    DEFAULT_MAPPING_CSV,
+    DEFAULT_FACTOR_SCORES_PARQUET,
+    DEFAULT_PLACE_SCORES_PARQUET,
+    DEFAULT_SCORED_EVIDENCE_PARQUET,
     FACTOR_CATEGORIES,
     FACTOR_DETAILS,
     FACTOR_ORDER,
     complete_factor_table,
-    calculate_scores,
-    compute_factor_scores,
-    compute_place_scores,
 )
 from modules.validation_analysis import (
     build_cluster_feature_matrix,
@@ -63,13 +63,19 @@ st.set_page_config(
 )
 
 
-@st.cache_data(show_spinner="매핑 결과와 점수 계산 결과를 불러오는 중입니다.")
+@st.cache_resource(show_spinner="새 매핑 결과와 점수 계산 결과를 불러오는 중입니다.")
 def load_demo_data(
-    input_csv: str,
+    evidence_parquet: str,
+    factor_parquet: str,
+    place_parquet: str,
     scoring_version: str = SCORING_CACHE_VERSION,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     _ = scoring_version
-    return calculate_scores(Path(input_csv))
+    return (
+        pd.read_parquet(evidence_parquet),
+        pd.read_parquet(factor_parquet),
+        pd.read_parquet(place_parquet),
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -78,26 +84,20 @@ def load_source_data_summary() -> dict[str, int | None]:
         "sample_place_count": None,
         "collected_review_count": None,
         "collected_place_count": None,
+        "candidate_review_count": None,
+        "candidate_place_count": None,
     }
 
-    if SAMPLE_PLACE_CSV.exists():
-        for encoding in ("utf-8-sig", "cp949"):
-            try:
-                sample = pd.read_csv(SAMPLE_PLACE_CSV, encoding=encoding)
-                summary["sample_place_count"] = len(sample)
-                break
-            except (UnicodeDecodeError, ValueError):
-                continue
+    if FULL_REVIEW_SUMMARY_JSON.exists():
+        full_summary = json.loads(FULL_REVIEW_SUMMARY_JSON.read_text(encoding="utf-8"))
+        summary["sample_place_count"] = int(full_summary["output_places"])
+        summary["collected_review_count"] = int(full_summary["output_rows"])
+        summary["collected_place_count"] = int(full_summary["output_places"])
 
-    if RAW_REVIEW_CSV.exists():
-        for encoding in ("utf-8-sig", "cp949"):
-            try:
-                raw_reviews = pd.read_csv(RAW_REVIEW_CSV, encoding=encoding, usecols=["상호명"])
-                summary["collected_review_count"] = len(raw_reviews)
-                summary["collected_place_count"] = raw_reviews["상호명"].nunique(dropna=True)
-                break
-            except (UnicodeDecodeError, ValueError):
-                continue
+    if CANDIDATE_SUMMARY_JSON.exists():
+        candidate_summary = json.loads(CANDIDATE_SUMMARY_JSON.read_text(encoding="utf-8"))
+        summary["candidate_review_count"] = int(candidate_summary["candidate_rows"])
+        summary["candidate_place_count"] = int(candidate_summary["candidate_places"])
 
     return summary
 
@@ -520,7 +520,7 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
     st.markdown(highlight_evidence(review_text, review_rows), unsafe_allow_html=True)
 
     display = review_rows[
-        ["evidence", "factor", "sentiment_label", "sentiment_value", "reason"]
+        ["evidence", "factor", "sentiment_label", "sentiment_value"]
     ].copy()
     display = display.rename(
         columns={
@@ -528,7 +528,6 @@ def render_mapping_results(scored_evidence: pd.DataFrame, cafe_name: str) -> Non
             "factor": "매핑 요인",
             "sentiment_label": "감성 방향",
             "sentiment_value": "구절별 점수",
-            "reason": "매핑 근거",
         }
     )
     display["구절별 점수"] = display["구절별 점수"].map(format_signed_score)
@@ -860,12 +859,11 @@ def render_personalized_recommendation(
         & (scored_evidence["factor"].isin(evidence_factors))
     ].copy()
     evidence_rows = evidence_rows.sort_values(["sentiment_value", "factor"], ascending=[False, True]).head(8)
-    evidence_display = evidence_rows[["factor", "sentiment_label", "evidence", "reason"]].rename(
+    evidence_display = evidence_rows[["factor", "sentiment_label", "evidence"]].rename(
         columns={
             "factor": "요인",
             "sentiment_label": "감성 방향",
             "evidence": "추천 근거 구절",
-            "reason": "매핑 근거",
         }
     )
     st.dataframe(evidence_display, use_container_width=True, hide_index=True)
@@ -989,17 +987,16 @@ def render_validation_analysis(
             ].copy()
             ascending = selected_case["case_type"] == "하위"
             evidence_rows = evidence_rows.sort_values(
-                ["sentiment_value", "confidence"],
-                ascending=[ascending, False],
+                "sentiment_value",
+                ascending=ascending,
             )
             evidence_display = evidence_rows[
-                ["sentiment_label", "sentiment_value", "evidence", "reason", "review_text"]
+                ["sentiment_label", "sentiment_value", "evidence", "review_text"]
             ].rename(
                 columns={
                     "sentiment_label": "평가 방향",
                     "sentiment_value": "구절별 점수",
                     "evidence": "근거 구절",
-                    "reason": "매핑 근거",
                     "review_text": "리뷰",
                 }
             )
@@ -1160,16 +1157,26 @@ def main() -> None:
     inject_css()
     st.title("공간 리뷰 텍스트 기반 장소성 정량화")
 
-    if not DEFAULT_MAPPING_CSV.exists():
-        st.error(f"매핑 결과 CSV를 찾을 수 없습니다: {DEFAULT_MAPPING_CSV}")
+    demo_paths = [
+        DEFAULT_SCORED_EVIDENCE_PARQUET,
+        DEFAULT_FACTOR_SCORES_PARQUET,
+        DEFAULT_PLACE_SCORES_PARQUET,
+    ]
+    missing_paths = [path for path in demo_paths if not path.exists()]
+    if missing_paths:
+        st.error(
+            "앱용 점수 데이터가 없습니다. "
+            "`python scripts/build_demo_scoring_data.py`를 먼저 실행하세요.\n\n"
+            + "\n".join(str(path) for path in missing_paths)
+        )
         return
 
-    scored_evidence, _, _ = load_demo_data(
-        str(DEFAULT_MAPPING_CSV),
+    scored_evidence, factor_scores, place_scores = load_demo_data(
+        str(DEFAULT_SCORED_EVIDENCE_PARQUET),
+        str(DEFAULT_FACTOR_SCORES_PARQUET),
+        str(DEFAULT_PLACE_SCORES_PARQUET),
         SCORING_CACHE_VERSION,
     )
-    factor_scores = compute_factor_scores(scored_evidence)
-    place_scores = compute_place_scores(factor_scores)
     source_summary = load_source_data_summary()
 
     with st.sidebar:
@@ -1178,7 +1185,7 @@ def main() -> None:
         evidence_count = len(scored_evidence)
 
         st.header("데이터 흐름")
-        st.caption("공공 상권정보 표본에서 카페를 선정하고, Google Maps 리뷰에서 장소성 관련 구절을 매핑했습니다.")
+        st.caption("서울시 카페 리뷰에서 장소성 후보를 선별하고, 리뷰 구절을 10개 장소성 요인과 평가 방향에 매핑했습니다.")
         st.markdown(
             f"""
             <div class="sidebar-focus">
@@ -1201,27 +1208,23 @@ def main() -> None:
             """
             <p class="sidebar-flow-note">
             계산 기준: 긍정 +1, 중립/혼합 0, 부정 -1<br>
-            요인 점수는 정규화하지 않고 -1에서 +1 범위로 산출합니다.
+            요인 점수는 -1에서 +1 범위로 산출합니다.
             </p>
             """,
             unsafe_allow_html=True,
         )
 
-        st.markdown('<p class="sidebar-step-title">1. 표본 및 리뷰 수집</p>', unsafe_allow_html=True)
+        st.markdown('<p class="sidebar-step-title">1. 리뷰 데이터</p>', unsafe_allow_html=True)
         st.markdown(
             f"""
             <div class="sidebar-secondary-list">
                 <div class="sidebar-secondary-row">
-                    <span class="sidebar-secondary-label">서울시 카페 표본</span>
+                    <span class="sidebar-secondary-label">리뷰 보유 장소</span>
                     <span class="sidebar-secondary-value">{format_count_unit(source_summary["sample_place_count"], "개")}</span>
                 </div>
                 <div class="sidebar-secondary-row">
-                    <span class="sidebar-secondary-label">수집 리뷰</span>
+                    <span class="sidebar-secondary-label">전체 리뷰</span>
                     <span class="sidebar-secondary-value">{format_count_unit(source_summary["collected_review_count"], "건")}</span>
-                </div>
-                <div class="sidebar-secondary-row">
-                    <span class="sidebar-secondary-label">리뷰 보유 장소</span>
-                    <span class="sidebar-secondary-value">{format_count_unit(source_summary["collected_place_count"], "개")}</span>
                 </div>
             </div>
             """,
@@ -1243,12 +1246,43 @@ def main() -> None:
 
         st.divider()
         st.header("장소 선택")
-        cafe_options = (
-            place_scores.sort_values(["mapped_evidence_count", "placeness_score"], ascending=[False, False])
-            ["cafe_name"]
-            .tolist()
+        district_counts = place_scores.groupby("district")["place_id"].nunique()
+        district_options = sorted(
+            district_counts.index.astype(str).tolist()
         )
-        cafe_name = st.selectbox("장소 선택", cafe_options)
+        default_district = "마포구" if "마포구" in district_options else district_options[0]
+        selected_district = st.selectbox(
+            "행정구 선택",
+            district_options,
+            index=district_options.index(default_district),
+            format_func=lambda district: f"{district} ({int(district_counts[district]):,}곳)",
+            key="sidebar_district",
+        )
+
+        district_places = place_scores[
+            place_scores["district"].eq(selected_district)
+        ].copy()
+        district_places = district_places.sort_values(
+            ["mapped_evidence_count", "mentioned_factor_count", "cafe_name"],
+            ascending=[False, False, True],
+        )
+        place_lookup = district_places.set_index("place_id", drop=False)
+        place_ids = district_places["place_id"].tolist()
+
+        def format_place_option(place_id: str) -> str:
+            row = place_lookup.loc[place_id]
+            return (
+                f"{row['source_cafe_name']} · {row['neighborhood']} "
+                f"(근거 {int(row['mapped_evidence_count']):,}개)"
+            )
+
+        selected_place_id = st.selectbox(
+            "장소 선택",
+            place_ids,
+            format_func=format_place_option,
+            key="sidebar_place",
+        )
+        cafe_name = str(place_lookup.loc[selected_place_id, "cafe_name"])
 
     tab1, tab2, tab3, tab4, tab6 = st.tabs(
         [

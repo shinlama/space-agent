@@ -1,0 +1,110 @@
+{
+  "removed_store_ids": {
+    "MA0101202505A0052865": "카페플로리안",
+    "MA010120220803913346": "오타르DDP점",
+    "MA0101202303A0000033": "버블에그",
+    "MA0101202501A0039340": "북서울스넥",
+    "MA0106202201A2364743": "서울아트센터",
+    "MA010120220810440902": "바스켓12계동점",
+    "MA0101202310A0093029": "카페소림",
+    "MA0101202305A0103250": "부스럭",
+    "MA0101202305A0124638": "태린",
+    "MA010120220812650776": "세종문화회관카페베네"
+  },
+  "files": [
+    {
+      "path": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\google_reviews_clear_mismatch_v6.csv",
+      "before_rows": 543615,
+      "after_rows": 543615,
+      "removed_rows": 0,
+      "before_places": 11909,
+      "after_places": 11909,
+      "removed_places": 0,
+      "removed_rows_by_store": {
+        "MA0101202505A0052865": 0,
+        "MA010120220803913346": 0,
+        "MA0101202303A0000033": 0,
+        "MA0101202501A0039340": 0,
+        "MA0106202201A2364743": 0,
+        "MA010120220810440902": 0,
+        "MA0101202310A0093029": 0,
+        "MA0101202305A0103250": 0,
+        "MA0101202305A0124638": 0,
+        "MA010120220812650776": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\spatial_review_candidates_v6.csv",
+      "before_rows": 298998,
+      "after_rows": 298998,
+      "removed_rows": 0,
+      "before_places": 11322,
+      "after_places": 11322,
+      "removed_places": 0,
+      "removed_rows_by_store": {
+        "MA0101202505A0052865": 0,
+        "MA010120220803913346": 0,
+        "MA0101202303A0000033": 0,
+        "MA0101202501A0039340": 0,
+        "MA0106202201A2364743": 0,
+        "MA010120220810440902": 0,
+        "MA0101202310A0093029": 0,
+        "MA0101202305A0103250": 0,
+        "MA0101202305A0124638": 0,
+        "MA010120220812650776": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6\\placeness_mapping_reviews.csv",
+      "before_rows": 298998,
+      "after_rows": 298998,
+      "removed_rows": 0,
+      "before_places": 11322,
+      "after_places": 11322,
+      "removed_places": 0,
+      "removed_rows_by_store": {
+        "MA0101202505A0052865": 0,
+        "MA010120220803913346": 0,
+        "MA0101202303A0000033": 0,
+        "MA0101202501A0039340": 0,
+        "MA0106202201A2364743": 0,
+        "MA010120220810440902": 0,
+        "MA0101202310A0093029": 0,
+        "MA0101202305A0103250": 0,
+        "MA0101202305A0124638": 0,
+        "MA010120220812650776": 0
+      }
+    },
+    {
+      "path": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6\\placeness_mapping_sentences.csv",
+      "before_rows": 710817,
+      "after_rows": 676614,
+      "removed_rows": 34203,
+      "before_places": 11013,
+      "after_places": 11003,
+      "removed_places": 10,
+      "removed_rows_by_store": {
+        "MA0101202505A0052865": 8587,
+        "MA010120220803913346": 4072,
+        "MA0101202303A0000033": 3194,
+        "MA0101202501A0039340": 2971,
+        "MA0106202201A2364743": 2876,
+        "MA010120220810440902": 2840,
+        "MA0101202310A0093029": 2927,
+        "MA0101202305A0103250": 2377,
+        "MA0101202305A0124638": 2210,
+        "MA010120220812650776": 2149
+      }
+    }
+  ],
+  "final": {
+    "source_review_places": 11909,
+    "source_reviews": 543615,
+    "candidate_places": 11322,
+    "candidate_reviews": 298998,
+    "mapping_review_rows": 298998,
+    "mapped_reviews": 276248,
+    "mapped_places": 11003,
+    "mapping_sentence_rows": 676614
+  }
+}

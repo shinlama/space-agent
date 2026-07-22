@@ -7,7 +7,16 @@ import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MAPPING_CSV = PROJECT_ROOT / "llm_factor_mapping_sentences_full.csv"
+DEFAULT_MAPPING_CSV = (
+    PROJECT_ROOT
+    / "outputs"
+    / "openai_batch_full_gpt54nano_v6"
+    / "placeness_mapping_sentences.csv"
+)
+DEFAULT_DEMO_OUTPUT_DIR = PROJECT_ROOT / "demo_outputs" / "gpt54nano_v6"
+DEFAULT_SCORED_EVIDENCE_PARQUET = DEFAULT_DEMO_OUTPUT_DIR / "scored_evidence.parquet"
+DEFAULT_FACTOR_SCORES_PARQUET = DEFAULT_DEMO_OUTPUT_DIR / "factor_scores.parquet"
+DEFAULT_PLACE_SCORES_PARQUET = DEFAULT_DEMO_OUTPUT_DIR / "place_scores.parquet"
 
 FACTOR_CATEGORIES: dict[str, list[str]] = {
     "물리적 특성": ["심미성", "개방성", "감각적 경험", "접근성", "쾌적성"],
@@ -115,23 +124,68 @@ def read_csv_safely(path: str | Path, **kwargs) -> pd.DataFrame:
 
 def load_mapping_sentences(path: str | Path = DEFAULT_MAPPING_CSV) -> pd.DataFrame:
     df = read_csv_safely(path)
-    required = {
-        "review_index",
-        "cafe_name",
-        "review_text",
-        "sentence_id",
-        "sentence",
-        "factor",
-        "confidence",
-        "evidence",
-        "reason",
-        "sentiment_hint",
+    aliases = {
+        "상가업소번호": "place_id",
+        "상호명": "source_cafe_name",
+        "시군구명": "district",
+        "행정동명": "neighborhood",
+        "도로명주소": "address",
+        "리뷰": "review_text",
     }
+    df = df.rename(
+        columns={source: target for source, target in aliases.items() if source in df.columns}
+    )
+
+    required = {"review_index", "review_text", "sentence_id", "sentence", "factor", "sentiment_hint"}
     missing = sorted(required - set(df.columns))
     if missing:
         raise ValueError(f"Required columns are missing from {path}: {missing}")
 
     df = df.copy()
+    if "source_cafe_name" not in df.columns:
+        if "cafe_name" not in df.columns:
+            raise ValueError(f"A place-name column is missing from {path}")
+        df["source_cafe_name"] = df["cafe_name"]
+    for column in ["source_cafe_name", "district", "neighborhood", "address"]:
+        if column not in df.columns:
+            df[column] = ""
+        df[column] = df[column].fillna("").astype(str).str.strip()
+
+    if "place_id" not in df.columns:
+        df["place_id"] = df["source_cafe_name"]
+    df["place_id"] = df["place_id"].fillna("").astype(str).str.strip()
+    fallback_id = (
+        df["source_cafe_name"]
+        + "|"
+        + df["district"]
+        + "|"
+        + df["neighborhood"]
+        + "|"
+        + df["address"]
+    )
+    df.loc[df["place_id"].eq(""), "place_id"] = fallback_id[df["place_id"].eq("")]
+
+    location = (df["district"] + " " + df["neighborhood"]).str.strip()
+    base_label = df["source_cafe_name"].where(location.eq(""), df["source_cafe_name"] + " · " + location)
+    duplicate_label = df.assign(_base_label=base_label).groupby("_base_label")["place_id"].transform("nunique").gt(1)
+    df["cafe_name"] = base_label
+    df.loc[duplicate_label, "cafe_name"] = (
+        base_label[duplicate_label] + " · " + df.loc[duplicate_label, "place_id"]
+    )
+
+    if "source_evidence" not in df.columns:
+        df["source_evidence"] = df.get("evidence", df["sentence"])
+    if "model_evidence" in df.columns:
+        model_evidence = df["model_evidence"].fillna("").astype(str).str.strip()
+        fallback_evidence = df.get("evidence", df["sentence"]).fillna("").astype(str).str.strip()
+        df["evidence"] = model_evidence.where(model_evidence.ne(""), fallback_evidence)
+    elif "evidence" not in df.columns:
+        df["evidence"] = df["sentence"]
+    if "confidence" not in df.columns:
+        df["confidence"] = pd.NA
+    if "reason" not in df.columns:
+        df["reason"] = ""
+
     df["factor"] = df["factor"].astype(str).str.strip()
     df = df[df["factor"].isin(FACTOR_ORDER)].copy()
     df["review_index"] = pd.to_numeric(df["review_index"], errors="coerce").astype("Int64")
@@ -170,7 +224,18 @@ def compute_factor_scores(scored_evidence: pd.DataFrame) -> pd.DataFrame:
     if scored_evidence.empty:
         return pd.DataFrame()
 
-    grouped = scored_evidence.groupby(["cafe_name", "factor"], dropna=False)
+    grouped = scored_evidence.groupby(
+        [
+            "place_id",
+            "cafe_name",
+            "source_cafe_name",
+            "district",
+            "neighborhood",
+            "address",
+            "factor",
+        ],
+        dropna=False,
+    )
     factor_scores = grouped.agg(
         factor_category=("factor_category", "first"),
         mention_count=("sentiment_value", "size"),
@@ -184,12 +249,12 @@ def compute_factor_scores(scored_evidence: pd.DataFrame) -> pd.DataFrame:
     ).reset_index()
 
     total_mentions = (
-        factor_scores.groupby("cafe_name")["mention_count"]
+        factor_scores.groupby("place_id")["mention_count"]
         .sum()
         .rename("total_mention_count")
         .reset_index()
     )
-    factor_scores = factor_scores.merge(total_mentions, on="cafe_name", how="left")
+    factor_scores = factor_scores.merge(total_mentions, on="place_id", how="left")
     factor_scores["mention_share"] = (
         factor_scores["mention_count"] / factor_scores["total_mention_count"]
     )
@@ -204,7 +269,10 @@ def compute_place_scores(factor_scores: pd.DataFrame) -> pd.DataFrame:
     if factor_scores.empty:
         return pd.DataFrame()
 
-    place_scores = factor_scores.groupby("cafe_name", dropna=False).agg(
+    place_scores = factor_scores.groupby(
+        ["place_id", "cafe_name", "source_cafe_name", "district", "neighborhood", "address"],
+        dropna=False,
+    ).agg(
         placeness_score=("weighted_score", "sum"),
         mapped_evidence_count=("mention_count", "sum"),
         mentioned_factor_count=("factor", "nunique"),
@@ -219,13 +287,13 @@ def compute_place_scores(factor_scores: pd.DataFrame) -> pd.DataFrame:
     place_scores["negative_ratio"] = place_scores["negative_count"] / place_scores["mapped_evidence_count"]
 
     top_factors = (
-        factor_scores.sort_values(["cafe_name", "mention_count", "factor_score"], ascending=[True, False, False])
-        .groupby("cafe_name")["factor"]
+        factor_scores.sort_values(["place_id", "mention_count", "factor_score"], ascending=[True, False, False])
+        .groupby("place_id")["factor"]
         .first()
         .rename("most_mentioned_factor")
         .reset_index()
     )
-    place_scores = place_scores.merge(top_factors, on="cafe_name", how="left")
+    place_scores = place_scores.merge(top_factors, on="place_id", how="left")
     return place_scores.sort_values("placeness_score", ascending=False).reset_index(drop=True)
 
 

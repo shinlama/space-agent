@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "review_index": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sentence_id": {
+                  "type": "integer"
+                },
+                "mappings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "factor": {
+                        "type": "string",
+                        "enum": [
+                          "심미성",
+                          "개방성",
+                          "접근성",
+                          "감각적 경험",
+                          "쾌적성",
+                          "활동성",
+                          "상호작용성",
+                          "상징성",
+                          "기억 및 선호",
+                          "지역 정체성"
+                        ]
+                      },
+                      "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "evidence": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "sentiment_hint": {
+                        "type": "string",
+                        "enum": [
+                          "positive",
+                          "negative",
+                          "neutral",
+                          "mixed"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "factor",
+                      "confidence",
+                      "evidence",
+                      "reason",
+                      "sentiment_hint"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "sentence_id",
+                "mappings"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "review_index",
+          "items"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "reviews"
+  ],
+  "additionalProperties": false
+}

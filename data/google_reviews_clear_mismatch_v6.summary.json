@@ -1,0 +1,39 @@
+{
+  "current": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\google_reviews_full_corrected_textclean_v4.csv",
+  "classification": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\place_revalidation_classified_v5.csv",
+  "recrawled": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\google_reviews_recrawled_corrected_v4.csv",
+  "progress": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\google_reviews_recrawled_corrected_v4_progress.csv",
+  "output": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\google_reviews_clear_mismatch_v6.csv",
+  "audit_output": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\place_revalidation_clear_mismatch_v6.csv",
+  "policy": "exclude_only_clear_place_link_mismatches",
+  "input_rows": 1046892,
+  "expanded_actions": {
+    "keep_existing_verified": 6691,
+    "keep_existing_unresolved": 3645,
+    "use_recrawled_corrected": 1732,
+    "exclude": 1226,
+    "exclude_clear_mismatch": 1184,
+    "keep_existing_recovered": 38
+  },
+  "clear_mismatch_reasons": {
+    "verified_non_cafe_target": 1013,
+    "shared_google_target": 654,
+    "non_cafe_parent_facility": 401,
+    "duplicate_corrected_target": 213,
+    "different_chain_brand": 99,
+    "shared_google_target|different_chain_brand": 15,
+    "non_cafe_parent_facility|different_chain_brand": 15
+  },
+  "kept_current_places": 10374,
+  "kept_current_rows": 500910,
+  "recrawl_target_places": 1732,
+  "recrawl_completed_places": 1725,
+  "recrawl_places_with_text": 1545,
+  "recrawled_text_rows": 61873,
+  "nontext_rows_removed_after_merge": 1,
+  "duplicate_rows_removed_after_merge": 2,
+  "output_places": 11909,
+  "output_rows": 543615,
+  "postclean_removed_places": 10,
+  "postclean_removed_rows": 19165
+}
