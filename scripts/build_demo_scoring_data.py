@@ -61,7 +61,12 @@ def main() -> None:
     place_csv_path = output_dir / "place_scores.csv"
 
     deploy_evidence = scored_evidence[DEPLOY_EVIDENCE_COLUMNS].copy()
-    deploy_evidence.to_parquet(evidence_path, index=False, compression="zstd")
+    deploy_evidence.to_parquet(
+        evidence_path,
+        index=False,
+        compression="zstd",
+        row_group_size=20_000,
+    )
     factor_scores.to_parquet(factor_path, index=False, compression="zstd")
     place_scores.to_parquet(place_path, index=False, compression="zstd")
     factor_scores.to_csv(factor_csv_path, index=False, encoding="utf-8-sig")

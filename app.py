@@ -18,7 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 FULL_REVIEW_SUMMARY_JSON = PROJECT_ROOT / "data" / "google_reviews_clear_mismatch_v6.summary.json"
 CANDIDATE_SUMMARY_JSON = PROJECT_ROOT / "data" / "spatial_review_candidates_v6.summary.json"
-SCORING_CACHE_VERSION = "gpt54nano_signed_score_v6_district_selector_cleanup_20260723"
+SCORING_CACHE_VERSION = "gpt54nano_signed_score_v6_lazy_evidence_20260723"
 
 from modules.research_scoring import (
     DEFAULT_FACTOR_SCORES_PARQUET,
@@ -29,14 +29,6 @@ from modules.research_scoring import (
     FACTOR_ORDER,
     complete_factor_table,
 )
-from modules.validation_analysis import (
-    build_cluster_feature_matrix,
-    evaluate_cluster_range,
-    get_factor_extreme_cases,
-    representative_places_for_cluster,
-    run_place_clustering,
-)
-
 RECOMMENDATION_PRESETS = {
     "분위기 좋은 곳": ["심미성", "감각적 경험", "쾌적성"],
     "작업/공부하기 좋은 곳": ["쾌적성", "개방성", "접근성", "활동성"],
@@ -63,19 +55,44 @@ st.set_page_config(
 )
 
 
-@st.cache_resource(show_spinner="새 매핑 결과와 점수 계산 결과를 불러오는 중입니다.")
+@st.cache_resource(show_spinner="장소성 점수 계산 결과를 불러오는 중입니다.")
 def load_demo_data(
-    evidence_parquet: str,
     factor_parquet: str,
     place_parquet: str,
     scoring_version: str = SCORING_CACHE_VERSION,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     _ = scoring_version
     return (
-        pd.read_parquet(evidence_parquet),
         pd.read_parquet(factor_parquet),
         pd.read_parquet(place_parquet),
     )
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def load_scored_evidence(
+    evidence_parquet: str,
+    cafe_names: tuple[str, ...],
+    factors: tuple[str, ...] = (),
+    scoring_version: str = SCORING_CACHE_VERSION,
+) -> pd.DataFrame:
+    _ = scoring_version
+    if not cafe_names:
+        return pd.DataFrame()
+
+    filters: list[tuple[str, str, object]] = [
+        ("cafe_name", "in", list(cafe_names)),
+    ]
+    if factors:
+        filters.append(("factor", "in", list(factors)))
+    return pd.read_parquet(evidence_parquet, filters=filters)
+
+
+@st.cache_data(show_spinner=False)
+def load_scoring_summary() -> dict[str, object]:
+    summary_path = DEFAULT_SCORED_EVIDENCE_PARQUET.parent / "summary.json"
+    if not summary_path.exists():
+        return {}
+    return json.loads(summary_path.read_text(encoding="utf-8"))
 
 
 @st.cache_data(show_spinner=False)
@@ -1171,18 +1188,18 @@ def main() -> None:
         )
         return
 
-    scored_evidence, factor_scores, place_scores = load_demo_data(
-        str(DEFAULT_SCORED_EVIDENCE_PARQUET),
+    factor_scores, place_scores = load_demo_data(
         str(DEFAULT_FACTOR_SCORES_PARQUET),
         str(DEFAULT_PLACE_SCORES_PARQUET),
         SCORING_CACHE_VERSION,
     )
     source_summary = load_source_data_summary()
+    scoring_summary = load_scoring_summary()
 
     with st.sidebar:
-        analysis_review_count = scored_evidence["review_index"].nunique()
+        analysis_review_count = int(scoring_summary.get("mapped_reviews", 0))
         analysis_place_count = place_scores["cafe_name"].nunique()
-        evidence_count = len(scored_evidence)
+        evidence_count = int(scoring_summary.get("mapping_rows", 0))
 
         st.header("데이터 흐름")
         st.caption("서울시 카페 리뷰에서 장소성 후보를 선별하고, 리뷰 구절을 10개 장소성 요인과 평가 방향에 매핑했습니다.")
@@ -1284,25 +1301,27 @@ def main() -> None:
         )
         cafe_name = str(place_lookup.loc[selected_place_id, "cafe_name"])
 
-    tab1, tab2, tab3, tab4, tab6 = st.tabs(
-        [
-            "평가 체계",
-            "리뷰 매핑",
-            "점수 계산",
-            "개인화 추천",
-            "검증 분석",
-        ]
+    selected_evidence = load_scored_evidence(
+        str(DEFAULT_SCORED_EVIDENCE_PARQUET),
+        (cafe_name,),
+        (),
+        SCORING_CACHE_VERSION,
     )
-    with tab1:
+
+    selected_view = st.radio(
+        "분석 단계",
+        options=["평가 체계", "리뷰 매핑", "점수 계산"],
+        index=0,
+        horizontal=True,
+        label_visibility="collapsed",
+        key="main_view",
+    )
+    if selected_view == "평가 체계":
         render_factor_system()
-    with tab2:
-        render_mapping_results(scored_evidence, cafe_name)
-    with tab3:
-        render_score_results(scored_evidence, factor_scores, place_scores, cafe_name)
-    with tab4:
-        render_personalized_recommendation(scored_evidence, factor_scores, place_scores)
-    with tab6:
-        render_validation_analysis(scored_evidence, factor_scores, place_scores)
+    elif selected_view == "리뷰 매핑":
+        render_mapping_results(selected_evidence, cafe_name)
+    elif selected_view == "점수 계산":
+        render_score_results(selected_evidence, factor_scores, place_scores, cafe_name)
 
 
 if __name__ == "__main__":
