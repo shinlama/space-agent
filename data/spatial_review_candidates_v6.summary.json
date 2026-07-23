@@ -2,10 +2,10 @@
   "input": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\google_reviews_clear_mismatch_v6.csv",
   "output": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\data\\spatial_review_candidates_v6.csv",
   "method": "high-recall lexical prefilter before contextual LLM mapping",
-  "input_rows": 543615,
-  "candidate_rows": 298998,
-  "candidate_ratio": 0.5500179354874314,
-  "candidate_places": 11322,
+  "input_rows": 511461,
+  "candidate_rows": 285449,
+  "candidate_ratio": 0.5581051145639648,
+  "candidate_places": 11297,
   "factor_cue_hits": {
     "심미성": 131925,
     "상호작용성": 96298,
@@ -70,6 +70,6 @@
     "접근": 2867,
     "다시 방문": 2795
   },
-  "postclean_removed_places": 10,
-  "postclean_removed_rows": 11606
+  "postclean_removed_places": 35,
+  "postclean_removed_rows": 25155
 }

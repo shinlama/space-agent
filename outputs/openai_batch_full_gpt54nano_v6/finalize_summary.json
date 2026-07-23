@@ -1,16 +1,16 @@
 {
   "run_dir": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6",
   "model": "gpt-5.4-nano",
-  "expected_reviews": 298998,
-  "returned_reviews": 298998,
+  "expected_reviews": 285449,
+  "returned_reviews": 285449,
   "missing_reviews": 0,
   "historical_failed_response_records": 44,
   "unresolved_failed_reviews": 0,
-  "mapping_rows": 676614,
-  "mapped_reviews": 276248,
-  "unmapped_reviews": 22750,
-  "evidence_exact_substring_rows": 660748,
-  "evidence_exact_substring_ratio": 0.976550884256016,
+  "mapping_rows": 648463,
+  "mapped_reviews": 263888,
+  "unmapped_reviews": 21561,
+  "evidence_exact_substring_rows": 633182,
+  "evidence_exact_substring_ratio": 0.9764350471807952,
   "usage": {
     "prompt_tokens": 50959362,
     "completion_tokens": 32554605,
@@ -18,8 +18,8 @@
   },
   "sentence_output": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6\\placeness_mapping_sentences.csv",
   "review_output": "C:\\Users\\jiwon\\Desktop\\연구\\space-agent\\outputs\\openai_batch_full_gpt54nano_v6\\placeness_mapping_reviews.csv",
-  "mapped_places": 11003,
-  "postclean_removed_places": 10,
-  "postclean_removed_reviews": 11606,
-  "postclean_removed_mapping_rows": 34203
+  "mapped_places": 10978,
+  "postclean_removed_places": 35,
+  "postclean_removed_reviews": 25155,
+  "postclean_removed_mapping_rows": 62354
 }

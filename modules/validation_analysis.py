@@ -40,10 +40,15 @@ def _representative_evidence(
     if rows.empty:
         return ""
 
-    rows = rows.sort_values(
-        ["sentiment_value", "confidence"],
-        ascending=[not prefer_positive, False],
-    )
+    rows["_evidence_length"] = rows["evidence"].fillna("").astype(str).str.len()
+    sort_columns = ["sentiment_value"]
+    ascending = [not prefer_positive]
+    if "confidence" in rows.columns and rows["confidence"].notna().any():
+        sort_columns.append("confidence")
+        ascending.append(False)
+    sort_columns.append("_evidence_length")
+    ascending.append(False)
+    rows = rows.sort_values(sort_columns, ascending=ascending)
     return _join_examples(rows["evidence"], limit=limit)
 
 

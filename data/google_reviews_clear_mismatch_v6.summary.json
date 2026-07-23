@@ -32,8 +32,8 @@
   "recrawled_text_rows": 61873,
   "nontext_rows_removed_after_merge": 1,
   "duplicate_rows_removed_after_merge": 2,
-  "output_places": 11909,
-  "output_rows": 543615,
-  "postclean_removed_places": 10,
-  "postclean_removed_rows": 19165
+  "output_places": 11884,
+  "output_rows": 511461,
+  "postclean_removed_places": 35,
+  "postclean_removed_rows": 51319
 }
