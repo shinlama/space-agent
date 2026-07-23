@@ -18,7 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 FULL_REVIEW_SUMMARY_JSON = PROJECT_ROOT / "data" / "google_reviews_clear_mismatch_v6.summary.json"
 CANDIDATE_SUMMARY_JSON = PROJECT_ROOT / "data" / "spatial_review_candidates_v6.summary.json"
-SCORING_CACHE_VERSION = "gpt54nano_signed_score_v6_district_selector"
+SCORING_CACHE_VERSION = "gpt54nano_signed_score_v6_district_selector_cleanup_20260723"
 
 from modules.research_scoring import (
     DEFAULT_FACTOR_SCORES_PARQUET,
