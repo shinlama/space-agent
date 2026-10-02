@@ -505,11 +505,8 @@ def render_charts(table: pd.DataFrame) -> None:
     style_chart(mention_chart, "Mention proportion", [0, mention_max])
     mention_chart.update_yaxes(tickformat=".0%")
 
-    score_col, mention_col = st.columns(2, gap="large")
-    with score_col:
-        st.plotly_chart(score_chart, use_container_width=True, config={"displayModeBar": False})
-    with mention_col:
-        st.plotly_chart(mention_chart, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(score_chart, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(mention_chart, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_summary_table(table: pd.DataFrame) -> None:
