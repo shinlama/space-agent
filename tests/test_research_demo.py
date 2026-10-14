@@ -64,6 +64,7 @@ class ResearchDemoTests(unittest.TestCase):
         rendered = "\n".join(item.value for item in app.markdown)
         self.assertNotIn("언급비중", rendered)
         self.assertNotIn("언급 비중", rendered)
+        self.assertNotIn("점수 범위는 -1에서 +1입니다.", rendered)
 
         app.selectbox(key="sidebar_district").set_value("강남구").run()
         self.assert_no_exceptions(app)
