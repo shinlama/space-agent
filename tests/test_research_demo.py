@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from modules.research_scoring import (
     DEFAULT_FACTOR_SCORES_PARQUET,
+    DEFAULT_MAPPING_CSV,
+    DEFAULT_PLACE_SCORES_PARQUET,
     DEFAULT_SCORED_EVIDENCE_PARQUET,
     FACTOR_ORDER,
     complete_factor_table,
@@ -37,6 +39,9 @@ class ResearchDemoTests(unittest.TestCase):
         app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=45).run()
         self.assert_no_exceptions(app)
         self.assertEqual(app.radio[0].options, ["평가 체계", "리뷰 매핑", "점수 계산"])
+        self.assertIn(
+            "매핑 모델: gpt-5.4-nano (v6)", [item.value for item in app.caption]
+        )
 
         app.radio[0].set_value("리뷰 매핑").run()
         self.assert_no_exceptions(app)
@@ -62,6 +67,49 @@ class ResearchDemoTests(unittest.TestCase):
 
         app.selectbox(key="sidebar_district").set_value("강남구").run()
         self.assert_no_exceptions(app)
+
+    def test_confirmed_gpt54nano_v6_dataset(self) -> None:
+        self.assertEqual(DEFAULT_MAPPING_CSV.parent.name, "openai_batch_full_gpt54nano_v6")
+        for path in [
+            DEFAULT_SCORED_EVIDENCE_PARQUET,
+            DEFAULT_FACTOR_SCORES_PARQUET,
+            DEFAULT_PLACE_SCORES_PARQUET,
+        ]:
+            self.assertEqual(path.parent.name, "gpt54nano_v6")
+
+        summary = json.loads(
+            (DEFAULT_SCORED_EVIDENCE_PARQUET.parent / "summary.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(summary["model"], "gpt-5.4-nano")
+        evidence = pd.read_parquet(
+            DEFAULT_SCORED_EVIDENCE_PARQUET,
+            columns=["review_index", "place_id", "factor"],
+        )
+        self.assertEqual(len(evidence), 648463)
+        self.assertEqual(evidence["review_index"].nunique(), 263888)
+        self.assertEqual(evidence["place_id"].nunique(), 10978)
+        self.assertEqual(summary["mapping_rows"], len(evidence))
+        self.assertEqual(summary["mapped_reviews"], evidence["review_index"].nunique())
+        self.assertEqual(summary["mapped_places"], evidence["place_id"].nunique())
+        self.assertEqual(summary["factor_counts"], evidence["factor"].value_counts().to_dict())
+
+        sample = pd.read_parquet(
+            DEFAULT_SCORED_EVIDENCE_PARQUET,
+            columns=["evidence", "factor", "sentiment_key"],
+            filters=[("review_index", "=", 288824)],
+        )
+        expected = [
+            ("주차공간 꽤 넓습니다.", "접근성", "positive"),
+            ("신기하게 주문하면 가져다 주시고 치워주시네요.", "상호작용성", "positive"),
+            ("화장실도 깔끔하고 관리 잘 되어 있습니다.", "쾌적성", "positive"),
+            ("전체적인 인테리어는 노출콘트리트~?", "심미성", "neutral"),
+            ("넓고 괜찮긴 합니다.", "개방성", "positive"),
+            ("의자가 나무로 되어 있어 조금 불편하구요.", "쾌적성", "negative"),
+            ("좌식으로 앉는 곳도 생각보다 많이 불편하더라구요.", "쾌적성", "negative"),
+            ("조명이 어두워서 2층 올라가는 계단 조심하셔야 합니다.", "쾌적성", "negative"),
+            ("재방문 의사는 있습니다.", "기억 및 선호", "positive"),
+        ]
+        self.assertCountEqual(list(sample.itertuples(index=False, name=None)), expected)
 
     def test_factor_scores_are_unweighted_phrase_means(self) -> None:
         evidence = pd.read_parquet(

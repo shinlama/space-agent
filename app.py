@@ -717,6 +717,7 @@ def main() -> None:
 
         st.header("데이터 흐름")
         st.caption("서울시 카페 리뷰에서 장소성 후보를 선별하고, 리뷰 구절을 10개 장소성 요인과 평가 방향에 매핑했습니다.")
+        st.caption(f"매핑 모델: {scoring_summary.get('model', '확인 불가')} (v6)")
         st.markdown(
             f"""
             <div class="sidebar-focus">
