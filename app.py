@@ -781,7 +781,7 @@ def main() -> None:
         district_options = sorted(
             district_counts.index.astype(str).tolist()
         )
-        default_district = "마포구" if "마포구" in district_options else district_options[0]
+        default_district = "종로구" if "종로구" in district_options else district_options[0]
         selected_district = st.selectbox(
             "행정구 선택",
             district_options,

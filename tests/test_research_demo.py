@@ -38,6 +38,7 @@ class ResearchDemoTests(unittest.TestCase):
     def test_korean_mapping_and_scoring_views(self) -> None:
         app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=45).run()
         self.assert_no_exceptions(app)
+        self.assertEqual(app.selectbox(key="sidebar_district").value, "종로구")
         self.assertEqual(app.radio[0].options, ["평가 체계", "리뷰 매핑", "점수 계산"])
         self.assertIn(
             "매핑 모델: gpt-5.4-nano (v6)", [item.value for item in app.caption]
@@ -49,6 +50,7 @@ class ResearchDemoTests(unittest.TestCase):
 
         app.radio[0].set_value("점수 계산").run()
         self.assert_no_exceptions(app)
+        self.assertEqual(app.selectbox(key="sidebar_district").value, "종로구")
         scores = app.dataframe[0].value
         self.assertEqual(len(scores), len(FACTOR_ORDER))
         self.assertIn("장소성 요인 점수", scores)
